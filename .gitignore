@@ -1,0 +1,13 @@
+# secrets
+.env
+# données brutes et sorties (vidéos perso, sorties SAM)
+data/*
+!data/.gitkeep
+probe_out/
+*.mp4
+*.mov
+# python
+.venv/
+__pycache__/
+*.pyc
+.DS_Store

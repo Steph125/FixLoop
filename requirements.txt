@@ -1,0 +1,6 @@
+openai>=1.40
+meta-sam-parser>=0.1.0
+opencv-python-headless>=4.9
+numpy>=1.26
+matplotlib>=3.8
+python-dotenv>=1.0

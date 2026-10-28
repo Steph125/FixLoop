@@ -1,0 +1,55 @@
+{
+  "id": "chain_off_chainring",
+  "title": "Chaîne tombée du plateau",
+  "symptoms": [
+    "la chaîne pend sous le plateau ou repose sur le boîtier de pédalier",
+    "le pédalier tourne dans le vide"
+  ],
+  "parts": {
+    "chain": "bicycle chain",
+    "chainring": "chainring",
+    "derailleur": "rear derailleur"
+  },
+  "steps": [
+    {
+      "id": "frame_view",
+      "instruction": "Place le téléphone face à la transmission, pour que la chaîne et le plateau soient bien visibles.",
+      "highlight": ["chain", "chainring"],
+      "success": [
+        {"type": "detected", "part": "chain"},
+        {"type": "detected", "part": "chainring"}
+      ]
+    },
+    {
+      "id": "engage_top_teeth",
+      "instruction": "Pose la chaîne sur les dents du haut du plateau, sans la tendre.",
+      "highlight": ["chain", "chainring"],
+      "success": [
+        {"type": "contact_ratio_min", "a": "chain", "b": "chainring", "threshold": 0.25}
+      ],
+      "anomaly": [
+        {"type": "contact_ratio_max", "a": "chain", "b": "chainring", "threshold": 0.05,
+         "message": "La chaîne ne touche pas le plateau : elle est encore tombée."}
+      ]
+    },
+    {
+      "id": "turn_backward",
+      "instruction": "Tourne doucement le pédalier en arrière d'un demi-tour pour que la chaîne s'engage.",
+      "highlight": ["chainring"],
+      "success": [
+        {"type": "contact_ratio_min", "a": "chain", "b": "chainring", "threshold": 0.25}
+      ],
+      "anomaly": [
+        {"type": "contact_ratio_max", "a": "chain", "b": "chainring", "threshold": 0.05,
+         "message": "La chaîne a quitté le plateau pendant la rotation."}
+      ]
+    }
+  ],
+  "dynamic_test": {
+    "instruction": "Tourne le pédalier en avant pendant trois secondes.",
+    "duration_s": 3,
+    "must_hold": [
+      {"type": "contact_ratio_min", "a": "chain", "b": "chainring", "threshold": 0.25}
+    ]
+  }
+}
