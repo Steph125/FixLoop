@@ -94,3 +94,8 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Passé du 1er coup. Preuve : `tests/test_voice.py` (8 tests), `pytest` 71 passed + 9 skipped,
   `check_spec.py` OK. Fichiers : `fixloop/voice.py`, `tests/test_voice.py`,
   `spec/04-memory-voice/tasks.md`.
+- MEM-T1 (historique local) : `WonderMemory` sans Wonder (`load` → « aucun » ou 5 dernières lignes,
+  `repeated`, `save` atomique par allowlist, `date` surchargeable pour MEM-T6, client stocké pour
+  MEM-T4). Passé du 1er coup. Preuve : `tests/test_memory.py` (5 tests),
+  `pytest` 76 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/memory.py`, `tests/test_memory.py`, `spec/04-memory-voice/tasks.md`.

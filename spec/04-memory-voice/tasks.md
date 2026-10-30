@@ -4,10 +4,11 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
 
 ## Mémoire
 
-- [ ] **MEM-T1 — Historique local.** `WonderMemory` sans Wonder d'abord : lecture, validation de `bike_id`,
+- [x] **MEM-T1 — Historique local.** `WonderMemory` sans Wonder d'abord : lecture, validation de `bike_id`,
   écriture atomique, `repeated()`, repli texte brut. `FakeMemory` reste pour les tests de session.
   Fichiers : `fixloop/memory.py`, `tests/test_memory.py`.
   Exigences : `MEM-R1.1`, `R1.5`, `R1.6`, `R2.1`, `R2.3`, `R2.4`, `R3.1`, `R3.2`.
+  Preuve : `tests/test_memory.py` (5 tests : « aucun », repli, `repeated`, refus, confidentialité).
 - [ ] **MEM-T2 — Rapport enrichi.** `Session._close` fournit étapes validées, anomalies (étape, instant, message)
   et durée ; adapter `test_happy_path_to_closure`.
   Fichiers : `state_machine.py`. Exigences : `MEM-R2.1`. Touche `01-core-loop`.
