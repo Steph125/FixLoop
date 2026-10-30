@@ -57,6 +57,16 @@ class FakeMemory:
         self.saved.append(report)
 
 
+class RaisingMemory(FakeMemory):
+    """Memoire injoignable : `load` et `save` levent (spec/01-core-loop, CORE-T18)."""
+
+    def load(self, bike_id):
+        raise ConnectionError("historique coupe")
+
+    def save(self, bike_id, report):
+        raise ConnectionError("ecriture coupee")
+
+
 class FakeSamStream:
     """Flux SAM rejoué : des événements texte qui portent une sortie brute valide."""
 

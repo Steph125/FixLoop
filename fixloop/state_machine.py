@@ -111,9 +111,27 @@ class Session:
         self.t = 0.0
 
     # ------------------------------------------------------------------ entrées
-    def start(self, images: list[Any]) -> None:
-        history = self.memory.load(self.bike_id)
+    def _safe_load(self) -> str:
+        """Historique, ou repli "aucun" si la memoire leve (CORE-R4.7)."""
+        try:
+            history = self.memory.load(self.bike_id)
+        except Exception:
+            self._event("memory_error", where="load")
+            return "aucun"
         self.model_calls["wonder"] += 1
+        return history
+
+    def _safe_save(self, report: dict) -> None:
+        """Ecrit le rapport ; journalise `memory_error` si la memoire leve (CORE-R4.7)."""
+        try:
+            self.memory.save(self.bike_id, report)
+        except Exception:
+            self._event("memory_error", where="save")
+            return
+        self.model_calls["wonder"] += 1
+
+    def start(self, images: list[Any]) -> None:
+        history = self._safe_load()
         try:
             proc_id = self.agent.diagnose(images, self.procedures, history)
         except Exception:
@@ -318,8 +336,7 @@ class Session:
         report = {"procedure": self.procedure["id"], "success": success,
                   "events": [e for e in self.log if e["event"] in ("validated", "anomaly")],
                   "model_calls": dict(self.model_calls)}
-        self.memory.save(self.bike_id, report)
-        self.model_calls["wonder"] += 1
+        self._safe_save(report)
         self.out.say("Réparation validée. Je l'ai ajoutée à l'historique de ton vélo.")
         self._event("closed", success=success)
 

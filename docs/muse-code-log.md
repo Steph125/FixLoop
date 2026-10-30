@@ -15,6 +15,13 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve : `test_negated_forms_trigger_nothing`, `test_corrected_forms_detected`,
   `pytest` 79 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
   Fichiers : `fixloop/voice.py`, `tests/test_voice.py`, `spec/04-memory-voice/tasks.md`.
+- CORE-T18 (robustesse mémoire) : `_safe_load` (repli « aucun » + `memory_error`)
+  et `_safe_save` (clôture sans rapport + `memory_error`), compteur `wonder` incrémenté
+  seulement en cas de succès ; `RaisingMemory` dans `tests/fakes.py`, paramètre `memory`
+  ajouté au `Runner` (aucun test existant modifié).
+  Preuve : `test_raising_memory_falls_back_and_closes`.
+  Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`, `tests/test_state_machine.py`,
+  `spec/01-core-loop/tasks.md`.
 
 ## 2026-10-30
 

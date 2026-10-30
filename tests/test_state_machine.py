@@ -9,8 +9,10 @@ PROCS = load_all()
 
 
 class Runner:
-    def __init__(self, agent=None, **session_kw):
-        self.agent, self.memory, self.out = agent or FakeAgent(), FakeMemory(), FakeOutput()
+    def __init__(self, agent=None, memory=None, **session_kw):
+        self.agent = agent or FakeAgent()
+        self.memory = memory or FakeMemory()
+        self.out = FakeOutput()
         self.s = Session(PROCS, self.agent, self.memory, self.out, bike_id="velo-test", **session_kw)
         self.i = 0
         self.s.start(images=[])
@@ -241,3 +243,34 @@ def test_anomaly_is_not_repeated_during_cooldown():
     assert len(r.events("anomaly")) == 1
     r.feed("off", 10)                     # au-delà de 8 s : rappel
     assert len(r.events("anomaly")) == 2
+
+
+def test_raising_memory_falls_back_and_closes():
+    from fakes import RaisingMemory  # CORE-R4.7 : memoire injoignable
+
+    agent = FakeAgent()
+    seen = {}
+    orig_diagnose = agent.diagnose
+
+    def diagnose(images, procedures, history):
+        seen["history"] = history
+        return orig_diagnose(images, procedures, history)
+
+    agent.diagnose = diagnose
+    r = Runner(agent=agent, memory=RaisingMemory())
+    assert seen["history"] == "aucun"  # repli au demarrage
+    assert [e["where"] for e in r.events("memory_error")] == ["load"]
+    r.feed("off", 4)
+    assert r.s.step["id"] == "engage_top_teeth"
+    r.feed("off", 6)
+    r.feed("on", 4)
+    assert r.s.step["id"] == "turn_backward"
+    r.feed("on", 6)
+    r.s.on_user_done()
+    r.feed("on", 4)
+    assert r.s.state == State.ESSAI_DYNAMIQUE
+    r.feed("on", 8)
+    assert r.s.state == State.CLOTURE  # cloture sans rapport
+    assert [e["where"] for e in r.events("memory_error")] == ["load", "save"]
+    assert r.memory.saved == []
+    assert r.s.model_calls["wonder"] == 0
