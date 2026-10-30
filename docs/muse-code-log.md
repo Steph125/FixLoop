@@ -54,3 +54,9 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Passé du 1er coup. Preuve : `test_single_bad_frame_resets_dynamic_timer_without_anomaly`,
   `pytest` 49 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.
+- CORE-T13 (perte du cadrage) : `last_seen` à chaque mesure, `_check_framing` sur verdict discret
+  uniquement (pas de parole double avec anomalie/arbitrage), message avec nom français de la pièce,
+  rappel après 10 s. Passé du 1er coup.
+  Preuve : `test_framing_lost_after_timeout`, `test_no_framing_when_parts_visible`,
+  `pytest` 51 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/state_machine.py`, `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.

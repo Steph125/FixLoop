@@ -42,15 +42,21 @@ class Output(Protocol):  # téléphone
 
 DEFAULT_ADVICE = "Je ne vois pas bien. Montre-moi le plateau de face, mains hors du champ."
 FALLBACK_PROBLEM = "Il y a un problème, regarde la pièce en rouge."
+PART_FRENCH = {"chain": "la chaîne", "chainring": "le plateau", "derailleur": "le dérailleur"}
+FRAMING_COOLDOWN_S = 10.0
 
 
 class Session:
     def __init__(self, procedures: dict[str, dict], agent: Agent, memory: Memory, out: Output,
                  bike_id: str, anomaly_cooldown_s: float = 8.0, keyframes_kept: int = 3,
-                 arbitration_cooldown_s: float = 10.0, debounce_frames: int = 4):
+                 arbitration_cooldown_s: float = 10.0, debounce_frames: int = 4,
+                 framing_timeout_s: float = 6.0):
         self.procedures, self.agent, self.memory, self.out = procedures, agent, memory, out
         self.bike_id = bike_id
         self.debounce_frames = debounce_frames  # 3 en direct, 4 en replay (CORE-R9.1)
+        self.framing_timeout_s = framing_timeout_s
+        self.last_seen: dict[str, float] = {}
+        self.next_framing_t = -1.0
         self.cooldown = anomaly_cooldown_s
         self.arbitration_cooldown = arbitration_cooldown_s
         self.next_arbitration_t = -1.0
@@ -95,9 +101,13 @@ class Session:
         self.t = m.t
         if keyframe is not None:
             self.keyframes.append(keyframe)
+        for part, seen in m.detected.items():
+            if seen:
+                self.last_seen[part] = m.t
         if self.state == State.OBSERVATION:
             self.window.append(m)
-            self._check_step()
+            if self._check_step() is not None:  # verdict discret : on peut signaler le cadrage
+                self._check_framing()
         elif self.state == State.ESSAI_DYNAMIQUE:
             self.window.append(m)
             self._check_dynamic()
@@ -114,13 +124,14 @@ class Session:
         self.out.highlight(self.step.get("highlight", []), "blue")
         self._event("step", step=self.step["id"])
 
-    def _check_step(self) -> None:
+    def _check_step(self) -> Verdict | None:
+        """Rend le verdict s'il est discret (`0`), sinon None (quelque chose a été dit)."""
         v = verify(self.step, self.window, self.user_done, self.debounce_frames)
         if v.value == "eps" and self._suppressed(v):
-            return
+            return None
         if v.value == "?":
             if self.t < self.next_arbitration_t:   # Spark au plus une fois toutes les 10 s
-                return
+                return None
             self.state = State.ARBITRAGE
             try:
                 v = self.agent.arbitrate(self.step, list(self.keyframes),
@@ -135,10 +146,35 @@ class Session:
                 self.out.say(v.message or DEFAULT_ADVICE)
         if v.value == "1":
             self._validate(v)
-        elif v.value == "eps":
+            return None
+        if v.value == "eps":
             self._anomaly(v)
-        elif self.state == State.ARBITRAGE:
+            return None
+        if self.state == State.ARBITRAGE:
             self.state = State.OBSERVATION
+            return None
+        return v  # "0" discret
+
+    def _required_parts(self) -> list[str]:
+        """Pièces citées par les règles de succès de l'étape en cours (CORE-R10)."""
+        parts = []
+        for rule in self.step.get("success", []):
+            for key in ("part", "a", "b"):
+                if key in rule and rule[key] not in parts:
+                    parts.append(rule[key])
+        return parts
+
+    def _check_framing(self) -> None:
+        """Perte du cadrage : pièce requise invisible depuis `framing_timeout_s` (CORE-R10)."""
+        if self.t < self.next_framing_t:
+            return
+        for part in self._required_parts():
+            if self.t - self.last_seen.get(part, 0.0) >= self.framing_timeout_s:
+                self.out.say(f"Je ne vois plus {PART_FRENCH.get(part, part)}. "
+                             "Replace le téléphone face au plateau.")
+                self._event("framing_lost", part=part)
+                self.next_framing_t = self.t + FRAMING_COOLDOWN_S
+                return
 
     def _validate(self, v: Verdict) -> None:
         self.state = State.ETAPE_VALIDEE

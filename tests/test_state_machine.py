@@ -157,6 +157,24 @@ def test_single_bad_frame_resets_dynamic_timer_without_anomaly():
     assert r.s.state == State.OBSERVATION and r.s.step["id"] == "turn_backward"
 
 
+def test_framing_lost_after_timeout():
+    r = Runner()  # framing_timeout_s = 6 s par défaut (CORE-R9.1)
+    assert r.s.framing_timeout_s == 6.0
+    r.feed("off", 4)                  # chaîne vue pour la dernière fois à t = 1,5 s
+    r.feed("hidden", 13)              # chaîne cachée, verdict discret : perte à t = 7,5 s
+    lost = [e for e in r.s.log if e["event"] == "framing_lost"]
+    assert len(lost) == 1 and lost[0]["part"] == "chain"  # CORE-R10.1
+    assert any("Je ne vois plus la chaîne" in s for s in r.out.said)
+    r.feed("hidden", 20)              # rappel après 10 s seulement (CORE-R10.2)
+    assert len([e for e in r.s.log if e["event"] == "framing_lost"]) == 2
+
+
+def test_no_framing_when_parts_visible():
+    r = Runner()
+    r.feed("off", 16)                 # plus de 6 s mais chaîne toujours vue
+    assert not [e for e in r.s.log if e["event"] == "framing_lost"]
+
+
 def test_anomaly_is_not_repeated_during_cooldown():
     r = Runner()
     r.feed("off", 4); r.feed("on", 4)     # étape turn_backward

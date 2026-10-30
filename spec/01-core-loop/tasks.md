@@ -48,9 +48,10 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   anomalie ; `N` images fausses déclenchent l'anomalie.
   Fichiers : `tests/test_state_machine.py`. Exigences : `CORE-R6.2`, `R6.4`.
   Preuve : `test_single_bad_frame_resets_dynamic_timer_without_anomaly`.
-- [ ] **CORE-T13 — Perte du cadrage.** `last_seen[pièce]` mis à jour à chaque mesure ; si une pièce requise n'a
+- [x] **CORE-T13 — Perte du cadrage.** `last_seen[pièce]` mis à jour à chaque mesure ; si une pièce requise n'a
   pas été vue depuis `framing_timeout_s`, dire le message, journaliser `framing_lost`, ne pas répéter avant 10 s.
   Fichiers : `state_machine.py`, tests. Exigences : `CORE-R10.1`, `R10.2`, `R9.1`.
+  Preuve : `test_framing_lost_after_timeout`, `test_no_framing_when_parts_visible`.
 - [ ] **CORE-T14 — Instantané et `Output.state`.** `Session.snapshot()` au format `design.md` 6.5 ; appel de
   `out.state(...)` à chaque changement d'état, d'étape ou de verdict (pas à chaque image si rien ne change).
   Mettre à jour `FakeOutput`. Fichiers : `state_machine.py`, `tests/fakes.py`. Exigences : `CORE-R11.1`, `R11.2`.
