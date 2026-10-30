@@ -81,3 +81,10 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Difficile : 1er essai raté sur mes égalités float (0.36*2.5) — `pytest.approx` partout.
   Preuve : `tests/test_costs.py` (5 tests), `pytest` 59 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/costs.py`, `tests/test_costs.py`, `spec/05-session-server/tasks.md`.
+- SRV-T3 (protocole) : `parse_client_message` (table type → champs requis, `cmd` restreint, bool
+  exclu des entiers, champs en plus permis), `parse_binary` (0x01/0x02, t_ms gros-boutiste,
+  `too_big` au-delà de 200 ko). Aucune dépendance externe. Passé du 1er coup.
+  Choix prudent : tests dans `tests/test_protocol.py` plutôt que `test_server.py` (FastAPI absent,
+  SRV-T1/T5 le rempliront). Preuve : 4 tests, `pytest` 63 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `server/protocol.py`, `server/__init__.py`, `tests/test_protocol.py`,
+  `spec/05-session-server/tasks.md`.

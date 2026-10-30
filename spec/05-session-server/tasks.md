@@ -10,8 +10,9 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   des jetons manquants), `tests/test_costs.py`.
   Exigences : `SRV-R8.1`, `R8.5`. Bloque : `PERC-T7`, `AGT-T9`, `MEM-T4`.
   Preuve : `tests/test_costs.py` (5 tests : 360 images → 0,90 $, vidéo min 50, persistance).
-- [ ] **SRV-T3 — Protocole.** `server/protocol.py` : validation des messages JSON, en-tête binaire, taille max.
+- [x] **SRV-T3 — Protocole.** `server/protocol.py` : validation des messages JSON, en-tête binaire, taille max.
   Exigences : `SRV-R3.1` à `R3.4`.
+  Preuve : `tests/test_protocol.py` (4 tests, sans dépendance externe).
 - [ ] **SRV-T4 — Ouverture et contrôle d'accès.** `hello` / `hello_ack`, code d'accès, 2 sessions max, blocage
   après 5 refus par IP.
   Exigences : `SRV-R2.1` à `R2.4`.
