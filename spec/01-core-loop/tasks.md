@@ -65,6 +65,9 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   d'octets ou la chaîne `MODEL_API_KEY`.
   Fichiers : `state_machine.py`, tests. Exigences : `CORE-R8.1`, `R8.2`, `R8.3`.
   Preuve : `test_anomaly_events_carry_source`, `test_export_jsonl_has_no_binary_or_key`.
+- [ ] **CORE-T18 — Robustesse face à la mémoire.** Envelopper `Memory.load` et `Memory.save` dans la session ;
+  repli « aucun » et clôture sans rapport ; événement `memory_error` ; test avec une `RaisingMemory`.
+  Fichiers : `state_machine.py`, `tests/fakes.py`. Exigences : `CORE-R4.7`. Trouvé à la relecture du 30 oct.
 - [ ] **CORE-T17 — Performance de la géométrie.** Mesurer `measure()` sur 100 images 848×464 enregistrées ;
   noter la médiane dans `eval/day1/findings.md` (section ajoutée).
   Exigences : `CORE-R2.4`. Fait quand : médiane notée, cible < 50 ms atteinte ou écart expliqué.
@@ -81,7 +84,7 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
 | R3.1–R3.3, R3.5, R3.6 | T5 |
 | R3.4, R3.7 | T5, T10 |
 | R3.8 | T9 |
-| R4.1–R4.6 | T6 |
+| R4.1–R4.6 | T6 ; R4.7 : T18 |
 | R5.1–R5.3 | T6 |
 | R5.4 | T11 |
 | R6.1–R6.3 | T6 ; R6.2, R6.4 : T12 |

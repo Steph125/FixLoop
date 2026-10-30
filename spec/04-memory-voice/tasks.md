@@ -9,6 +9,8 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   Fichiers : `fixloop/memory.py`, `tests/test_memory.py`.
   Exigences : `MEM-R1.1`, `R1.5`, `R1.6`, `R2.1`, `R2.3`, `R2.4`, `R3.1`, `R3.2`.
   Preuve : `tests/test_memory.py` (5 tests : « aucun », repli, `repeated`, refus, confidentialité).
+- [ ] **MEM-T7 — Historique illisible.** `_read` : JSON invalide → renommage `.corrupt-<date>.json`, historique
+  vide ; test. Exigences : `MEM-R1.1`. Trouvé à la relecture.
 - [ ] **MEM-T2 — Rapport enrichi.** `Session._close` fournit étapes validées, anomalies (étape, instant, message)
   et durée ; adapter `test_happy_path_to_closure`.
   Fichiers : `state_machine.py`. Exigences : `MEM-R2.1`. Touche `01-core-loop`.
@@ -32,6 +34,9 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
 - [x] **VOX-T2 — Détecteur de commandes.** `normalize`, `CommandDetector` et `tests/test_voice.py`.
   Exigences : `VOX-R2.1` à `R2.4`. Aucun réseau.
   Preuve : `tests/test_voice.py` (8 tests : formes, mot entier, priorité, anti-répétition, silence, écho).
+- [ ] **VOX-T6 — Négation et formes corrigées.** Nouvelles listes de `design.md` 2.2, règle de négation ; tests :
+  « je n'ai pas fini », « c'est pas fait », « ce n'est pas bon », « c'est quoi ce bruit » → aucune commande ;
+  « c'est fini », « tu peux répéter » → `done`, `repeat`. Exigences : `VOX-R2.1`, `R2.6`. Trouvé à la relecture.
 - [ ] **VOX-T3 — Pont Transcribe.** `VoiceBridge` (connexion, envoi PCM16, réception, 3 reconnexions, arrêt) ;
   test avec faux serveur WebSocket.
   Exigences : `VOX-R1.1`, `R1.3`, `R3.2`, `R4.1`. Dépend de : T1.
@@ -45,13 +50,13 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
 
 | Critère | Tâches |
 |---|---|
-| MEM-R1.1, R1.5, R1.6 | MEM-T1 |
+| MEM-R1.1, R1.5, R1.6 | MEM-T1 ; R1.1 : MEM-T7 |
 | MEM-R1.2, R1.3 | MEM-T3, MEM-T4 |
 | MEM-R1.4 | MEM-T5 |
 | MEM-R2.1 | MEM-T1, MEM-T2 ; R2.2 : MEM-T4 ; R2.3, R2.4 : MEM-T1 |
 | MEM-R3.1, R3.2 | MEM-T1 |
 | MEM-R4.1 | MEM-T6 ; R4.2 : `SUB-T3`, `SUB-T6` |
 | VOX-R1.1, R1.3 | VOX-T3 ; R1.2, R1.4 : VOX-T1 |
-| VOX-R2.1–R2.4 | VOX-T2 ; R2.5 : VOX-T4 |
+| VOX-R2.1–R2.4 | VOX-T2 ; R2.1, R2.6 : VOX-T6 ; R2.5 : VOX-T4 |
 | VOX-R3.1 | VOX-T5, `APP-T4` ; R3.2 : VOX-T3, VOX-T5 |
 | VOX-R4.1 | VOX-T3 ; R4.2 : VOX-T4 |

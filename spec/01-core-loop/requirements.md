@@ -65,6 +65,8 @@ téléphone.
    clôturer.
 5. QUAND la session est clôturée, le système DOIT écrire un rapport (`Memory.save`) et dire une phrase de fin.
 6. Le système NE DOIT jamais passer à l'étape suivante sur un verdict venant de l'agent (`AGT-R2`).
+7. SI `Memory.load` ou `Memory.save` lève une exception, ALORS le système DOIT continuer : historique « aucun »
+   au démarrage, rapport non écrit à la clôture, et journaliser l'événement `memory_error`.
 
 ## CORE-R5 — Anomalies (Must)
 
@@ -108,7 +110,7 @@ cadrer, sans jamais valider à l'aveugle.
 1. Le système DOIT journaliser chaque événement (`diagnose`, `step`, `user_done`, `validated`, `anomaly`,
    `arbitrate`, `dynamic_start`, `closed`, `framing_lost`) avec l'instant, l'état, l'étape, les preuves et le
    compteur d'appels aux modèles.
-2. Le journal DOIT être exportable en JSON Lines, une ligne par événement, au schéma de `design.md` section 6.
+2. Le journal DOIT être exportable en JSON Lines, une ligne par événement, au schéma de `design.md` section 7.
 3. Le journal NE DOIT contenir ni image ni clé.
 
 ## CORE-R9 — Paramètres de session (Must)

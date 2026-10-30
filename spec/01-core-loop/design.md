@@ -237,6 +237,7 @@ Une ligne JSON par événement, dans `Session.log`, exportée par le serveur dan
 | `command` | `cmd` |
 | `dynamic_start` | — |
 | `closed` | `success` |
+| `memory_error` | `op` (`load` ou `save`), `error` (type d'exception) |
 
 ## 8. Erreurs et cas limites
 

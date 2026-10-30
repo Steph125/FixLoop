@@ -12,6 +12,8 @@ repli qui marche sans le modèle (historique JSON relu tel quel, bouton « C'est
 dise par exemple « c'est la 3e fois que ta chaîne tombe ce mois-ci ».
 
 1. Le système DOIT conserver un historique par vélo dans `data/bikes/<bike_id>.json` (ignoré par git).
+   SI ce fichier est illisible (JSON invalide), ALORS le système DOIT le renommer en `<bike_id>.corrupt-<date>.json`
+   et repartir d'un historique vide, sans lever d'exception.
 2. QUAND une session démarre, le système DOIT lire l'historique et demander à `muse-wonder-1.0` (mode Standard)
    une synthèse de moins de 60 mots : réparations passées, pannes répétées, conseil éventuel.
 3. La synthèse DOIT être transmise au diagnostic (`AGT-R1.1`).
@@ -60,15 +62,18 @@ l'écran.
 
    | Commande | Formes reconnues |
    |---|---|
-   | `done` | « c'est fait », « c est fait », « j'ai fini », « fini », « termine », « c'est bon » |
+   | `done` | « c'est fait », « c est fait », « j'ai fini », « c'est fini », « j'ai terminé », « c'est bon » |
    | `help` | « aide-moi », « aide moi », « aide », « je n'y arrive pas », « au secours » |
-   | `repeat` | « répète », « repete », « redis », « quoi », « pardon » |
+   | `repeat` | « répète », « repete », « redis », « tu peux répéter », « pardon » |
 
 2. Une transcription qui ne contient aucune de ces formes NE DOIT déclencher aucune commande.
 3. Une même commande NE DOIT pas être déclenchée deux fois en moins de 2 s.
 4. PENDANT QUE le téléphone parle (synthèse vocale) et 500 ms après, le système NE DOIT PAS déclencher de
    commande (éviter que FixLoop s'entende lui-même).
 5. Le système DOIT journaliser chaque commande détectée avec la transcription normalisée (pas l'audio).
+6. SI la forme reconnue est niée (« pas », « n' », « ne », « jamais » dans les 3 mots qui la précèdent, ou « pas »
+   juste après : « je n'ai pas fini », « c'est pas fait », « ce n'est pas bon »), ALORS le système NE DOIT
+   déclencher aucune commande. Trouvé à la relecture du 30 oct. : « je n'ai pas fini » déclenchait `done`.
 
 ## VOX-R3 — Repli sans voix (Must)
 

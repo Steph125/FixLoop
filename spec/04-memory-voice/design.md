@@ -73,9 +73,9 @@ transcription finale) **n'est pas encore vérifié** : `VOX-T1` lit la doc et é
 
 ```python
 COMMANDS = {
-    "done":   ["c est fait", "j ai fini", "fini", "termine", "c est bon"],
+    "done":   ["c est fait", "j ai fini", "c est fini", "j ai termine", "c est termine", "c est bon"],
     "help":   ["aide moi", "aide", "je n y arrive pas", "au secours"],
-    "repeat": ["repete", "redis", "quoi", "pardon"],
+    "repeat": ["repete", "repeter", "redis", "pardon"],
 }
 
 def normalize(text: str) -> str      # minuscules, NFD sans accents, apostrophes et ponctuation -> espace, espaces réduits
@@ -96,6 +96,9 @@ class VoiceBridge:                    # une instance par session
 Règles de `feed` :
 - correspondance par **mot entier** dans le texte normalisé (`" aide "` ne correspond pas à « aider ») ;
 - si plusieurs commandes, priorité `done` > `help` > `repeat` ;
+- **négation** (`VOX-R2.6`) : forme ignorée si l'un des 3 mots qui la précèdent est `pas`, `n`, `ne`, `jamais`,
+  ou si le mot qui la suit est `pas` ; « fini » et « quoi » seuls sont retirés (trop de faux positifs :
+  « c'est quoi ce bruit », « pas fini ») ;
 - ignoré si `speaking` ou moins de `mute_tail_s` après la fin de la synthèse ;
 - ignoré si la même commande a été rendue il y a moins de `cooldown_s`.
 
