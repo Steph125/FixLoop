@@ -8,20 +8,28 @@ inchangées (preuves datées) ; ce module en reprend le comportement mesuré.
 
 from __future__ import annotations
 
+import asyncio
+import base64
 import os
 import re
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
+import cv2
 import numpy as np
 from meta_sam_parser import (
     CompletedOutcome,
     ResponsesStreamError,
+    ResponsesStreamRefusalError,
     decode_mask_to_raster,
     image_segmentation_format,
+    parse_responses_stream,
     video_segmentation_format,
 )
 from openai import APIConnectionError
+
+from .models import FrameMasks
 
 
 def _env_float(name: str, default: float) -> float:
@@ -43,6 +51,10 @@ LIVE_WIDTH = _env_int("FIXLOOP_SAM_WIDTH", 848)
 MAX_IN_FLIGHT = _env_int("FIXLOOP_SAM_INFLIGHT", 3)
 CHUNK_SECONDS = _env_float("FIXLOOP_SAM_CHUNK_S", 10.0)
 VIDEO_FPS = 10.0
+SAM_MODEL = "sam-3.1"
+BASE_URL = "https://api.meta.ai/v1"
+IMAGE_ATTEMPTS = 3           # 1 essai + 2 relances (PERC-R4.1)
+IMAGE_RETRY_S = 5.0          # attente avant relance : 5 s x tentative (PERC-R4.2)
 
 RETRYABLE = (APIConnectionError, ResponsesStreamError, ConnectionError, TimeoutError)
 
@@ -60,13 +72,182 @@ class PartResult:
 
 @dataclass
 class ImageResult:
-    """Résultat du mode image pour une image (complété par PERC-T4)."""
+    """Résultat du mode image pour une image."""
 
     frame_index: int
     t: float
     parts: dict[str, PartResult] = field(default_factory=dict)
     timing: dict = field(default_factory=dict)
     error: str | None = None
+    w: int = 0
+    h: int = 0
+
+    def to_frame_masks(self) -> FrameMasks:
+        """Assemble un FrameMasks ; les pièces absentes (masque None) sont omises (PERC-R1.6)."""
+        kept = {p: pr for p, pr in self.parts.items() if pr.mask is not None}
+        return FrameMasks(frame_index=self.frame_index, t=self.t,
+                          masks={p: pr.mask for p, pr in kept.items()},
+                          confidence={p: pr.confidence for p, pr in kept.items()})
+
+
+def live_parts(procedure: dict) -> list[str]:
+    """Pièces citées par une règle (succès, anomalie, must_hold), dans l'ordre de la fiche.
+
+    Seules ces pièces sont segmentées en direct (PERC-R1.9) : pour
+    `chain_off_chainring`, chaîne et plateau, pas le dérailleur.
+    """
+    cited: set[str] = set()
+    for step in procedure.get("steps", []):
+        for rule in step.get("success", []) + step.get("anomaly", []):
+            for key in ("part", "a", "b"):
+                if key in rule:
+                    cited.add(rule[key])
+    for rule in procedure.get("dynamic_test", {}).get("must_hold", []):
+        for key in ("part", "a", "b"):
+            if key in rule:
+                cited.add(rule[key])
+    return [p for p in procedure.get("parts", {}) if p in cited]
+
+
+def _error_name(part: str, exc: BaseException) -> str:
+    """`"<pièce>: <TypeErreur> <code>"` ; le code (401, 429…) quand il existe (PERC-R4.3)."""
+    code = getattr(exc, "status_code", None)
+    base = f"{part}: {type(exc).__name__}"
+    return f"{base} {code}" if isinstance(code, int) else base
+
+
+class LivePerception:
+    """Segmentation en direct, une requête SAM par pièce, en parallèle (PERC-R1, R2, R4)."""
+
+    def __init__(self, procedure: dict, client: Any | None = None, costs: Any | None = None,
+                 retry_s: float = IMAGE_RETRY_S, max_in_flight: int = MAX_IN_FLIGHT):
+        self.procedure = procedure
+        if client is None:  # jamais dans les tests : la clé ne quitte pas le serveur
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(base_url=BASE_URL, api_key=os.environ["MODEL_API_KEY"], timeout=60)
+        self.client, self.costs = client, costs
+        self.retry_s, self.max_in_flight = retry_s, max_in_flight
+        self.in_flight = 0
+        self.dropped = 0
+
+    def try_submit(self, jpeg: bytes, frame_index: int, t: float) -> Any | None:
+        """Soumet une image sans attendre ; None si déjà 3 en cours (abandonnée, PERC-R2.2)."""
+        if self.in_flight >= self.max_in_flight:
+            self.dropped += 1
+            return None
+        self.in_flight += 1
+        task = asyncio.get_running_loop().create_task(self._run(jpeg, frame_index, t))
+        task.add_done_callback(self._task_done)
+        return task
+
+    async def _run(self, jpeg: bytes, frame_index: int, t: float) -> ImageResult:
+        try:
+            return await self.segment_image(jpeg, frame_index, t)
+        finally:
+            self.in_flight -= 1
+
+    @staticmethod
+    def _task_done(task: Any) -> None:
+        try:
+            task.exception()
+        except (asyncio.CancelledError, Exception):
+            pass  # l'erreur est déjà dans ImageResult.error ; ici on évite l'avertissement
+
+    async def segment_image(self, jpeg: bytes, frame_index: int, t: float) -> ImageResult:
+        """Segmente une image pour les pièces de live_parts (PERC-R1.1, R1.8, R1.9)."""
+        parts = live_parts(self.procedure)
+        img = cv2.imdecode(np.frombuffer(jpeg, dtype=np.uint8), cv2.IMREAD_COLOR)
+        if img is None:
+            return ImageResult(frame_index, t, {}, {"total_s": 0.0, "attempts": {}}, "image: illisible")
+        h, w = img.shape[:2]
+        if w > LIVE_WIDTH:  # réduction seulement, jamais d'agrandissement
+            img = cv2.resize(img, (LIVE_WIDTH, int(h * LIVE_WIDTH / w)), interpolation=cv2.INTER_AREA)
+            ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+            if ok:
+                jpeg = buf.tobytes()
+            h, w = img.shape[:2]
+        data_url = "data:image/jpeg;base64," + base64.b64encode(jpeg).decode()
+        t0 = time.monotonic()
+        per = await asyncio.gather(*(self._segment_part(p, data_url, h, w) for p in parts))
+        total = time.monotonic() - t0
+        out: dict[str, PartResult] = {}
+        attempts: dict[str, int] = {}
+        errors: list[str] = []
+        firsts: list[float] = []
+        for part, (pr, n, first, err) in zip(parts, per):
+            out[part] = pr
+            attempts[part] = n
+            if first is not None:
+                firsts.append(first)
+            if err is not None:
+                errors.append(err)
+        timing = {"total_s": round(total, 3),
+                  "first_byte_s": round(min(firsts), 3) if firsts else None,
+                  "attempts": attempts}
+        return ImageResult(frame_index, t, out, timing,
+                           "; ".join(errors) if errors else None, w, h)
+
+    async def _segment_part(self, part: str, data_url: str, h: int, w: int
+                            ) -> tuple[PartResult, int, float | None, str | None]:
+        """Une pièce, avec relances réseau ; rend (résultat, tentatives, premier octet, erreur)."""
+        prompt = self.procedure["parts"][part]
+        largest = self.procedure.get("select", {}).get(part) == "largest"
+        attempts = 0
+        t0 = time.monotonic()
+        while True:
+            attempts += 1
+            try:
+                stream = await self.client.responses.create(
+                    model=SAM_MODEL,
+                    input=[{"type": "message", "role": "user", "content": [
+                        {"type": "input_text", "text": prompt},
+                        {"type": "input_image", "image_url": data_url},
+                    ]}],
+                    metadata={"include_confidence": "true", "mask_encoding": "one_bit"},
+                    stream=True,
+                )
+                try:
+                    marks: dict[str, float] = {}
+                    result = await parse_responses_stream(
+                        self._timed(stream, marks), image_segmentation_format()).final_result()
+                finally:
+                    await stream.close()  # PERC-R4.5, y compris après une erreur
+            except ResponsesStreamRefusalError as e:  # réponse refusée : pièce absente, sans relance
+                self._cost(part, time.monotonic() - t0, False, attempts)
+                return PartResult(None), attempts, None, _error_name(part, e)
+            except RETRYABLE as e:
+                if attempts >= IMAGE_ATTEMPTS:
+                    self._cost(part, time.monotonic() - t0, False, attempts)
+                    return PartResult(None), attempts, None, _error_name(part, e)
+                await asyncio.sleep(self.retry_s * attempts)  # PERC-R4.2 : 5 s, puis 10 s
+                continue
+            except Exception as e:  # 400, 401, 402, 429… : pas de relance (PERC-R4.3)
+                self._cost(part, time.monotonic() - t0, False, attempts)
+                return PartResult(None), attempts, None, _error_name(part, e)
+            first = marks["first"] - t0 if "first" in marks else None
+            found = masks_from_records(result.records, h, w, CONF_THR, largest)
+            pr = found.get(0, found.get(sorted(found)[0])) if found else PartResult(None)
+            self._cost(part, time.monotonic() - t0, True, attempts)
+            return pr, attempts, first, None
+
+    @staticmethod
+    async def _timed(stream: Any, marks: dict[str, float]) -> Any:
+        """Relaye les événements en notant l'arrivée du premier octet (PERC-R1.8)."""
+        async for ev in stream:
+            kind = ev.get("type") if isinstance(ev, dict) else getattr(ev, "type", "")
+            if "first" not in marks and kind == "response.output_text.delta":
+                marks["first"] = time.monotonic()
+            yield ev
+
+    def _cost(self, part: str, seconds: float, ok: bool, attempts: int) -> None:
+        """Journalise la requête (PERC-R7, exploité par PERC-T7) ; n'interrompt jamais."""
+        if self.costs is None:
+            return
+        try:
+            self.costs.add(model=SAM_MODEL, kind="image", units=1, seconds=seconds,
+                           ok=ok, part=part, attempts=attempts)
+        except Exception:
+            pass
 
 
 def parse_raw(text: str, video: bool = True) -> Any:
