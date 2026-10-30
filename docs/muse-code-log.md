@@ -50,3 +50,7 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `pytest` 48 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`, `tests/test_state_machine.py`,
   `spec/01-core-loop/tasks.md`.
+- CORE-T12 (chronomètre dynamique) : tâche de tests uniquement, code déjà conforme.
+  Passé du 1er coup. Preuve : `test_single_bad_frame_resets_dynamic_timer_without_anomaly`,
+  `pytest` 49 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.

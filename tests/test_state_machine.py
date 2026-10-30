@@ -141,6 +141,22 @@ def test_measures_ignored_after_closure():
     assert r.s.state == State.CLOTURE and len(r.s.log) == n_events
 
 
+def test_single_bad_frame_resets_dynamic_timer_without_anomaly():
+    r = Runner()
+    r.feed("off", 4); r.feed("on", 4); r.s.on_user_done(); r.feed("on", 4)
+    assert r.s.state == State.ESSAI_DYNAMIQUE
+    r.feed("on", 2)
+    assert r.s.dynamic_t0 is not None
+    r.feed("off", 1)                     # une image fausse isolée : chrono à zéro, pas d'anomalie
+    assert r.s.dynamic_t0 is None and r.s.fail_streak == 1  # CORE-R6.4
+    assert r.s.state == State.ESSAI_DYNAMIQUE and not r.events("anomaly")
+    r.feed("on", 1)                      # ça repart
+    assert r.s.dynamic_t0 is not None and r.s.fail_streak == 0
+    r.feed("off", 4)                     # N fausses de suite : anomalie (CORE-R6.2)
+    assert len(r.events("anomaly")) == 1
+    assert r.s.state == State.OBSERVATION and r.s.step["id"] == "turn_backward"
+
+
 def test_anomaly_is_not_repeated_during_cooldown():
     r = Runner()
     r.feed("off", 4); r.feed("on", 4)     # étape turn_backward

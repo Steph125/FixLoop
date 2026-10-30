@@ -44,9 +44,10 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   Fait quand : une session avec `RaisingAgent` arrive à la clôture sur la scène synthétique.
   Preuve : `test_raising_agent_still_reaches_closure`, `test_out_of_order_measures_are_ignored`,
   `test_measures_ignored_after_closure`, `test_unknown_procedure_falls_back_to_first`.
-- [ ] **CORE-T12 — Chronomètre du test dynamique.** Test : une image fausse isolée remet le chronomètre à zéro sans
+- [x] **CORE-T12 — Chronomètre du test dynamique.** Test : une image fausse isolée remet le chronomètre à zéro sans
   anomalie ; `N` images fausses déclenchent l'anomalie.
   Fichiers : `tests/test_state_machine.py`. Exigences : `CORE-R6.2`, `R6.4`.
+  Preuve : `test_single_bad_frame_resets_dynamic_timer_without_anomaly`.
 - [ ] **CORE-T13 — Perte du cadrage.** `last_seen[pièce]` mis à jour à chaque mesure ; si une pièce requise n'a
   pas été vue depuis `framing_timeout_s`, dire le message, journaliser `framing_lost`, ne pas répéter avant 10 s.
   Fichiers : `state_machine.py`, tests. Exigences : `CORE-R10.1`, `R10.2`, `R9.1`.
