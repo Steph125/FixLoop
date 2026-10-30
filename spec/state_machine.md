@@ -14,7 +14,7 @@ observe en continu ; Muse Spark n'est appelé qu'au démarrage, en cas de doute 
 | `DEMARRAGE` | Lecture de l'historique du vélo, diagnostic initial sur 1–3 images, choix de la procédure | Muse Wonder, Muse Spark |
 | `OBSERVATION` | Mesures géométriques sur l'étape `k`, rien n'est dit à l'utilisateur | SAM 3.1 |
 | `VERIFICATION` | Calcul du verdict `V` pour l'étape `k` | — (règles) |
-| `ARBITRAGE` | Mesure ambiguë : Spark juge 2–3 images clés + les mesures | Muse Spark |
+| `ARBITRAGE` | Mesure ambiguë : Spark regarde 2–3 gros plans. Il peut confirmer un échec ou donner un conseil de cadrage, **jamais valider** (eval/day2). Au plus une fois toutes les 10 s | Muse Spark |
 | `ANOMALIE` | Erreur détectée : explication, consigne vocale, pièce surlignée en rouge | Muse Spark |
 | `ETAPE_VALIDEE` | Confirmation vocale, passage à `k+1` | — |
 | `ESSAI_DYNAMIQUE` | Après la dernière étape : pédalier tourné 3 s, la chaîne doit rester en place | SAM 3.1 |
@@ -47,7 +47,7 @@ stateDiagram-v2
     Verification --> EtapeValidee: V = 1
     Verification --> Arbitrage: V = ?
     Verification --> Anomalie: V = ε
-    Arbitrage --> EtapeValidee: verdict 1
+    Arbitrage --> Observation: doute ou « réussie » (Spark ne valide jamais)
     Arbitrage --> Anomalie: verdict ε
     Anomalie --> Observation: l'utilisateur corrige
     state DerniereEtape <<choice>>

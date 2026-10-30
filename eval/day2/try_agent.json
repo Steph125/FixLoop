@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "diagnose",
+    "s": 4.53,
+    "ok": true,
+    "raw": "{\"procedure\": \"chain_off_chainring\", \"raison\": \"Tu vois ta chaîne posée au-dessus du plateau, hors des dents.\"}"
+  },
+  {
+    "kind": "arbitrate",
+    "s": 8.28,
+    "ok": true,
+    "raw": "{\"verdict\": \"reussie\", \"confiance\": 0.82, \"raison\": \"Tu as bien placé ta chaîne derrière le disque noir.\", \"conseil\": \"\"}"
+  },
+  {
+    "kind": "arbitrate",
+    "s": 5.6,
+    "ok": true,
+    "raw": "{\"verdict\":\"ratee\",\"confiance\":0.92,\"raison\":\"Tu poses ta chaîne sur le bord noir, pas derrière.\"}"
+  },
+  {
+    "kind": "explain",
+    "s": 2.71,
+    "ok": true,
+    "raw": "{\"phrase\": \"Ta chaîne flotte au-dessus du plateau, pose-la sur les dents du haut.\", \"piece\": \"chainring\"}"
+  }
+]

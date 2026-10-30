@@ -2,7 +2,7 @@ from fixloop.models import Verdict
 
 
 class FakeAgent:
-    def __init__(self, arbitrate_to="1"):
+    def __init__(self, arbitrate_to="0"):
         self.calls, self.arbitrate_to = [], arbitrate_to
 
     def diagnose(self, images, procedures, history):
@@ -11,7 +11,8 @@ class FakeAgent:
 
     def arbitrate(self, step, keyframes, window):
         self.calls.append("arbitrate")
-        return Verdict(self.arbitrate_to, None, {}, "Arbitrage : chaîne hors du plateau." if self.arbitrate_to == "eps" else None)
+        msg = "Arbitrage : chaîne hors du plateau." if self.arbitrate_to == "eps" else "Montre-moi le plateau de face."
+        return Verdict(self.arbitrate_to, None, {}, msg)
 
     def explain(self, step, verdict, keyframes):
         self.calls.append("explain")

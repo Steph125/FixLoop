@@ -1,0 +1,26 @@
+[
+  {
+    "kind": "diagnose",
+    "s": 8.16,
+    "ok": true,
+    "raw": "{\"procedure\": \"chain_off_chainring\", \"raison\": \"Tu vois ta chaîne tombée sous ton plateau avant.\"}"
+  },
+  {
+    "kind": "arbitrate",
+    "s": 12.32,
+    "ok": true,
+    "raw": "{\"verdict\": \"impossible_a_dire\", \"raison\": \"Rapproche ton téléphone du plateau pour que je voie ta chaîne.\"}"
+  },
+  {
+    "kind": "arbitrate",
+    "s": 9.45,
+    "ok": true,
+    "raw": "{\"verdict\": \"reussie\", \"raison\": \"Tu as bien posé la chaîne sur le haut du plateau.\"}"
+  },
+  {
+    "kind": "explain",
+    "s": 4.73,
+    "ok": true,
+    "raw": "{\"phrase\": \"Ta chaîne est à côté, pose-la sur les dents en haut du plateau.\", \"piece\": \"chainring\"}"
+  }
+]

@@ -57,6 +57,10 @@
     "notes": {
       "type": "string",
       "description": "Comment lire les mesures de cette fiche, d'où viennent les seuils."
+    },
+    "visual_cues": {
+      "type": "string",
+      "description": "Repères visuels donnés à Muse Spark, propres au vélo (ex. disque de protection qui cache les dents)."
     }
   },
   "$defs": {

@@ -55,13 +55,24 @@ def test_anomaly_then_correction():
     assert r.s.step["id"] == "turn_backward"
 
 
-def test_uncertain_goes_to_arbitration():
-    r = Runner(FakeAgent(arbitrate_to="1"))
+def test_uncertain_asks_spark_once_then_geometry_decides():
+    r = Runner(FakeAgent(arbitrate_to="0"))
     r.feed("off", 4)
     r.s.on_user_done()
-    r.feed("hidden", 4)                   # main devant la chaîne
-    assert "arbitrate" in r.agent.calls
+    r.feed("hidden", 12)                  # 6 s main devant la chaîne : Spark appelé une seule fois
+    assert r.agent.calls.count("arbitrate") == 1
+    assert "Montre-moi le plateau de face." in r.out.said
+    assert r.s.step["id"] == "engage_top_teeth"   # Spark ne valide pas
+    r.feed("on", 4)                       # la mesure SAM confirme
     assert r.s.step["id"] == "turn_backward"
+
+
+def test_spark_confirmed_failure_triggers_explanation():
+    r = Runner(FakeAgent(arbitrate_to="eps"))
+    r.feed("off", 4)
+    r.s.on_user_done()
+    r.feed("hidden", 4)
+    assert r.events("anomaly") and "explain" in r.agent.calls
 
 
 def test_dynamic_failure_returns_to_last_step():

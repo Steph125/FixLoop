@@ -6,6 +6,7 @@
     "le pédalier tourne dans le vide"
   ],
   "notes": "Mesure : part du bord du plateau couverte par la chaîne. Chaîne EN PLACE : SAM fond la chaîne posée sur les dents dans le plateau, la chaîne ne touche le bord qu'aux deux points d'entrée et de sortie (~0,09). Chaîne TOMBÉE : elle repose le long du plateau et couvre une grande partie de son bord (~0,34). Seuils tirés de eval/day1 (vidéo velo2, 29 oct.) : en place <= 0,18 ; tombée >= 0,26 ; entre les deux = incertain.",
+  "visual_cues": "Repères visuels pour ce vélo : le plateau est couvert d'un disque noir de protection qui cache les dents. Chaîne TOMBÉE = chaîne bien visible, posée sur le bord du disque noir ou pendante sous le plateau. Chaîne EN PLACE = la chaîne passe derrière le disque : on ne la voit qu'entrer et sortir du plateau.",
   "parts": {
     "chain": "bicycle chain",
     "chainring": "chainring",

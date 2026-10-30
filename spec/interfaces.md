@@ -65,14 +65,11 @@ Outils exposés à Muse Spark (tool calling) : `get_measures`, `get_keyframes`, 
 | serveur → client | `say` | texte à lire avec la synthèse vocale du navigateur |
 | serveur → client | `state` | état courant, étape `k / K`, dernières mesures |
 
-## Question ouverte : temps réel ou par extraits
+## Décision : direct en mode image, replay en mode vidéo (30 oct.)
 
-SAM 3.1 sur l'API fonctionne par requête, un concept par requête. Deux options, à trancher avec la latence
-mesurée par la sonde :
+Mesuré dans `eval/day1/findings.md` : verdict par image en 1,9 s (médiane), 4,4 s au 90e centile, 10 états corrects sur 10.
 
-1. **Images une à une** : 1 requête par pièce et par image, à 1–2 images/s. Simple, mais 3 à 6 requêtes par seconde.
-2. **Extraits courts** : le client envoie des extraits de 3–5 s, segmentés en vidéo (suivi d'objets inclus).
-   Moins de requêtes, mais 3–5 s de retard sur le verdict. Facturation minimale de 50 images par requête.
-
-Le **mode replay** (vidéos pré-enregistrées pour les juges) segmente chaque vidéo une seule fois et met le résultat en cache.
-Vérifier les tarifs exacts sur la page Pricing avant de choisir.
+1. **Direct** : 1 image par seconde, 1 requête `sam-3.1` par pièce et par image, requêtes qui se chevauchent ;
+   anti-rebond de 3 images en direct (4 en replay).
+2. **Replay** (juges) : vidéo segmentée une seule fois en morceaux de 10 s, résultat mis en cache.
+3. Coût : vérifier sur la page Usage après une session de démo avant de multiplier les essais en direct.

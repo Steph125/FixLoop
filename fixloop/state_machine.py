@@ -42,10 +42,13 @@ class Output(Protocol):  # téléphone
 
 class Session:
     def __init__(self, procedures: dict[str, dict], agent: Agent, memory: Memory, out: Output,
-                 bike_id: str, anomaly_cooldown_s: float = 8.0, keyframes_kept: int = 3):
+                 bike_id: str, anomaly_cooldown_s: float = 8.0, keyframes_kept: int = 3,
+                 arbitration_cooldown_s: float = 10.0):
         self.procedures, self.agent, self.memory, self.out = procedures, agent, memory, out
         self.bike_id = bike_id
         self.cooldown = anomaly_cooldown_s
+        self.arbitration_cooldown = arbitration_cooldown_s
+        self.next_arbitration_t = -1.0
         self.state = State.DEMARRAGE
         self.procedure: dict | None = None
         self.k = 0
@@ -102,10 +105,15 @@ class Session:
         if v.value == "eps" and self._suppressed(v):
             return
         if v.value == "?":
+            if self.t < self.next_arbitration_t:   # Spark au plus une fois toutes les 10 s
+                return
             self.state = State.ARBITRAGE
             v = self.agent.arbitrate(self.step, list(self.keyframes), self.window[-DEFAULT_DEBOUNCE:])
             self.model_calls["spark"] += 1
-            self._event("arbitrate", verdict=v.value)
+            self.next_arbitration_t = self.t + self.arbitration_cooldown
+            self._event("arbitrate", verdict=v.value, evidence=v.evidence)
+            if v.value == "0":
+                self.out.say(v.message or "Je ne vois pas bien. Montre-moi le plateau de face, mains hors du champ.")
         if v.value == "1":
             self._validate(v)
         elif v.value == "eps":

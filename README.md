@@ -15,6 +15,7 @@ Everything in this repository was written during the hackathon. The git history 
 | Oct 28 | Environment check, SAM 3.1 API probe (contact ratio chain / chainring) |
 | Oct 28 | Spec (state machine, procedure schema, interfaces, acceptance), first procedure, verifier and state machine with tests on a synthetic scene |
 | Oct 29 | First real SAM 3.1 measurements on the author's bike (eval/day1): chunked, resumable probe; thresholds calibrated, 0 misclassified frames |
+| Oct 30 | Live mode validated: image-by-image SAM 3.1 verdict in 1.9 s (median), 10/10 correct states; Muse Spark agent (diagnosis, arbitration, explanation) |
 
 ## Meta models used
 
