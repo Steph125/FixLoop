@@ -6,9 +6,10 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   chargement des fiches au démarrage, lecture de `.env`. Ajouter `fastapi`, `uvicorn[standard]`, `websockets` à
   `requirements.txt`.
   Exigences : `SRV-R1.1` à `R1.4`. Fait quand : `curl http://127.0.0.1:8000/api/health` rend `ok`.
-- [ ] **SRV-T2 — Journal des coûts.** `fixloop/costs.py` (`PRICES`, `CostLog`, persistance par jour, estimation
+- [x] **SRV-T2 — Journal des coûts.** `fixloop/costs.py` (`PRICES`, `CostLog`, persistance par jour, estimation
   des jetons manquants), `tests/test_costs.py`.
   Exigences : `SRV-R8.1`, `R8.5`. Bloque : `PERC-T7`, `AGT-T9`, `MEM-T4`.
+  Preuve : `tests/test_costs.py` (5 tests : 360 images → 0,90 $, vidéo min 50, persistance).
 - [ ] **SRV-T3 — Protocole.** `server/protocol.py` : validation des messages JSON, en-tête binaire, taille max.
   Exigences : `SRV-R3.1` à `R3.4`.
 - [ ] **SRV-T4 — Ouverture et contrôle d'accès.** `hello` / `hello_ack`, code d'accès, 2 sessions max, blocage

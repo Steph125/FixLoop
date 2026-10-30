@@ -75,3 +75,9 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve : `test_anomaly_events_carry_source`, `test_export_jsonl_has_no_binary_or_key`,
   `pytest` 54 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/state_machine.py`, `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.
+- SRV-T2 (journal des coûts) : `PRICES` (table tech §3), `CostLog` (`add` → coût estimé, `session_total`,
+  `day_total`, `by_model`, JSONL par jour relu au démarrage), vidéo facturée min 50, modèle inconnu → 0
+  sans lever, `estimated` marqué pour les jetons. Appel compatible avec le crochet posé en PERC-T4.
+  Difficile : 1er essai raté sur mes égalités float (0.36*2.5) — `pytest.approx` partout.
+  Preuve : `tests/test_costs.py` (5 tests), `pytest` 59 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/costs.py`, `tests/test_costs.py`, `spec/05-session-server/tasks.md`.
