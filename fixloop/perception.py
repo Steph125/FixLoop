@@ -306,14 +306,35 @@ def masks_from_records(records: Any, h: int, w: int, conf_thr: float = CONF_THR,
             m, conf = max(objs, key=lambda mc: int(mc[0].sum()))
             ys, xs = np.nonzero(m)
             box = (int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1)
-            out[fi] = PartResult(mask=m, confidence=conf, box=box, n_objects=1)
+            out[fi] = PartResult(mask=m, confidence=conf, box=box,
+                                 svg_path=mask_to_svg_path(m), n_objects=1)
         else:
             m = np.logical_or.reduce([o[0] for o in objs])
             ys, xs = np.nonzero(m)
             box = (int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1)
             out[fi] = PartResult(mask=m, confidence=max(o[1] for o in objs),
-                                 box=box, n_objects=len(objs))
+                                 box=box, svg_path=mask_to_svg_path(m), n_objects=len(objs))
     return out
+
+
+def mask_to_svg_path(mask: np.ndarray, tol: float = 1.5) -> str:
+    """Contour d'un masque en chemin SVG (`"M x,y L x,y … Z"` par contour, entiers).
+
+    Contours extérieurs simplifiés (`approxPolyDP`, tolérance 1,5 px), petits
+    contours de moins de 40 px² ignorés : moins de 4 ko par pièce et par image
+    (PERC-R6.1, R6.2). Les coordonnées sont celles du tableau donné : plein
+    cadre si le masque est plein cadre.
+    """
+    cnts, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    out = []
+    for cnt in cnts:
+        if cv2.contourArea(cnt) < 40:
+            continue
+        pts = cv2.approxPolyDP(cnt, tol, True).reshape(-1, 2)
+        if len(pts) < 3:
+            continue
+        out.append("M " + " L ".join(f"{int(x)},{int(y)}" for x, y in pts) + " Z")
+    return " ".join(out)
 
 
 FRAME_MARK = re.compile(r"<(\d+)f>")

@@ -19,6 +19,7 @@ from fixloop import perception
 from fixloop.perception import (
     CONF_THR,
     lines_for,
+    mask_to_svg_path,
     masks_from_records,
     parse_raw,
     plan_chunks,
@@ -125,6 +126,49 @@ def test_lines_for():
 
 
 RAW_CHUNK = Path("probe_out2/raw_chain_00.txt")
+
+
+def test_svg_path_is_small_and_offset():
+    mask = np.zeros((30, 40), dtype=bool)
+    mask[2:12, 5:15] = True  # 100 px² : au-dessus du seuil de 40 px²
+    path = mask_to_svg_path(mask)
+    assert path.startswith("M ") and path.endswith(" Z")  # PERC-R6.1
+    assert len(path.encode()) < 4096  # PERC-R6.2
+    xs = [int(token.split(",")[0]) for token in path[2:-2].split(" L ")]
+    ys = [int(token.split(",")[1]) for token in path[2:-2].split(" L ")]
+    assert (min(xs), min(ys), max(xs) + 1, max(ys) + 1) == (5, 2, 15, 12)  # PERC-R6.3 : plein cadre
+    assert mask_to_svg_path(np.zeros((30, 40), dtype=bool)) == ""  # vide : chemin vide
+    dot = np.zeros((30, 40), dtype=bool)
+    dot[4, 4] = True
+    assert mask_to_svg_path(dot) == ""  # moins de 40 px² : ignoré
+
+
+def test_part_result_carries_svg_and_box():
+    out = masks_from_records([make_rec(np.ones((10, 10), dtype=bool), 5, 2, 0.9)], 30, 40, 0.4, False)
+    assert out[0].svg_path.startswith("M ") and len(out[0].svg_path.encode()) < 4096
+    assert out[0].box == (5, 2, 15, 12)
+
+
+@pytest.mark.skipif(not RAW_CHUNK.exists(), reason="probe_out2 absent")
+def test_recorded_masks_svg_median_under_4k():
+    import statistics
+
+    from meta_sam_parser import decode_mask_to_raster, decode_mask_to_svg_path
+
+    recs = []
+    for name in ("probe_out2/raw_chain_00.txt", "probe_out2/raw_chainring_00.txt"):
+        result = parse_raw(Path(name).read_text(encoding="utf-8"), video=True)
+        recs += [r for r in result.records if r.kind == "mask"][:10]
+    assert len(recs) == 20
+    sizes, raw_sizes = [], []
+    for rec in recs:
+        mh, mw = rec.mask.height, rec.mask.width
+        raster = np.frombuffer(decode_mask_to_raster(rec.mask), dtype=np.uint8)
+        raster = raster.reshape(mh, mw).astype(bool)
+        sizes.append(len(mask_to_svg_path(raster).encode()))
+        raw_sizes.append(len(decode_mask_to_svg_path(rec.mask).encode()))
+    assert max(sizes) < 4096  # PERC-R6.2 : médiane 303 o le 30 oct., contre 9344 o (voir PERC-D6)
+    assert statistics.median(sizes) < statistics.median(raw_sizes)
 
 
 @pytest.mark.skipif(not RAW_CHUNK.exists(), reason="probe_out2 absent")

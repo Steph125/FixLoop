@@ -27,9 +27,10 @@
 - [ ] **PERC-T5 — Mode vidéo dans le module.** `segment_video` (préparation, morceaux, Files API, cache par
   empreinte, confirmation du nombre d'images facturées). `probe/sam_api_probe.py` reste inchangé (preuve datée).
   Exigences : `PERC-R3.1` à `R3.6`, `R4.2`. Fait quand : test du cache (2e passage sans requête) passe.
-- [ ] **PERC-T6 — Contours SVG et boîtes.** `mask_to_svg_path` ; comparer avec `decode_mask_to_svg_path` sur
+- [x] **PERC-T6 — Contours SVG et boîtes.** `mask_to_svg_path` ; comparer avec `decode_mask_to_svg_path` sur
   20 masques enregistrés (taille, rendu) ; noter le choix dans `design.md` section 9.
   Exigences : `PERC-R6.1` à `R6.3`. Fait quand : taille médiane < 4 ko notée.
+  Preuve : `test_recorded_masks_svg_median_under_4k` (médiane 303 o, max 410 o) ; décision `PERC-D6`.
 - [ ] **PERC-T7 — Journal des coûts.** Appeler `CostLog.add(model="sam-3.1", mode, part, images, seconds,
   attempts, ok)` à chaque requête ; facturation vidéo max(images, 50).
   Exigences : `PERC-R7.1`, `R7.2`. Dépend de : `SRV-T2` (`fixloop/costs.py`).

@@ -21,3 +21,12 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `parse_responses_stream`, refus SAM exclu des relances (sous-classe de `ResponsesStreamError`).
   Fichiers : `fixloop/perception.py`, `tests/fakes.py`, `tests/test_perception_live.py`,
   `spec/02-perception/tasks.md`.
+- PERC-T6 (contours SVG) : `mask_to_svg_path` (OpenCV simplifié, tol 1,5, seuil 40 px²),
+  `svg_path` rempli dans `masks_from_records`, comparaison sur 20 masques enregistrés :
+  303 o médians contre 9 344 o pour `decode_mask_to_svg_path` (rejeté, > 4 ko), décision
+  `PERC-D6` dans `spec/02-perception/design.md`.
+  Difficile : 1er essai raté, mon rectangle de test (12 px²) sous le seuil de 40 px² de la
+  spec — test adapté (100 px²), spec inchangée. Preuve : `test_recorded_masks_svg_median_under_4k`,
+  `pytest` 41 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/perception.py`, `tests/test_perception.py`, `spec/02-perception/design.md`,
+  `spec/02-perception/tasks.md`.

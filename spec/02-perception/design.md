@@ -114,9 +114,9 @@ parse_raw(raw_<pièce>.txt) → masks_from_records → FrameMasks par image
 ## 5. Contours SVG
 
 `mask_to_svg_path(mask)` : `cv2.findContours(RETR_EXTERNAL, CHAIN_APPROX_SIMPLE)`, `approxPolyDP(tol=1,5)`,
-contours de moins de 40 px² ignorés, chaîne `"M x,y L x,y … Z"` par contour, coordonnées entières. Alternative :
-`decode_mask_to_svg_path` de `meta-sam-parser` décalé de `bounds` ; retenue seulement si plus légère à qualité
-égale (`PERC-T6` mesure les deux).
+contours de moins de 40 px² ignorés, chaîne `"M x,y L x,y … Z"` par contour, coordonnées entières. Alternative
+`decode_mask_to_svg_path` de `meta-sam-parser` écartée par la mesure (voir `PERC-D6`, section 9) : 9 344 octets
+en médiane, au-dessus de la limite de 4 ko (`PERC-R6.2`).
 
 ## 6. Erreurs
 
@@ -159,3 +159,7 @@ contours de moins de 40 px² ignorés, chaîne `"M x,y L x,y … Z"` par contour
 - **PERC-D5 (29 oct., précisé le 30)** — Le dérailleur n'est pas utilisé par la fiche : son prompt attrape la
   manivelle et le plateau. Il reste dans `parts` (segmenté en replay pour la surimpression) mais n'est pas
   demandé en direct (`PERC-R1.9`) : `live_parts(procedure)` = pièces citées par une règle.
+- **PERC-D6 (30 oct.)** — Contours SVG par `mask_to_svg_path` (OpenCV simplifié), pas par
+  `decode_mask_to_svg_path`. Mesuré sur 20 masques enregistrés (`probe_out2/raw_chain_00.txt`,
+  `raw_chainring_00.txt`) : 303 octets en médiane (max 410) contre 9 344 (max 12 316) pour le décodeur
+  brut, qui dépasse la limite de 4 ko (`PERC-R6.2`). Test : `test_recorded_masks_svg_median_under_4k`.
