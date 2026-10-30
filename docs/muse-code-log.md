@@ -88,3 +88,9 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   SRV-T1/T5 le rempliront). Preuve : 4 tests, `pytest` 63 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `server/protocol.py`, `server/__init__.py`, `tests/test_protocol.py`,
   `spec/05-session-server/tasks.md`.
+- VOX-T2 (détecteur de commandes) : `normalize` (minuscules, NFD, ponctuation en espaces),
+  `CommandDetector` (mot entier, priorité done > help > repeat, anti-répétition 2 s, silence
+  synthèse + 500 ms, `history` pour VOX-T4), méthode nommée `speaking` comme le design.
+  Passé du 1er coup. Preuve : `tests/test_voice.py` (8 tests), `pytest` 71 passed + 9 skipped,
+  `check_spec.py` OK. Fichiers : `fixloop/voice.py`, `tests/test_voice.py`,
+  `spec/04-memory-voice/tasks.md`.

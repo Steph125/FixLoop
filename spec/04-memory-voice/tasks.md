@@ -28,8 +28,9 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   fichier WAV de test (« c'est fait », enregistré par l'auteur), afficher les événements reçus. Noter dans
   `design.md` section 2.1 : configuration, encodage audio, noms des événements, délai mesuré.
   Exigences : `VOX-R1.2`, `R1.4`. Fait quand : transcription finale reçue et délai noté dans `eval/day3/`.
-- [ ] **VOX-T2 — Détecteur de commandes.** `normalize`, `CommandDetector` et `tests/test_voice.py`.
+- [x] **VOX-T2 — Détecteur de commandes.** `normalize`, `CommandDetector` et `tests/test_voice.py`.
   Exigences : `VOX-R2.1` à `R2.4`. Aucun réseau.
+  Preuve : `tests/test_voice.py` (8 tests : formes, mot entier, priorité, anti-répétition, silence, écho).
 - [ ] **VOX-T3 — Pont Transcribe.** `VoiceBridge` (connexion, envoi PCM16, réception, 3 reconnexions, arrêt) ;
   test avec faux serveur WebSocket.
   Exigences : `VOX-R1.1`, `R1.3`, `R3.2`, `R4.1`. Dépend de : T1.
