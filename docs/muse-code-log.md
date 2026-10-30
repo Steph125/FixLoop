@@ -60,3 +60,11 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve : `test_framing_lost_after_timeout`, `test_no_framing_when_parts_visible`,
   `pytest` 51 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/state_machine.py`, `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.
+- CORE-T14 (instantané et Output.state) : `snapshot()` au format 6.5, `verdict` suivi, `last_contact`
+  gardé après vidage de fenêtre, `_maybe_emit_state` sur changement d'état/étape/verdict, `state()`
+  ajouté au protocole `Output` et à `FakeOutput` (demandé par la tâche).
+  Difficile : 1er essai raté, contact vide après validation — `last_contact` ajouté, justifié par
+  R11.1 (« dernière mesure »). Preuve : `test_snapshot_and_state_notifications`,
+  `pytest` 52 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`, `tests/test_state_machine.py`,
+  `spec/01-core-loop/tasks.md`.

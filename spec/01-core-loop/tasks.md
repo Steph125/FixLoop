@@ -52,9 +52,10 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   pas été vue depuis `framing_timeout_s`, dire le message, journaliser `framing_lost`, ne pas répéter avant 10 s.
   Fichiers : `state_machine.py`, tests. Exigences : `CORE-R10.1`, `R10.2`, `R9.1`.
   Preuve : `test_framing_lost_after_timeout`, `test_no_framing_when_parts_visible`.
-- [ ] **CORE-T14 — Instantané et `Output.state`.** `Session.snapshot()` au format `design.md` 6.5 ; appel de
+- [x] **CORE-T14 — Instantané et `Output.state`.** `Session.snapshot()` au format `design.md` 6.5 ; appel de
   `out.state(...)` à chaque changement d'état, d'étape ou de verdict (pas à chaque image si rien ne change).
   Mettre à jour `FakeOutput`. Fichiers : `state_machine.py`, `tests/fakes.py`. Exigences : `CORE-R11.1`, `R11.2`.
+  Preuve : `test_snapshot_and_state_notifications`.
 - [ ] **CORE-T15 — Commandes « répète » et « aide-moi ».** `Session.on_command("repeat" | "help")` ; ajouter
   `Agent.help(step, keyframes) -> str` au protocole et à `FakeAgent` ; journaliser `command`.
   Fichiers : `state_machine.py`, `tests/fakes.py`. Exigences : `CORE-R12.1`, `R12.2`, `R12.3`.

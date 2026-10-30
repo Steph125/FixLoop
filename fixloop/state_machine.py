@@ -38,6 +38,7 @@ class Memory(Protocol):  # Muse Wonder
 class Output(Protocol):  # téléphone
     def say(self, text: str) -> None: ...
     def highlight(self, parts: list[str], color: str) -> None: ...
+    def state(self, snapshot: dict) -> None: ...  # CORE-R11 : instantané à chaque changement
 
 
 DEFAULT_ADVICE = "Je ne vois pas bien. Montre-moi le plateau de face, mains hors du champ."
@@ -65,6 +66,9 @@ class Session:
         self.k = 0
         self.window: list[Measures] = []
         self.user_done = False
+        self.verdict = "0"
+        self.last_contact: dict[tuple[str, str], float] = {}
+        self._last_emitted: tuple | None = None
         self.keyframes: deque = deque(maxlen=keyframes_kept)
         self.suppressed: dict[str, float] = {}       # message d'anomalie -> réactivé à t
         self.dynamic_t0: float | None = None
@@ -87,6 +91,7 @@ class Session:
         self.procedure = self.procedures[proc_id]
         self._event("diagnose", procedure=proc_id)
         self._enter_step(0)
+        self._maybe_emit_state()
 
     def on_user_done(self) -> None:
         if self.state in (State.OBSERVATION, State.ESSAI_DYNAMIQUE):
@@ -104,6 +109,7 @@ class Session:
         for part, seen in m.detected.items():
             if seen:
                 self.last_seen[part] = m.t
+        self.last_contact = dict(m.contact)
         if self.state == State.OBSERVATION:
             self.window.append(m)
             if self._check_step() is not None:  # verdict discret : on peut signaler le cadrage
@@ -111,6 +117,7 @@ class Session:
         elif self.state == State.ESSAI_DYNAMIQUE:
             self.window.append(m)
             self._check_dynamic()
+        self._maybe_emit_state()
 
     # ------------------------------------------------------------------ logique
     @property
@@ -119,14 +126,38 @@ class Session:
 
     def _enter_step(self, k: int) -> None:
         self.k, self.window, self.user_done = k, [], False
+        self.verdict = "0"
         self.state = State.OBSERVATION
         self.out.say(self.step["instruction"])
         self.out.highlight(self.step.get("highlight", []), "blue")
         self._event("step", step=self.step["id"])
 
+    def snapshot(self) -> dict:
+        """Instantané observable : état, fiche, étape k/K, verdict, contacts, compteurs (CORE-R11.1)."""
+        contact = {f"{a}/{b}": (None if val != val else round(val, 3))
+                   for (a, b), val in self.last_contact.items()}
+        if self.procedure is None:
+            return {"state": self.state.value, "procedure": None, "step": None,
+                    "verdict": self.verdict, "contact": contact, "user_done": self.user_done,
+                    "model_calls": dict(self.model_calls), "t": round(self.t, 2)}
+        return {"state": self.state.value,
+                "procedure": {"id": self.procedure["id"], "title": self.procedure["title"]},
+                "step": {"index": self.k + 1, "count": len(self.procedure["steps"]),
+                         "id": self.step["id"], "instruction": self.step["instruction"]},
+                "verdict": self.verdict, "contact": contact, "user_done": self.user_done,
+                "model_calls": dict(self.model_calls), "t": round(self.t, 2)}
+
+    def _maybe_emit_state(self) -> None:
+        """Notifie l'instantané si l'état, l'étape ou le verdict a changé (CORE-R11.2)."""
+        key = (self.state, self.k, self.verdict)
+        if key != self._last_emitted:
+            self._last_emitted = key
+            self.out.state(self.snapshot())
+
     def _check_step(self) -> Verdict | None:
         """Rend le verdict s'il est discret (`0`), sinon None (quelque chose a été dit)."""
         v = verify(self.step, self.window, self.user_done, self.debounce_frames)
+        self.verdict = v.value
         if v.value == "eps" and self._suppressed(v):
             return None
         if v.value == "?":
@@ -140,6 +171,7 @@ class Session:
                 v = None
             self.model_calls["spark"] += 1
             v = self._safe_arbitration(v)
+            self.verdict = v.value
             self.next_arbitration_t = self.t + self.arbitration_cooldown
             self._event("arbitrate", verdict=v.value, evidence=v.evidence)
             if v.value == "0":

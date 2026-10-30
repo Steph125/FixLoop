@@ -175,6 +175,24 @@ def test_no_framing_when_parts_visible():
     assert not [e for e in r.s.log if e["event"] == "framing_lost"]
 
 
+def test_snapshot_and_state_notifications():
+    r = Runner()
+    assert len(r.out.states) == 1  # CORE-R11.2 : émis au démarrage
+    first = r.out.states[0]
+    assert first["state"] == "OBSERVATION" and first["step"]["id"] == "frame_view"
+    assert (first["step"]["index"], first["step"]["count"]) == (1, 3)
+    r.feed("off", 2)                  # rien ne change : pas de nouvelle notification
+    assert len(r.out.states) == 1
+    r.feed("off", 2)                  # étape suivante : notification
+    assert r.out.states[-1]["step"]["id"] == "engage_top_teeth"
+    snap = r.s.snapshot()             # CORE-R11.1 : contenu de l'instantané
+    assert set(snap) == {"state", "procedure", "step", "verdict", "contact",
+                         "user_done", "model_calls", "t"}
+    assert snap["procedure"] == {"id": "chain_off_chainring", "title": "Chaîne tombée du plateau"}
+    assert snap["verdict"] in ("0", "1", "?", "eps")
+    assert "chain/chainring" in snap["contact"]
+
+
 def test_anomaly_is_not_repeated_during_cooldown():
     r = Runner()
     r.feed("off", 4); r.feed("on", 4)     # étape turn_backward

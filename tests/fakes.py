@@ -120,10 +120,13 @@ class FakeSamClient:
 
 class FakeOutput:
     def __init__(self):
-        self.said, self.highlights = [], []
+        self.said, self.highlights, self.states = [], [], []
 
     def say(self, text):
         self.said.append(text)
 
     def highlight(self, parts, color):
         self.highlights.append((tuple(parts), color))
+
+    def state(self, snapshot):
+        self.states.append(snapshot)
