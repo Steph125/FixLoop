@@ -11,11 +11,12 @@
 
 ## À faire
 
-- [ ] **PERC-T3 — Extraire `fixloop/perception.py`, partie commune.** Constantes, `RETRYABLE`, placement plein
+- [x] **PERC-T3 — Extraire `fixloop/perception.py`, partie commune.** Constantes, `RETRYABLE`, placement plein
   cadre, `masks_from_records` (filtre de confiance, `largest` / union, boîte), `parse_raw`, `lines_for` (repris de
   `scripts/try_agent.py`), `shift_frames`, `plan_chunks`.
   Exigences : `PERC-R1.3` à `R1.6`, `R3.2`, `R3.4`, `R5.1`, `R5.2`, `R8.2`.
   Fait quand : tests unitaires de placement, sélection, filtre et découpage passent.
+  Preuve : `tests/test_perception.py` (12 tests, `pytest` 37 passed le 30 oct.).
 - [ ] **PERC-T4 — Mode image dans le module.** `LivePerception.segment_image`, `try_submit` (au plus 3 en cours),
   relances (5 s × tentative), pas de relance hors réseau, résultat `error`, chronométrage, `live_parts`
   (seulement les pièces citées par une règle).
