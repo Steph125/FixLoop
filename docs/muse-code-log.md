@@ -3,6 +3,19 @@
 Tenu par Muse Code à chaque tâche terminée (date, prompt, fichiers, corrections à la main).
 Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la raison.
 
+## 2026-10-30 (soir, sans interaction)
+
+- VOX-T6 (négation et formes corrigées) : listes `COMMANDS` alignées sur `design.md` 2.2
+  (« fini »/« quoi » seuls retirés, « c est fini »/« c est termine »/« repeter » ajoutés),
+  règle VOX-R2.6 (négation dans les 3 mots avant ou « pas » après → aucune commande).
+  Difficile : `muse.edit_file` refuse les blocs multilignes sur fichiers CRLF — fichier
+  réécrit puis reconverti en CRLF ; 1 test existant adapté (`fini` seul, exigé par la spec).
+  Choix prudent : `git add` nominatif (pas `-A`) pour ne pas embarquer `latency_out/`,
+  `prompt_serie2.md` (fichiers de l'utilisateur).
+  Preuve : `test_negated_forms_trigger_nothing`, `test_corrected_forms_detected`,
+  `pytest` 79 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
+  Fichiers : `fixloop/voice.py`, `tests/test_voice.py`, `spec/04-memory-voice/tasks.md`.
+
 ## 2026-10-30
 
 - PERC-T3 (partie commune perception) : aucun code à écrire, `fixloop/perception.py`

@@ -34,9 +34,10 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
 - [x] **VOX-T2 — Détecteur de commandes.** `normalize`, `CommandDetector` et `tests/test_voice.py`.
   Exigences : `VOX-R2.1` à `R2.4`. Aucun réseau.
   Preuve : `tests/test_voice.py` (8 tests : formes, mot entier, priorité, anti-répétition, silence, écho).
-- [ ] **VOX-T6 — Négation et formes corrigées.** Nouvelles listes de `design.md` 2.2, règle de négation ; tests :
+- [x] **VOX-T6 — Négation et formes corrigées.** Nouvelles listes de `design.md` 2.2, règle de négation ; tests :
   « je n'ai pas fini », « c'est pas fait », « ce n'est pas bon », « c'est quoi ce bruit » → aucune commande ;
   « c'est fini », « tu peux répéter » → `done`, `repeat`. Exigences : `VOX-R2.1`, `R2.6`. Trouvé à la relecture.
+  Preuve : `tests/test_voice.py` (`test_negated_forms_trigger_nothing`, `test_corrected_forms_detected`), `pytest` 79 passed + 9 skipped, `check_spec.py` OK.
 - [ ] **VOX-T3 — Pont Transcribe.** `VoiceBridge` (connexion, envoi PCM16, réception, 3 reconnexions, arrêt) ;
   test avec faux serveur WebSocket.
   Exigences : `VOX-R1.1`, `R1.3`, `R3.2`, `R4.1`. Dépend de : T1.

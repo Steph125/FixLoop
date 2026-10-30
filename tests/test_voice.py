@@ -1,4 +1,4 @@
-"""Détecteur de commandes vocales (spec/04-memory-voice, VOX-T2). Aucun réseau."""
+"""Détecteur de commandes vocales (spec/04-memory-voice, VOX-T2, VOX-T6). Aucun réseau."""
 
 from fixloop.voice import COMMANDS, CommandDetector, normalize
 
@@ -30,7 +30,7 @@ def test_whole_word_only():
     det = CommandDetector()
     assert det.feed("tu peux m'aider", 0.0) is None  # « aide » n'est pas « aider »
     assert det.feed("c'est infini", 1.0) is None  # « fini » n'est pas « infini »
-    assert det.feed("pourquoi faire", 2.0) is None  # « quoi » n'est pas « pourquoi »
+    assert det.feed("pourquoi faire", 2.0) is None  # « quoi » seul retiré (VOX-T6)
     assert det.feed("je prédis la suite", 3.0) is None
 
 
@@ -41,9 +41,9 @@ def test_priority_done_first():
 
 def test_same_command_not_repeated_within_2s():
     det = CommandDetector()
-    assert det.feed("fini", 0.0) == "done"
-    assert det.feed("fini", 1.0) is None  # VOX-R2.3
-    assert det.feed("fini", 2.1) == "done"
+    assert det.feed("c'est fini", 0.0) == "done"
+    assert det.feed("c'est fini", 1.0) is None  # VOX-R2.3
+    assert det.feed("c'est fini", 2.1) == "done"
 
 
 def test_muted_while_speaking_and_tail():
@@ -58,3 +58,27 @@ def test_muted_while_speaking_and_tail():
 def test_echo_phrase_ignored():
     det = CommandDetector()
     assert det.feed("Tu as dit que c'était fait, mais corrige.", 0.0) is None
+
+
+def test_negated_forms_trigger_nothing():
+    det = CommandDetector()
+    for text in [  # VOX-R2.6
+        "je n'ai pas fini",
+        "c'est pas fait",
+        "ce n'est pas bon",
+        "ne répète pas",
+        "redis pas ça",
+        "ne m'aide pas",
+    ]:
+        assert det.feed(text, 0.0) is None, text
+
+
+def test_bare_fini_and_quoi_trigger_nothing():
+    det = CommandDetector()
+    assert det.feed("pas fini", 0.0) is None  # VOX-T6 : « fini » seul retiré
+    assert det.feed("c'est quoi ce bruit", 1.0) is None  # « quoi » seul retiré
+
+
+def test_corrected_forms_detected():
+    assert CommandDetector().feed("c'est fini", 0.0) == "done"  # VOX-T6
+    assert CommandDetector().feed("tu peux répéter", 0.0) == "repeat"  # contient « repeter »
