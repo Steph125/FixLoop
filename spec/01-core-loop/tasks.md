@@ -37,11 +37,13 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   une règle `contact_ratio_max` → jamais `1`.
   Fichiers : `tests/test_geometry_verifier.py`. Exigences : `CORE-R3.4`, `R3.7`.
   Preuve : `test_anomaly_wins_when_both_true`, `test_nan_never_validates_contact_ratio_max`.
-- [ ] **CORE-T11 — Robustesse face à l'agent.** Envelopper `diagnose`, `arbitrate`, `explain` dans la session :
+- [x] **CORE-T11 — Robustesse face à l'agent.** Envelopper `diagnose`, `arbitrate`, `explain` dans la session :
   exception ou valeur invalide → repli de `design.md` section 8. Ignorer les mesures dont `t` est inférieur à la
   dernière. Ignorer `on_measures` en `CLOTURE`.
   Fichiers : `state_machine.py`, `tests/fakes.py` (`RaisingAgent`). Exigences : `CORE-R5.4`, `R7.4`.
   Fait quand : une session avec `RaisingAgent` arrive à la clôture sur la scène synthétique.
+  Preuve : `test_raising_agent_still_reaches_closure`, `test_out_of_order_measures_are_ignored`,
+  `test_measures_ignored_after_closure`, `test_unknown_procedure_falls_back_to_first`.
 - [ ] **CORE-T12 — Chronomètre du test dynamique.** Test : une image fausse isolée remet le chronomètre à zéro sans
   anomalie ; `N` images fausses déclenchent l'anomalie.
   Fichiers : `tests/test_state_machine.py`. Exigences : `CORE-R6.2`, `R6.4`.

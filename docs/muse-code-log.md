@@ -41,3 +41,12 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Passés du 1er coup. Preuve : `test_anomaly_wins_when_both_true`,
   `test_nan_never_validates_contact_ratio_max`, `pytest` 44 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `tests/test_geometry_verifier.py`, `spec/01-core-loop/tasks.md`.
+- CORE-T11 (robustesse agent) : replis `diagnose` (1re fiche), `arbitrate` (`_safe_arbitration` : seul
+  `eps`/`0` passe, jamais `1`), `explain` (message de la règle) ; mesures hors ordre ignorées ;
+  `on_measures` ignoré en `CLOTURE`. `RaisingAgent` + `UnknownAgent` dans `tests/fakes.py`.
+  Difficile : 2 essais ratés sur mes propres assertions (appartenance à une liste au lieu de
+  sous-chaîne, point final absent de la phrase de repli) — code bon dès le 1er essai, vérifié par
+  une sonde d'exécution. Preuve : `test_raising_agent_still_reaches_closure` et 3 autres,
+  `pytest` 48 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`, `tests/test_state_machine.py`,
+  `spec/01-core-loop/tasks.md`.

@@ -40,6 +40,10 @@ class Output(Protocol):  # téléphone
     def highlight(self, parts: list[str], color: str) -> None: ...
 
 
+DEFAULT_ADVICE = "Je ne vois pas bien. Montre-moi le plateau de face, mains hors du champ."
+FALLBACK_PROBLEM = "Il y a un problème, regarde la pièce en rouge."
+
+
 class Session:
     def __init__(self, procedures: dict[str, dict], agent: Agent, memory: Memory, out: Output,
                  bike_id: str, anomaly_cooldown_s: float = 8.0, keyframes_kept: int = 3,
@@ -67,8 +71,13 @@ class Session:
     def start(self, images: list[Any]) -> None:
         history = self.memory.load(self.bike_id)
         self.model_calls["wonder"] += 1
-        proc_id = self.agent.diagnose(images, self.procedures, history)
+        try:
+            proc_id = self.agent.diagnose(images, self.procedures, history)
+        except Exception:
+            proc_id = None
         self.model_calls["spark"] += 1
+        if proc_id not in self.procedures:  # inconnu ou agent muet : 1re fiche
+            proc_id = next(iter(self.procedures))
         self.procedure = self.procedures[proc_id]
         self._event("diagnose", procedure=proc_id)
         self._enter_step(0)
@@ -79,6 +88,10 @@ class Session:
             self._event("user_done")
 
     def on_measures(self, m: Measures, keyframe: Any = None) -> None:
+        if self.state == State.CLOTURE:
+            return
+        if m.t < self.t:  # arrivée hors ordre : ignorée (le serveur livre dans le désordre)
+            return
         self.t = m.t
         if keyframe is not None:
             self.keyframes.append(keyframe)
@@ -109,12 +122,17 @@ class Session:
             if self.t < self.next_arbitration_t:   # Spark au plus une fois toutes les 10 s
                 return
             self.state = State.ARBITRAGE
-            v = self.agent.arbitrate(self.step, list(self.keyframes), self.window[-self.debounce_frames:])
+            try:
+                v = self.agent.arbitrate(self.step, list(self.keyframes),
+                                         self.window[-self.debounce_frames:])
+            except Exception:
+                v = None
             self.model_calls["spark"] += 1
+            v = self._safe_arbitration(v)
             self.next_arbitration_t = self.t + self.arbitration_cooldown
             self._event("arbitrate", verdict=v.value, evidence=v.evidence)
             if v.value == "0":
-                self.out.say(v.message or "Je ne vois pas bien. Montre-moi le plateau de face, mains hors du champ.")
+                self.out.say(v.message or DEFAULT_ADVICE)
         if v.value == "1":
             self._validate(v)
         elif v.value == "eps":
@@ -133,10 +151,28 @@ class Session:
         else:
             self._close(success=True)
 
+    @staticmethod
+    def _safe_arbitration(v: Any) -> Verdict:
+        """Un arbitrage ne valide jamais : `eps` ou `0`, sinon repli (CORE-R7.5, AGT-R2)."""
+        if isinstance(v, Verdict) and v.value in ("eps", "0"):
+            return v
+        evidence = getattr(v, "evidence", None) if isinstance(v, Verdict) else None
+        evidence = dict(evidence) if isinstance(evidence, dict) else {}
+        evidence["ignore"] = "Spark ne valide jamais : on attend que la mesure SAM confirme"
+        message = getattr(v, "message", None) if isinstance(v, Verdict) else None
+        return Verdict("0", None, evidence, message or DEFAULT_ADVICE)
+
     def _anomaly(self, v: Verdict) -> None:
         self.state = State.ANOMALIE
-        text, part = self.agent.explain(self.step, v, list(self.keyframes))
+        try:
+            text, part = self.agent.explain(self.step, v, list(self.keyframes))
+        except Exception:
+            text, part = None, None
         self.model_calls["spark"] += 1
+        if not isinstance(text, str) or not text:
+            text = v.message or FALLBACK_PROBLEM  # CORE-R5.4 : agent muet, message de la règle
+        if not isinstance(part, str) or part not in self.procedure.get("parts", {}):
+            part = None
         self.out.say(text)
         self.out.highlight([part] if part else self.step.get("highlight", []), "red")
         self._event("anomaly", step=self.step["id"], message=v.message, evidence=v.evidence)

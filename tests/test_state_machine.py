@@ -1,4 +1,4 @@
-from fakes import FakeAgent, FakeMemory, FakeOutput
+from fakes import FakeAgent, FakeMemory, FakeOutput, RaisingAgent, UnknownAgent
 
 from fixloop.geometry import measure
 from fixloop.procedures import load_all
@@ -93,6 +93,52 @@ def test_session_debounce_3_validates_after_3_frames():
     r2 = Runner()                         # défaut : 4 en replay (CORE-R9.1)
     r2.feed("off", 3)
     assert r2.s.step["id"] == "frame_view"
+
+
+def test_raising_agent_still_reaches_closure():
+    r = Runner(agent=RaisingAgent())
+    assert r.s.procedure["id"] == "chain_off_chainring"  # repli : 1re fiche
+    r.feed("off", 4)
+    assert r.s.step["id"] == "engage_top_teeth"
+    r.s.on_user_done()
+    r.feed("off", 4)                      # anomalie : message de la règle dit (CORE-R5.4)
+    assert len(r.events("anomaly")) == 1
+    assert any("pas encore sur les dents" in s for s in r.out.said)
+    r.s.on_user_done()
+    r.feed("hidden", 4)                   # incertain : arbitrage muet, conseil par défaut (CORE-R7.4)
+    assert any("Montre-moi le plateau de face" in s for s in r.out.said)
+    assert r.s.step["id"] == "engage_top_teeth"   # jamais validé par l'agent
+    r.feed("on", 4)
+    assert r.s.step["id"] == "turn_backward"
+    r.s.on_user_done()
+    r.feed("on", 4)
+    assert r.s.state == State.ESSAI_DYNAMIQUE
+    r.feed("on", 8)
+    assert r.s.state == State.CLOTURE
+
+
+def test_unknown_procedure_falls_back_to_first():
+    r = Runner(agent=UnknownAgent())
+    assert r.s.procedure["id"] == "chain_off_chainring"
+
+
+def test_out_of_order_measures_are_ignored():
+    r = Runner()
+    r.feed("off", 4)
+    assert r.s.step["id"] == "engage_top_teeth" and r.s.window == []
+    old = measure(frame("off", 99, 0.1), r.s.procedure)   # t inférieur : ignorée
+    r.s.on_measures(old)
+    assert r.s.window == [] and r.s.step["id"] == "engage_top_teeth"
+
+
+def test_measures_ignored_after_closure():
+    r = Runner()
+    r.feed("off", 4); r.feed("on", 4); r.s.on_user_done(); r.feed("on", 4)
+    r.feed("on", 8)
+    assert r.s.state == State.CLOTURE
+    n_events = len(r.s.log)
+    r.s.on_measures(measure(frame("on", 999, 999.0), r.s.procedure))
+    assert r.s.state == State.CLOTURE and len(r.s.log) == n_events
 
 
 def test_anomaly_is_not_repeated_during_cooldown():

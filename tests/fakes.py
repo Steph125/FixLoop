@@ -22,6 +22,30 @@ class FakeAgent:
         return (verdict.message or "Il y a un problème.", "chain")
 
 
+class RaisingAgent(FakeAgent):
+    """Agent injoignable : chaque appel lève (spec/01-core-loop, CORE-T11)."""
+
+    def diagnose(self, images, procedures, history):
+        self.calls.append("diagnose")
+        raise ConnectionError("diagnostic coupé")
+
+    def arbitrate(self, step, keyframes, window):
+        self.calls.append("arbitrate")
+        raise TimeoutError("arbitrage coupé")
+
+    def explain(self, step, verdict, keyframes):
+        self.calls.append("explain")
+        raise TimeoutError("explication coupée")
+
+
+class UnknownAgent(FakeAgent):
+    """Agent qui rend un identifiant de fiche inconnu."""
+
+    def diagnose(self, images, procedures, history):
+        self.calls.append("diagnose")
+        return "n_existe_pas"
+
+
 class FakeMemory:
     def __init__(self):
         self.saved = []
