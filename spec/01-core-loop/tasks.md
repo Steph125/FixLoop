@@ -60,10 +60,11 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   `Agent.help(step, keyframes) -> str` au protocole et à `FakeAgent` ; journaliser `command`.
   Fichiers : `state_machine.py`, `tests/fakes.py`. Exigences : `CORE-R12.1`, `R12.2`, `R12.3`.
   Dépend de : `AGT-T8` pour l'implémentation réelle de `help`.
-- [ ] **CORE-T16 — Champ `source` des anomalies et export JSONL.** `source: "rule" | "muse-spark"` sur
+- [x] **CORE-T16 — Champ `source` des anomalies et export JSONL.** `source: "rule" | "muse-spark"` sur
   l'événement `anomaly` ; fonction `export_jsonl(log, path)` ; test qu'aucune entrée ne contient de tableau numpy,
   d'octets ou la chaîne `MODEL_API_KEY`.
   Fichiers : `state_machine.py`, tests. Exigences : `CORE-R8.1`, `R8.2`, `R8.3`.
+  Preuve : `test_anomaly_events_carry_source`, `test_export_jsonl_has_no_binary_or_key`.
 - [ ] **CORE-T17 — Performance de la géométrie.** Mesurer `measure()` sur 100 images 848×464 enregistrées ;
   noter la médiane dans `eval/day1/findings.md` (section ajoutée).
   Exigences : `CORE-R2.4`. Fait quand : médiane notée, cible < 50 ms atteinte ou écart expliqué.

@@ -68,3 +68,10 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `pytest` 52 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`, `tests/test_state_machine.py`,
   `spec/01-core-loop/tasks.md`.
+- CORE-T16 (source + export JSONL) : `source` sur `anomaly` (`rule` géométrie/dynamique,
+  `muse-spark` arbitrage confirmé), `export_jsonl` avec `_sanitize` (numpy → listes, octets
+  nommés, NaN → None). Passé du 1er coup. Note : R8.2 cite « design.md section 6 » mais le
+  schéma des événements est en section 7 — simple renvoi, export aligné sur la section 7.
+  Preuve : `test_anomaly_events_carry_source`, `test_export_jsonl_has_no_binary_or_key`,
+  `pytest` 54 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/state_machine.py`, `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.

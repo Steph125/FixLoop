@@ -175,6 +175,47 @@ def test_no_framing_when_parts_visible():
     assert not [e for e in r.s.log if e["event"] == "framing_lost"]
 
 
+def test_anomaly_events_carry_source():
+    r = Runner()
+    r.feed("off", 4); r.s.on_user_done(); r.feed("off", 4)
+    assert r.events("anomaly")[0]["source"] == "rule"  # CORE-R8.1 : anomalie géométrique
+    r2 = Runner(FakeAgent(arbitrate_to="eps"))
+    r2.feed("off", 4); r2.s.on_user_done(); r2.feed("hidden", 4)
+    assert r2.events("anomaly")[0]["source"] == "muse-spark"  # arbitrage Spark
+
+
+def test_export_jsonl_has_no_binary_or_key(tmp_path):
+    import json
+
+    import numpy as np
+
+    from fixloop.state_machine import export_jsonl
+
+    r = Runner()
+    r.feed("off", 4); r.s.on_user_done(); r.feed("off", 4)  # anomalie règle
+    r.feed("on", 4); r.s.on_user_done(); r.feed("on", 4)    # essai dynamique
+    r.feed("on", 8)                                         # clôture
+    assert r.s.state == State.CLOTURE
+    out = export_jsonl(r.s.log, tmp_path / "session.jsonl")
+    raw = out.read_text(encoding="utf-8")
+    assert "MODEL_API_KEY" not in raw  # CORE-R8.3 : ni clé, ni image
+
+    def walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                yield k
+                yield from walk(v)
+        elif isinstance(o, (list, tuple)):
+            for v in o:
+                yield from walk(v)
+        else:
+            yield o
+
+    for line in raw.splitlines():
+        for value in walk(json.loads(line)):
+            assert not isinstance(value, (np.ndarray, bytes, bytearray))  # CORE-R8.2/R8.3
+
+
 def test_snapshot_and_state_notifications():
     r = Runner()
     assert len(r.out.states) == 1  # CORE-R11.2 : émis au démarrage

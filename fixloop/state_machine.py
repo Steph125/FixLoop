@@ -6,12 +6,45 @@ la sortie vers le téléphone via `Output`. Les tests et la simulation passent d
 
 from __future__ import annotations
 
+import json
+import math
 from collections import deque
 from enum import Enum
+from pathlib import Path
 from typing import Any, Protocol
+
+import numpy as np
 
 from .models import Measures, Verdict
 from .verifier import holds, verify
+
+
+def _sanitize(value: Any) -> Any:
+    """Rend une valeur sûre pour JSON : pas de numpy, d'octets ni de NaN (CORE-R8.2, R8.3)."""
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, (bytes, bytearray)):
+        return f"<{len(value)} octets binaires>"
+    if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+        return None
+    if isinstance(value, dict):
+        return {str(k): _sanitize(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_sanitize(v) for v in value]
+    if isinstance(value, (set, frozenset)):
+        return [_sanitize(v) for v in sorted(value, key=repr)]
+    if isinstance(value, (str, int, bool)) or value is None:
+        return value
+    return str(value)
+
+
+def export_jsonl(log: list[dict], path: str | Path) -> Path:
+    """Exporte le journal en JSON Lines, une ligne par événement (CORE-R8.2)."""
+    path = Path(path)
+    with path.open("w", encoding="utf-8") as fh:
+        for entry in log:
+            fh.write(json.dumps(_sanitize(entry), ensure_ascii=False) + "\n")
+    return path
 
 
 class State(str, Enum):
@@ -160,6 +193,7 @@ class Session:
         self.verdict = v.value
         if v.value == "eps" and self._suppressed(v):
             return None
+        source = "rule"
         if v.value == "?":
             if self.t < self.next_arbitration_t:   # Spark au plus une fois toutes les 10 s
                 return None
@@ -176,11 +210,13 @@ class Session:
             self._event("arbitrate", verdict=v.value, evidence=v.evidence)
             if v.value == "0":
                 self.out.say(v.message or DEFAULT_ADVICE)
+            elif v.value == "eps":
+                source = "muse-spark"
         if v.value == "1":
             self._validate(v)
             return None
         if v.value == "eps":
-            self._anomaly(v)
+            self._anomaly(v, source=source)
             return None
         if self.state == State.ARBITRAGE:
             self.state = State.OBSERVATION
@@ -230,7 +266,7 @@ class Session:
         message = getattr(v, "message", None) if isinstance(v, Verdict) else None
         return Verdict("0", None, evidence, message or DEFAULT_ADVICE)
 
-    def _anomaly(self, v: Verdict) -> None:
+    def _anomaly(self, v: Verdict, source: str = "rule") -> None:
         self.state = State.ANOMALIE
         try:
             text, part = self.agent.explain(self.step, v, list(self.keyframes))
@@ -243,7 +279,8 @@ class Session:
             part = None
         self.out.say(text)
         self.out.highlight([part] if part else self.step.get("highlight", []), "red")
-        self._event("anomaly", step=self.step["id"], message=v.message, evidence=v.evidence)
+        self._event("anomaly", step=self.step["id"], message=v.message,
+                    evidence=v.evidence, source=source)
         self.suppressed[v.message or ""] = self.t + self.cooldown
         self.window, self.user_done = [], False
         self.state = State.OBSERVATION
