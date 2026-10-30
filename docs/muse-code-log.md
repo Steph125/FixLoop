@@ -37,3 +37,7 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve : `test_session_debounce_3_validates_after_3_frames`, `pytest` 42 passed + 9 skipped,
   `check_spec.py` OK. Fichiers : `fixloop/verifier.py`, `fixloop/state_machine.py`,
   `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.
+- CORE-T10 (tests vérificateur) : tâche de tests uniquement, `eps` > `1` et NaN jamais `1`.
+  Passés du 1er coup. Preuve : `test_anomaly_wins_when_both_true`,
+  `test_nan_never_validates_contact_ratio_max`, `pytest` 44 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `tests/test_geometry_verifier.py`, `spec/01-core-loop/tasks.md`.

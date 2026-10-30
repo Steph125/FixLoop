@@ -33,9 +33,10 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   Fichiers : `verifier.py`, `state_machine.py`, tests. Exigences : `CORE-R3.8`, `R9.1`.
   Fait quand : `test_session_debounce_3_validates_after_3_frames` passe.
   Preuve : `tests/test_state_machine.py::test_session_debounce_3_validates_after_3_frames`.
-- [ ] **CORE-T10 — Tests manquants du vérificateur.** Succès et anomalie vrais en même temps → `eps` ; NaN sur
+- [x] **CORE-T10 — Tests manquants du vérificateur.** Succès et anomalie vrais en même temps → `eps` ; NaN sur
   une règle `contact_ratio_max` → jamais `1`.
   Fichiers : `tests/test_geometry_verifier.py`. Exigences : `CORE-R3.4`, `R3.7`.
+  Preuve : `test_anomaly_wins_when_both_true`, `test_nan_never_validates_contact_ratio_max`.
 - [ ] **CORE-T11 — Robustesse face à l'agent.** Envelopper `diagnose`, `arbitrate`, `explain` dans la session :
   exception ou valeur invalide → repli de `design.md` section 8. Ignorer les mesures dont `t` est inférieur à la
   dernière. Ignorer `on_measures` en `CLOTURE`.

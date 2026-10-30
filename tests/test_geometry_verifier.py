@@ -55,3 +55,15 @@ def test_requires_done():
     step = PROC["steps"][2]
     assert verify(step, [m("on")] * 6, user_done=False).value == "0"
     assert verify(step, [m("on")] * 6, user_done=True).value == "1"
+
+
+def test_anomaly_wins_when_both_true():
+    step = {"success": [{"type": "detected", "part": "chain"}],
+            "anomaly": [{"type": "detected", "part": "chain", "message": "Les deux vraies."}]}
+    v = verify(step, [m("on")] * 4, user_done=False)
+    assert v.value == "eps"  # CORE-R3.4 : priorité à l'erreur
+
+
+def test_nan_never_validates_contact_ratio_max():
+    assert verify(STEP_ENGAGE, [m("hidden")] * 4, user_done=False).value != "1"  # CORE-R3.7
+    assert verify(STEP_ENGAGE, [m("hidden")] * 4, user_done=True).value != "1"
