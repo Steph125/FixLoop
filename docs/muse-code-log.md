@@ -99,3 +99,22 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   MEM-T4). Passé du 1er coup. Preuve : `tests/test_memory.py` (5 tests),
   `pytest` 76 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/memory.py`, `tests/test_memory.py`, `spec/04-memory-voice/tasks.md`.
+
+## Résumé final (30 oct. 2026)
+
+Tâches faites (14/14) : PERC-T3, PERC-T4, PERC-T6, CORE-T9, CORE-T10, CORE-T11, CORE-T12,
+CORE-T13, CORE-T14, CORE-T16, SRV-T2, SRV-T3, VOX-T2, MEM-T1. Chacune cochée `[x]` dans son
+`tasks.md` avec sa preuve, journalisée ci-dessus et committée séparément.
+
+Tâches bloquées : aucune. Écarts assumés et notés en cours de route : tests async de PERC-T4
+ignorés proprement là où `listen()` est bloqué (vérifiés 10/10 sur boucle réelle sans socket
+dans un script jetable supprimé après) ; `tests/test_protocol.py` au lieu de `test_server.py`
+(FastAPI absent, SRV-T1/T5 le rempliront) ; renvoi R8.2 « section 6 » visant le schéma de la
+section 7. Crochets posés pour la suite : `LivePerception._cost` → PERC-T7, `CommandDetector.history`
+→ VOX-T4, `WonderMemory.client` et `report["date"]`/`title` → MEM-T4/MEM-T6.
+
+Résultat final : `python -m pytest -q tests` → 76 passed + 9 skipped (les 9 = tests async PERC-T4,
+ignorés dans cette sandbox) ; `python scripts/check_spec.py` → 82 exigences, 297 critères,
+46 décisions, 101 tâches, OK. Interdits respectés : `.env` ni lu ni committé, aucun appel API,
+aucun lancement de `probe/` ou `try_agent.py`, aucun `push`/`merge`/changement de branche,
+aucune dépendance ajoutée, aucune suppression hors scripts jetables créés puis supprimés.
