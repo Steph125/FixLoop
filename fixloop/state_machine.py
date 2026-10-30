@@ -11,7 +11,7 @@ from enum import Enum
 from typing import Any, Protocol
 
 from .models import Measures, Verdict
-from .verifier import DEFAULT_DEBOUNCE, holds, verify
+from .verifier import holds, verify
 
 
 class State(str, Enum):
@@ -43,9 +43,10 @@ class Output(Protocol):  # téléphone
 class Session:
     def __init__(self, procedures: dict[str, dict], agent: Agent, memory: Memory, out: Output,
                  bike_id: str, anomaly_cooldown_s: float = 8.0, keyframes_kept: int = 3,
-                 arbitration_cooldown_s: float = 10.0):
+                 arbitration_cooldown_s: float = 10.0, debounce_frames: int = 4):
         self.procedures, self.agent, self.memory, self.out = procedures, agent, memory, out
         self.bike_id = bike_id
+        self.debounce_frames = debounce_frames  # 3 en direct, 4 en replay (CORE-R9.1)
         self.cooldown = anomaly_cooldown_s
         self.arbitration_cooldown = arbitration_cooldown_s
         self.next_arbitration_t = -1.0
@@ -101,14 +102,14 @@ class Session:
         self._event("step", step=self.step["id"])
 
     def _check_step(self) -> None:
-        v = verify(self.step, self.window, self.user_done)
+        v = verify(self.step, self.window, self.user_done, self.debounce_frames)
         if v.value == "eps" and self._suppressed(v):
             return
         if v.value == "?":
             if self.t < self.next_arbitration_t:   # Spark au plus une fois toutes les 10 s
                 return
             self.state = State.ARBITRAGE
-            v = self.agent.arbitrate(self.step, list(self.keyframes), self.window[-DEFAULT_DEBOUNCE:])
+            v = self.agent.arbitrate(self.step, list(self.keyframes), self.window[-self.debounce_frames:])
             self.model_calls["spark"] += 1
             self.next_arbitration_t = self.t + self.arbitration_cooldown
             self._event("arbitrate", verdict=v.value, evidence=v.evidence)
@@ -164,7 +165,7 @@ class Session:
             return
         self.dynamic_t0 = None          # on recompte depuis la prochaine image correcte
         self.fail_streak += 1
-        if self.fail_streak >= DEFAULT_DEBOUNCE:
+        if self.fail_streak >= self.debounce_frames:
             v = Verdict("eps", test["must_hold"][0], {"frame": m.frame_index},
                         "La chaîne n'est pas restée en place pendant la rotation.")
             self.k = len(self.procedure["steps"]) - 1   # on reprend à la dernière étape

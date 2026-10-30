@@ -30,3 +30,10 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `pytest` 41 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/perception.py`, `tests/test_perception.py`, `spec/02-perception/design.md`,
   `spec/02-perception/tasks.md`.
+- CORE-T9 (anti-rebond de session) : `debounce_frames` au constructeur de `Session` (défaut 4),
+  passé à `verify` (nouveau paramètre `n`, la valeur de l'étape l'emporte), à la fenêtre d'arbitrage
+  et au compteur d'échecs du test dynamique ; plus aucun usage de `DEFAULT_DEBOUNCE` dans
+  `state_machine.py`. Test passé du 1er coup.
+  Preuve : `test_session_debounce_3_validates_after_3_frames`, `pytest` 42 passed + 9 skipped,
+  `check_spec.py` OK. Fichiers : `fixloop/verifier.py`, `fixloop/state_machine.py`,
+  `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.

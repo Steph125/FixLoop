@@ -26,12 +26,13 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
 
 ## À faire
 
-- [ ] **CORE-T9 — Anti-rebond de session.** Ajouter `debounce_frames` au constructeur de `Session` (défaut 4) ;
+- [x] **CORE-T9 — Anti-rebond de session.** Ajouter `debounce_frames` au constructeur de `Session` (défaut 4) ;
   le passer à `verify(step, window, user_done, n)` (la valeur de l'étape l'emporte si elle existe), à la fenêtre
   d'arbitrage et au compteur d'échecs du test dynamique ; supprimer les usages directs de `DEFAULT_DEBOUNCE`
   dans `state_machine.py`.
   Fichiers : `verifier.py`, `state_machine.py`, tests. Exigences : `CORE-R3.8`, `R9.1`.
   Fait quand : `test_session_debounce_3_validates_after_3_frames` passe.
+  Preuve : `tests/test_state_machine.py::test_session_debounce_3_validates_after_3_frames`.
 - [ ] **CORE-T10 — Tests manquants du vérificateur.** Succès et anomalie vrais en même temps → `eps` ; NaN sur
   une règle `contact_ratio_max` → jamais `1`.
   Fichiers : `tests/test_geometry_verifier.py`. Exigences : `CORE-R3.4`, `R3.7`.

@@ -9,9 +9,9 @@ PROCS = load_all()
 
 
 class Runner:
-    def __init__(self, agent=None):
+    def __init__(self, agent=None, **session_kw):
         self.agent, self.memory, self.out = agent or FakeAgent(), FakeMemory(), FakeOutput()
-        self.s = Session(PROCS, self.agent, self.memory, self.out, bike_id="velo-test")
+        self.s = Session(PROCS, self.agent, self.memory, self.out, bike_id="velo-test", **session_kw)
         self.i = 0
         self.s.start(images=[])
 
@@ -82,6 +82,17 @@ def test_dynamic_failure_returns_to_last_step():
     r.feed("off", 4)                      # la chaîne saute pendant la rotation
     assert r.s.state == State.OBSERVATION and r.s.step["id"] == "turn_backward"
     assert r.events("anomaly")
+
+
+def test_session_debounce_3_validates_after_3_frames():
+    r = Runner(debounce_frames=3)
+    r.feed("off", 3)                      # CORE-R3.8 : N de session (3 en direct)
+    assert r.s.step["id"] == "engage_top_teeth"
+    r.feed("on", 3)
+    assert r.s.step["id"] == "turn_backward"
+    r2 = Runner()                         # défaut : 4 en replay (CORE-R9.1)
+    r2.feed("off", 3)
+    assert r2.s.step["id"] == "frame_view"
 
 
 def test_anomaly_is_not_repeated_during_cooldown():

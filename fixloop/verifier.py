@@ -32,9 +32,14 @@ def _evidence(window: list[Measures]) -> dict:
             "contact": {f"{a}/{b}": round(v, 3) for (a, b), v in last.contact.items()}}
 
 
-def verify(step: dict, window: list[Measures], user_done: bool) -> Verdict:
-    """Verdict sur les N dernières mesures. Priorité : anomalie > succès > incertain > en cours."""
-    n = step.get("debounce_frames", DEFAULT_DEBOUNCE)
+def verify(step: dict, window: list[Measures], user_done: bool, n: int | None = None) -> Verdict:
+    """Verdict sur les N dernières mesures. Priorité : anomalie > succès > incertain > en cours.
+
+    N = valeur de l'étape si elle existe, sinon N de session, sinon 4 (CORE-R3.8).
+    """
+    if n is None:
+        n = DEFAULT_DEBOUNCE
+    n = step.get("debounce_frames", n)
     if len(window) < n:
         return Verdict("0")
     recent = window[-n:]
