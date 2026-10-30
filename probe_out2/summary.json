@@ -1,0 +1,19 @@
+{
+  "images": 570,
+  "duree_segmentation_s": 529.1,
+  "contact_chaine_plateau_mediane": 0.139,
+  "detection": {
+    "chain": {
+      "taux_detection": 0.94,
+      "confiance_moyenne_si_detecte": 0.727
+    },
+    "chainring": {
+      "taux_detection": 1.0,
+      "confiance_moyenne_si_detecte": 0.881
+    },
+    "derailleur": {
+      "taux_detection": 1.0,
+      "confiance_moyenne_si_detecte": 0.786
+    }
+  }
+}

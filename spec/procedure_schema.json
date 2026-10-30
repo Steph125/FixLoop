@@ -4,54 +4,176 @@
   "title": "FixLoop repair procedure",
   "description": "Une fiche de réparation : pièces à suivre, étapes, règles de succès et d'anomalie mesurées sur les masques SAM 3.1.",
   "type": "object",
-  "required": ["id", "title", "parts", "steps"],
+  "required": [
+    "id",
+    "title",
+    "parts",
+    "steps"
+  ],
   "additionalProperties": false,
   "properties": {
-    "id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
-    "title": {"type": "string"},
-    "symptoms": {"type": "array", "items": {"type": "string"}, "description": "Ce que Muse Spark cherche au diagnostic initial pour choisir cette fiche."},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "symptoms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Ce que Muse Spark cherche au diagnostic initial pour choisir cette fiche."
+    },
     "parts": {
       "type": "object",
       "description": "Clé interne -> prompt SAM 3.1 (une phrase nominale courte, un seul objet).",
-      "additionalProperties": {"type": "string"},
+      "additionalProperties": {
+        "type": "string"
+      },
       "minProperties": 1
     },
-    "steps": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/step"}},
-    "dynamic_test": {"$ref": "#/$defs/dynamic_test"}
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    },
+    "dynamic_test": {
+      "$ref": "#/$defs/dynamic_test"
+    },
+    "select": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": [
+          "all",
+          "largest"
+        ]
+      },
+      "description": "Par pièce : 'largest' garde seulement le plus gros objet trouvé par SAM (ex. le plateau avant, pas les pignons arrière). Défaut 'all'."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Comment lire les mesures de cette fiche, d'où viennent les seuils."
+    }
   },
   "$defs": {
     "rule": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "properties": {
-        "type": {"enum": ["detected", "absent", "contact_ratio_min", "contact_ratio_max"]},
-        "part": {"type": "string", "description": "Pour detected / absent."},
-        "a": {"type": "string", "description": "Pièce qui touche (contact_ratio)."},
-        "b": {"type": "string", "description": "Pièce dont on mesure le bord (contact_ratio)."},
-        "threshold": {"type": "number", "minimum": 0, "maximum": 1},
-        "message": {"type": "string", "description": "Explication courte si la règle déclenche une anomalie."}
+        "type": {
+          "enum": [
+            "detected",
+            "absent",
+            "contact_ratio_min",
+            "contact_ratio_max"
+          ]
+        },
+        "part": {
+          "type": "string",
+          "description": "Pour detected / absent."
+        },
+        "a": {
+          "type": "string",
+          "description": "Pièce qui touche (contact_ratio)."
+        },
+        "b": {
+          "type": "string",
+          "description": "Pièce dont on mesure le bord (contact_ratio)."
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "message": {
+          "type": "string",
+          "description": "Explication courte si la règle déclenche une anomalie."
+        },
+        "when": {
+          "enum": [
+            "always",
+            "after_done"
+          ],
+          "default": "always",
+          "description": "Pour une règle d'anomalie : 'after_done' = évaluée seulement après « c'est fait » (utile quand l'état de départ ressemble à l'erreur)."
+        }
       }
     },
     "step": {
       "type": "object",
-      "required": ["id", "instruction", "success"],
+      "required": [
+        "id",
+        "instruction",
+        "success"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": {"type": "string"},
-        "instruction": {"type": "string", "description": "Phrase lue à voix haute."},
-        "highlight": {"type": "array", "items": {"type": "string"}, "description": "Pièces surlignées pendant l'étape."},
-        "success": {"type": "array", "items": {"$ref": "#/$defs/rule"}, "minItems": 1},
-        "anomaly": {"type": "array", "items": {"$ref": "#/$defs/rule"}},
-        "debounce_frames": {"type": "integer", "minimum": 1, "default": 4}
+        "id": {
+          "type": "string"
+        },
+        "instruction": {
+          "type": "string",
+          "description": "Phrase lue à voix haute."
+        },
+        "highlight": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Pièces surlignées pendant l'étape."
+        },
+        "success": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          },
+          "minItems": 1
+        },
+        "anomaly": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        },
+        "debounce_frames": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 4
+        },
+        "requires_done": {
+          "type": "boolean",
+          "default": false,
+          "description": "Si vrai, l'étape n'est validée qu'après « c'est fait », même si le succès est déjà visible."
+        }
       }
     },
     "dynamic_test": {
       "type": "object",
-      "required": ["instruction", "duration_s", "must_hold"],
+      "required": [
+        "instruction",
+        "duration_s",
+        "must_hold"
+      ],
       "properties": {
-        "instruction": {"type": "string"},
-        "duration_s": {"type": "number", "minimum": 1},
-        "must_hold": {"type": "array", "items": {"$ref": "#/$defs/rule"}}
+        "instruction": {
+          "type": "string"
+        },
+        "duration_s": {
+          "type": "number",
+          "minimum": 1
+        },
+        "must_hold": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        }
       }
     }
   }
