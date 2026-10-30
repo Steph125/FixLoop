@@ -1,4 +1,4 @@
-"""Verdict d'une étape (spec/state_machine.md, section « Verdict d'une étape »)."""
+"""Verdict d'une étape (spec/01-core-loop/design.md, section 5)."""
 
 from __future__ import annotations
 

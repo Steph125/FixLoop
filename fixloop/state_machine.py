@@ -1,4 +1,4 @@
-"""Machine à états de FixLoop (spec/state_machine.md).
+"""Machine à états de FixLoop (spec/01-core-loop/design.md, section 6).
 
 Logique pure, sans appel réseau : les modèles Meta sont injectés via `Agent` et `Memory`,
 la sortie vers le téléphone via `Output`. Les tests et la simulation passent des faux objets.

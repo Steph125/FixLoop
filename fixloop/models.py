@@ -1,4 +1,4 @@
-"""Types partagés entre modules (spec/interfaces.md)."""
+"""Types partagés entre modules (spec/01-core-loop/design.md, section 2)."""
 
 from __future__ import annotations
 
