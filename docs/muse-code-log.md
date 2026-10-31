@@ -42,6 +42,16 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve : `test_help_returns_hint_and_falls_back_to_instruction`,
   `pytest` 87 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
+- CORE-T15 (commandes « répète » et « aide-moi », dépendait d'AGT-T8, fait) :
+  `Session.on_command` (`repeat` redit la consigne, `help` demande à l'agent puis
+  redit la consigne si muet), `help` ajouté au protocole `Agent`, à `FakeAgent`
+  et à `RaisingAgent` ; événement `command` journalisé, commande inconnue ignorée.
+  Le `design.md` 6.3 de `01-core-loop` prévoyait déjà ces signatures (« à ajouter ») :
+  aucune correction de spec nécessaire.
+  Preuve : `test_on_command_repeat_and_help`,
+  `pytest` 88 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`,
+  `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

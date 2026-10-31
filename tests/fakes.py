@@ -21,6 +21,10 @@ class FakeAgent:
         self.calls.append("explain")
         return (verdict.message or "Il y a un problème.", "chain")
 
+    def help(self, step, keyframes):
+        self.calls.append("help")
+        return "Aide : vise les dents du haut."
+
 
 class RaisingAgent(FakeAgent):
     """Agent injoignable : chaque appel lève (spec/01-core-loop, CORE-T11)."""
@@ -36,6 +40,10 @@ class RaisingAgent(FakeAgent):
     def explain(self, step, verdict, keyframes):
         self.calls.append("explain")
         raise TimeoutError("explication coupée")
+
+    def help(self, step, keyframes):
+        self.calls.append("help")
+        raise TimeoutError("aide coupée")
 
 
 class UnknownAgent(FakeAgent):

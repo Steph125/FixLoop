@@ -135,6 +135,22 @@ def test_diagnose_reason_is_said_and_fallback_logged():
     assert r2.out.said[0] == "Je vois : Chaîne tombée du plateau."
 
 
+def test_on_command_repeat_and_help():
+    r = Runner()
+    r.s.on_command("repeat")  # CORE-R12.1 : redit la consigne de l'etape en cours
+    assert r.out.said[-1] == r.s.step["instruction"]
+    assert r.events("command")[-1]["cmd"] == "repeat"
+    r.s.on_command("help")  # CORE-R12.2 : indication demandee a l'agent
+    assert r.out.said[-1] == "Aide : vise les dents du haut."
+    assert "help" in r.agent.calls
+    assert r.events("command")[-1]["cmd"] == "help"
+    r2 = Runner(agent=RaisingAgent())  # agent muet : la consigne est redite
+    r2.s.on_command("help")
+    assert r2.out.said[-1] == r2.s.step["instruction"]
+    r2.s.on_command("sauter")  # commande inconnue : ignoree, sans journal
+    assert len(r2.events("command")) == 1
+
+
 def test_out_of_order_measures_are_ignored():
     r = Runner()
     r.feed("off", 4)

@@ -62,6 +62,7 @@ class Agent(Protocol):  # Muse Spark
                  ) -> tuple[str, str | None]: ...  # (id de fiche, raison dite a l'utilisateur)
     def arbitrate(self, step: dict, keyframes: list[Any], window: list[Measures]) -> Verdict: ...
     def explain(self, step: dict, verdict: Verdict, keyframes: list[Any]) -> tuple[str, str | None]: ...
+    def help(self, step: dict, keyframes: list[Any]) -> str: ...  # CORE-R12.2 (AGT-T8)
 
 
 class Memory(Protocol):  # Muse Wonder
@@ -158,6 +159,25 @@ class Session:
         if self.state in (State.OBSERVATION, State.ESSAI_DYNAMIQUE):
             self.user_done = True
             self._event("user_done")
+
+    def on_command(self, cmd: str) -> None:
+        """Commande vocale ou bouton (CORE-R12) ; inconnue ou avant demarrage : ignoree."""
+        if self.procedure is None:
+            return
+        if cmd == "repeat":  # CORE-R12.1 : redit la consigne de l'etape en cours
+            self.out.say(self.step["instruction"])
+        elif cmd == "help":  # CORE-R12.2 : indication de l'agent, sinon la consigne
+            try:
+                hint = self.agent.help(self.step, list(self.keyframes))
+            except Exception:
+                hint = None
+            self.model_calls["spark"] += 1
+            if not isinstance(hint, str) or not hint.strip():
+                hint = self.step["instruction"]
+            self.out.say(hint)
+        else:
+            return
+        self._event("command", cmd=cmd)
 
     def on_measures(self, m: Measures, keyframe: Any = None) -> None:
         if self.state == State.CLOTURE:

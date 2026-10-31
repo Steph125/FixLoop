@@ -56,10 +56,12 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   `out.state(...)` à chaque changement d'état, d'étape ou de verdict (pas à chaque image si rien ne change).
   Mettre à jour `FakeOutput`. Fichiers : `state_machine.py`, `tests/fakes.py`. Exigences : `CORE-R11.1`, `R11.2`.
   Preuve : `test_snapshot_and_state_notifications`.
-- [ ] **CORE-T15 — Commandes « répète » et « aide-moi ».** `Session.on_command("repeat" | "help")` ; ajouter
+- [x] **CORE-T15 — Commandes « répète » et « aide-moi ».** `Session.on_command("repeat" | "help")` ; ajouter
   `Agent.help(step, keyframes) -> str` au protocole et à `FakeAgent` ; journaliser `command`.
   Fichiers : `state_machine.py`, `tests/fakes.py`. Exigences : `CORE-R12.1`, `R12.2`, `R12.3`.
   Dépend de : `AGT-T8` pour l'implémentation réelle de `help`.
+  Preuve : `tests/test_state_machine.py::test_on_command_repeat_and_help`,
+  `pytest` 88 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
 - [x] **CORE-T16 — Champ `source` des anomalies et export JSONL.** `source: "rule" | "muse-spark"` sur
   l'événement `anomaly` ; fonction `export_jsonl(log, path)` ; test qu'aucune entrée ne contient de tableau numpy,
   d'octets ou la chaîne `MODEL_API_KEY`.
