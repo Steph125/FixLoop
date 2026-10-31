@@ -1,0 +1,60 @@
+"""Serveur HTTP FixLoop (spec/05-session-server, SRV-T1).
+
+FastAPI : fichiers statiques (`web/`), `/api/health`, `/api/procedures`.
+La clé API ne quitte jamais le serveur ; le navigateur ne la voit pas.
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+from pathlib import Path
+
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
+from fixloop.procedures import load_all
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def _version() -> str:
+    """Sha git court, `FIXLOOP_VERSION`, ou `dev` (SRV-R1.2)."""
+    tag = os.environ.get("FIXLOOP_VERSION")
+    if tag:
+        return tag
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True,
+                             text=True, cwd=ROOT, timeout=5)
+        sha = out.stdout.strip()
+        return sha if out.returncode == 0 and sha else "dev"
+    except Exception:
+        return "dev"
+
+
+def create_app(procedures: dict | None = None) -> FastAPI:
+    """Fabrique l'application ; `procedures` injectable pour les tests."""
+    load_dotenv(ROOT / ".env")  # MODEL_API_KEY, côté serveur uniquement (jamais journalisée)
+    procedures = procedures if procedures is not None else load_all()
+    app = FastAPI(title="FixLoop")
+    app.state.procedures = procedures
+    live = os.environ.get("FIXLOOP_FAKE_MODELS") != "1"
+    code_required = bool(os.environ.get("FIXLOOP_ACCESS_CODE"))
+
+    @app.get("/api/health")
+    def health() -> dict:
+        return {"ok": True, "version": _version(), "live": live,
+                "access_code_required": code_required}  # SRV-R1.2 : sans appel aux modèles
+
+    @app.get("/api/procedures")
+    def procedures_list() -> list:
+        return [{"id": p["id"], "title": p["title"]} for p in procedures.values()]  # SRV-R1.3
+
+    web = ROOT / "web"
+    if web.is_dir():  # SRV-R1.1 : l'appli statique arrive avec 06-phone-app
+        app.mount("/", StaticFiles(directory=web, html=True), name="web")
+    return app
+
+
+app = create_app()

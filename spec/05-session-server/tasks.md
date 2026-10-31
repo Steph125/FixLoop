@@ -2,10 +2,13 @@
 
 Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en bout en local avec `ws_client.py`.
 
-- [ ] **SRV-T1 — Squelette FastAPI.** `server/app.py` : fichiers statiques, `/api/health`, `/api/procedures`,
+- [~] **SRV-T1 — Squelette FastAPI.** `server/app.py` : fichiers statiques, `/api/health`, `/api/procedures`,
   chargement des fiches au démarrage, lecture de `.env`. Ajouter `fastapi`, `uvicorn[standard]`, `websockets` à
   `requirements.txt`.
   Exigences : `SRV-R1.1` à `R1.4`. Fait quand : `curl http://127.0.0.1:8000/api/health` rend `ok`.
+  À vérifier hors sandbox : PyPI injoignable ici (3 tentatives pip sans réponse), `fastapi`/`httpx`
+  absents donc `tests/test_server.py` ignoré ici et le `curl` local impossible (sockets interdits).
+  Preuve partielle : `py_compile` OK, `pytest` 97 passed + 13 skipped, `check_spec.py` OK.
 - [x] **SRV-T2 — Journal des coûts.** `fixloop/costs.py` (`PRICES`, `CostLog`, persistance par jour, estimation
   des jetons manquants), `tests/test_costs.py`.
   Exigences : `SRV-R8.1`, `R8.5`. Bloque : `PERC-T7`, `AGT-T9`, `MEM-T4`.
