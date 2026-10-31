@@ -95,3 +95,23 @@ def test_crop_around_box():
     from fixloop.agent import crop_around
     img = np.zeros((400, 800, 3), np.uint8)
     assert crop_around(img, (300, 100, 400, 200), margin=0.5).shape[:2] == (200, 200)
+
+
+def test_spark_calls_send_timeout_20_and_timeout_is_logged():
+    from openai import APITimeoutError
+
+    from fixloop.models import Verdict
+    c = FakeClient('{"procedure": "chain_off_chainring", "raison": "chaine pendante"}')
+    agent = SparkAgent(PROCS, client=c)
+    assert agent.diagnose([IMG], PROCS, "aucun") == "chain_off_chainring"
+    assert c.sent[0].get("timeout") == 20  # AGT-R6.2 : delai maximal de 20 s
+    c2 = FakeClient('{"verdict": "ratee", "confiance": 0.8}')
+    agent2 = SparkAgent(PROCS, client=c2)
+    agent2.arbitrate(STEP, [IMG], [])
+    assert c2.sent[0].get("timeout") == 20
+    agent2.explain(STEP, Verdict("eps", message="x"), [IMG])
+    assert c2.sent[-1].get("timeout") == 20
+    slow = FakeClient(APITimeoutError(request=None))
+    agent3 = SparkAgent(PROCS, client=slow)
+    assert agent3.arbitrate(STEP, [IMG], []).value == "0"  # delai traite comme absence de reponse
+    assert agent3.calls[-1]["error"] == "APITimeoutError"

@@ -13,6 +13,13 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `prompt_serie2.md`, `pytest-of-nguen/`, `tmp*/` (fichiers de l'utilisateur et résidus).
   VOX-T6 et CORE-T18 déjà committés le 30 oct., vérifiés sans changement.
   Fichiers : `fixloop/memory.py`, `tests/test_memory.py`, `spec/04-memory-voice/tasks.md`.
+- AGT-T5 (délai de 20 s) : `timeout=20` ajouté à `responses.create` dans `_ask`
+  (délai déjà traité comme absence de réponse par l'exception existante).
+  Difficile : 1er essai raté, `httpx` absent du `.venv` — `APITimeoutError(request=None)`
+  suffit (seul le nom du type est journalisé). Passé au 2e essai.
+  Preuve : `test_spark_calls_send_timeout_20_and_timeout_is_logged`,
+  `pytest` 83 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

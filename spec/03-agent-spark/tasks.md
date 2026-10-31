@@ -17,9 +17,11 @@
 
 ## À faire
 
-- [ ] **AGT-T5 — Délai de 20 s.** Passer `timeout=20` à chaque appel ; test avec un faux client qui lève
+- [x] **AGT-T5 — Délai de 20 s.** Passer `timeout=20` à chaque appel ; test avec un faux client qui lève
   `APITimeoutError` → `None`, journal `error`.
   Fichiers : `agent.py`, `tests/test_agent.py`. Exigences : `AGT-R6.2`.
+  Preuve : `tests/test_agent.py::test_spark_calls_send_timeout_20_and_timeout_is_logged`,
+  `pytest` 83 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
 - [ ] **AGT-T6 — Diagnostic avec raison.** `diagnose` rend `(id, raison)` ; adapter le protocole `Agent`,
   `FakeAgent` et `Session.start` (dire « Je vois : <titre>. ») ; journaliser le repli.
   Exigences : `AGT-R1.3`, `R1.4`. Dépend de : rien. Touche `01-core-loop` (`CORE-R4.1`).

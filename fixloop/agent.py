@@ -109,6 +109,7 @@ class SparkAgent:
                 reasoning={"effort": EFFORT.get(kind, "low")},
                 instructions=SYSTEM,
                 input=[{"type": "message", "role": "user", "content": content}],
+                timeout=20,  # AGT-R6.2 : au-delà, traité comme une absence de réponse
             )
             raw = r.output_text or ""
         except Exception as e:  # réseau, quota… : la machine continue d'observer
