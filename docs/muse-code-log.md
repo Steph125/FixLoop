@@ -30,6 +30,12 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `pytest` 84 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/agent.py`, `fixloop/state_machine.py`, `tests/fakes.py`,
   `tests/test_agent.py`, `tests/test_state_machine.py`, `spec/03-agent-spark/tasks.md`.
+- AGT-T7 (garde-fous de sortie) : `fit_one_sentence` (1re phrase si ≤ 20 mots,
+  sinon message de la règle) appliqué à `explain` ; le seuil 0,59 → `0` marchait déjà.
+  Passé au 1er essai après un échec authentique du nouveau test avant le code.
+  Preuve : `test_explain_truncates_long_phrase`, `test_low_confidence_failure_keeps_observing`,
+  `pytest` 86 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

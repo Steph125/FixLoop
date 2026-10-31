@@ -84,6 +84,26 @@ def extract_json(text: str) -> dict | None:
     return None
 
 
+MAX_PHRASE_WORDS = 20  # AGT-R4.2 : phrases destinées à l'utilisateur
+_SENT_END = re.compile(r"[.!?…]+")
+
+
+def fit_one_sentence(text: Any, max_words: int = MAX_PHRASE_WORDS) -> str | None:
+    """Première phrase si elle tient en `max_words` mots, sinon None (AGT-R4.5)."""
+    if not isinstance(text, str):
+        return None
+    text = text.strip()
+    if not text:
+        return None
+    if len(text.split()) <= max_words:
+        return text
+    m = _SENT_END.search(text)
+    first = text[:m.end()].strip() if m else ""
+    if first and len(first.split()) <= max_words:
+        return first
+    return None
+
+
 def _measures_summary(window: list[Measures]) -> list[dict]:
     return [{"t": round(m.t, 1), "detected": m.detected,
              "contact": {f"{a}/{b}": (None if v != v else round(v, 3)) for (a, b), v in m.contact.items()}}
@@ -188,6 +208,8 @@ class SparkAgent:
             '{"phrase": "<consigne à lire>", "piece": "<une pièce de la liste>"}'
         )
         data = self._ask("explain", text, keyframes) or {}
-        phrase = data.get("phrase") or verdict.message or "Il y a un problème, regarde la pièce en rouge."
+        phrase = fit_one_sentence(data.get("phrase"))  # AGT-R4.5 : > 20 mots tronquée
+        if phrase is None:
+            phrase = verdict.message or "Il y a un problème, regarde la pièce en rouge."
         part = data.get("piece") if data.get("piece") in parts else None
         return phrase, part

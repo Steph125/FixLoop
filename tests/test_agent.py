@@ -101,6 +101,25 @@ def test_crop_around_box():
     assert crop_around(img, (300, 100, 400, 200), margin=0.5).shape[:2] == (200, 200)
 
 
+def test_low_confidence_failure_keeps_observing():
+    from fixloop.agent import ACCEPT_FAILURE_CONF
+    assert ACCEPT_FAILURE_CONF == 0.6
+    borderline = FakeClient('{"verdict": "ratee", "confiance": 0.59, "raison": "doute"}')
+    v = SparkAgent(PROCS, client=borderline).arbitrate(STEP, [IMG], [])
+    assert v.value == "0"  # AGT-R2.4 : 0,59 < 0,6, on continue d'observer
+
+
+def test_explain_truncates_long_phrase():
+    from fixloop.models import Verdict
+    long_ok = FakeClient('{"phrase": "Remonte la chaîne sur les dents du haut. Ensuite tu pourras tourner le pédalier doucement pour vérifier que tout tient bien en place.", "piece": "chain"}')
+    text, part = SparkAgent(PROCS, client=long_ok).explain(STEP, Verdict("eps", message="Chaîne pas en place."), [IMG])
+    assert text == "Remonte la chaîne sur les dents du haut."  # AGT-R4.5 : 1re phrase, 8 mots
+    assert part == "chain"
+    wordy = FakeClient('{"phrase": "' + " ".join(["mot"] * 25) + '. Suite.", "piece": "chain"}')
+    text2, _ = SparkAgent(PROCS, client=wordy).explain(STEP, Verdict("eps", message="Chaîne pas en place."), [IMG])
+    assert text2 == "Chaîne pas en place."  # 1re phrase trop longue : message de la règle
+
+
 def test_spark_calls_send_timeout_20_and_timeout_is_logged():
     from openai import APITimeoutError
 

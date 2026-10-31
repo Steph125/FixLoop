@@ -27,8 +27,11 @@
   Exigences : `AGT-R1.3`, `R1.4`. Dépend de : rien. Touche `01-core-loop` (`CORE-R4.1`).
   Preuve : `tests/test_state_machine.py::test_diagnose_reason_is_said_and_fallback_logged`,
   `pytest` 84 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
-- [ ] **AGT-T7 — Garde-fous de sortie.** Phrase > 20 mots tronquée ou remplacée ; test confiance 0,59 → `0`.
+- [x] **AGT-T7 — Garde-fous de sortie.** Phrase > 20 mots tronquée ou remplacée ; test confiance 0,59 → `0`.
   Exigences : `AGT-R2.4`, `R4.5`.
+  Preuve : `tests/test_agent.py::test_explain_truncates_long_phrase`,
+  `test_low_confidence_failure_keeps_observing`,
+  `pytest` 86 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
 - [ ] **AGT-T8 — `help(step, keyframes)`.** Prompt de `design.md` section 3 ; repli sur la consigne.
   Exigences : `AGT-R5.1`, `R5.2`. Bloque : `CORE-T15`.
 - [ ] **AGT-T9 — Jetons et coûts.** Lire `r.usage` ; ajouter `input_tokens`, `output_tokens` au journal ; reporter
