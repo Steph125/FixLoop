@@ -42,9 +42,12 @@
   `test_image_requests_are_logged_to_costs`, `test_failed_request_is_logged_not_ok` (ignorés ici),
   `pytest` 94 passed + 11 skipped, `check_spec.py` OK. Aucun code à écrire (`_cost` couvrait déjà
   les 4 chemins de `_segment_part`) ; le mode vidéo sera couvert par PERC-T5.
-- [ ] **PERC-T8 — Équivalence avec `eval/day1`.** Test `recorded` : rejouer `probe_out2/raw_*.txt` avec le module,
+- [x] **PERC-T8 — Équivalence avec `eval/day1`.** Test `recorded` : rejouer `probe_out2/raw_*.txt` avec le module,
   comparer les médianes par phase (± 0,005) et le classement des 285 images (0 erreur).
   Exigences : `PERC-R9.1`, `R9.2`.
+  Preuve : `tests/test_perception.py::test_recorded_equivalence_day1`
+  (médianes 0,3437 / 0,0903 / 0,0896 contre 0,344 / 0,090 / 0,085 ; 0 mal classée),
+  `pytest` 97 passed + 12 skipped, `check_spec.py` OK.
 - [ ] **PERC-T9 — Vérification en direct, filtre de confiance.** Relancer `probe/sam_image_latency.py --times
   5,10,25,35` en important le module ; confirmer les 4 états. Coût : 8 images, environ 0,02 $.
   Exigences : `PERC-R1.4`, `R1.7`. Preuve à noter : `eval/day1/findings.md`.

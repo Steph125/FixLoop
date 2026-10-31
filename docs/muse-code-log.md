@@ -115,6 +115,15 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `check_spec.py` OK.
   Fichiers : `fixloop/perception.py`, `tests/test_perception.py`,
   `tests/test_perception_live.py`, `spec/02-perception/tasks.md`.
+- PERC-T8 (équivalence `eval/day1`, `probe_out2/` présent) : `test_recorded_equivalence_day1`
+  (marque `recorded`, saute si `probe_out2/` absent) rejoue `raw_chain.txt` +
+  `raw_chainring.txt` via `parse_raw` → `masks_from_records` (union chaîne, largest
+  plateau, 464×848) → `geometry.measure` : 285 images sur deux, phases
+  78/7/125/75, médianes 0,3437 / 0,0903 / 0,0896 (± 0,005 OK), 0 mal classée.
+  Difficile : 1er essai raté — médianes calculées avec les NaN, la sonde les exclut ;
+  test aligné sur la sonde (plus `pytest.ini` qui enregistre la marque `recorded`).
+  Preuve : `pytest` 97 passed + 12 skipped, `check_spec.py` OK.
+  Fichiers : `tests/test_perception.py`, `pytest.ini`, `spec/02-perception/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

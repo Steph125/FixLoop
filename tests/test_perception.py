@@ -174,6 +174,56 @@ def test_assemble_frames_merges_shifted_chunks():
 RAW_CHUNK = Path("probe_out2/raw_chain_00.txt")
 
 
+def recorded_raw(name):
+    p = Path("probe_out2") / name
+    if not p.exists():
+        pytest.skip("probe_out2/ absent : test d'équivalence sauté")
+    return p.read_text(encoding="utf-8")
+
+
+@pytest.mark.recorded
+def test_recorded_equivalence_day1():
+    """Rejoue probe_out2 avec le module : médianes ± 0,005, 0 image mal classée (PERC-R9)."""
+    import statistics
+
+    from fixloop.geometry import measure
+    from fixloop.models import FrameMasks
+    from fixloop.procedures import load_all
+
+    def median(vals):
+        vals = [x for x in vals if x == x]  # comme la sonde : NaN exclus (non détecté = incertain)
+        return statistics.median(vals)
+
+    proc = load_all()["chain_off_chainring"]
+    h, w = 464, 848  # vidéo velo2 préparée (eval/day1)
+    per_part = {}
+    for part, largest in (("chain", False), ("chainring", True)):
+        recs = parse_raw(recorded_raw(f"raw_{part}.txt")).records
+        for fi, pr in masks_from_records(recs, h, w, CONF_THR, largest).items():
+            per_part.setdefault(fi, {})[part] = pr
+    contacts = {}
+    for fi in sorted(per_part):
+        kept = {p: pr for p, pr in per_part[fi].items() if pr.mask is not None}
+        fm = FrameMasks(frame_index=fi, t=fi / 10.0,
+                        masks={p: pr.mask for p, pr in kept.items()},
+                        confidence={p: pr.confidence for p, pr in kept.items()})
+        contacts[fi] = measure(fm, proc).contact[("chain", "chainring")]
+    even = {fi: c for fi, c in contacts.items() if fi % 2 == 0}
+    assert len(even) == 285  # eval/day1 : une image sur deux
+    off = [c for fi, c in even.items() if fi <= 154]
+    trans = [fi for fi in even if 156 <= fi <= 168]
+    rot = [c for fi, c in even.items() if 170 <= fi <= 418]
+    still = [c for fi, c in even.items() if fi >= 420]
+    assert len(off) == 78 and len(trans) == 7 and len(rot) == 125 and len(still) == 75
+    assert median(off) == pytest.approx(0.344, abs=0.005)  # eval/day1
+    assert median(rot) == pytest.approx(0.090, abs=0.005)
+    assert median(still) == pytest.approx(0.085, abs=0.005)
+    bad = [fi for fi, c in even.items() if fi <= 154 and not (c == c and c >= 0.26)]
+    bad += [fi for fi, c in even.items()
+            if (170 <= fi <= 418 or fi >= 420) and c == c and c >= 0.26]
+    assert bad == []  # aucune image classée dans le mauvais état (NaN = incertain, permis hors tombée)
+
+
 def test_svg_path_is_small_and_offset():
     mask = np.zeros((30, 40), dtype=bool)
     mask[2:12, 5:15] = True  # 100 px² : au-dessus du seuil de 40 px²
