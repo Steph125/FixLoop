@@ -364,10 +364,69 @@ class Models:
         self.costs = costs
 
 
+class SimPerception:
+    """Perception factice : scène synthétique ou `raw_*.txt`, sans réseau (SRV-T10)."""
+
+    def __init__(self, script: tuple = ("off", "on"), raw: dict | None = None,
+                 h: int = 300, w: int = 400, costs: object = None) -> None:
+        self.script = list(script)
+        self.raw = raw  # {partie: texte brut recollé} rejoué image par image
+        self.h, self.w, self.costs = h, w, costs
+        self.i = 0
+
+    @classmethod
+    def from_raw(cls, raw_dir: object, h: int, w: int,
+                 costs: object = None) -> "SimPerception":
+        """Rejoue `raw_chain.txt` + `raw_chainring.txt` (replay, sans réseau)."""
+        from pathlib import Path
+        raw = {}
+        for part in ("chain", "chainring"):
+            raw[part] = (Path(raw_dir) / f"raw_{part}.txt").read_text(encoding="utf-8")
+        return cls(raw=raw, h=h, w=w, costs=costs)
+
+    def done_sync(self, fi: int, t: float) -> object:
+        """Résultat pour l'image `fi` : synchrone, testable sans boucle."""
+        import numpy as np
+
+        from fixloop.perception import ImageResult, PartResult, mask_to_svg_path, masks_from_records, parse_raw
+        from fixloop.sim import frame as sim_frame
+        if self.raw is not None:
+            parts = {}
+            for part, largest in (("chain", False), ("chainring", True)):
+                lines = self.raw[part].splitlines(keepends=True)
+                one = "".join(line for line in lines if line.startswith(f"<{fi}f>"))
+                found = masks_from_records(parse_raw(one).records, self.h, self.w,
+                                           0.4, largest)
+                pr = found.get(fi)
+                if pr is not None and pr.mask is not None:
+                    parts[part] = PartResult(pr.mask, pr.confidence, pr.box,
+                                             mask_to_svg_path(pr.mask), pr.n_objects)
+        else:
+            fm = sim_frame(self.script[min(self.i, len(self.script) - 1)], fi, t)
+            parts = {}
+            for p, mask in fm.masks.items():
+                ys, xs = np.nonzero(mask)
+                parts[p] = PartResult(mask, 0.9, (int(xs.min()), int(ys.min()),
+                                                 int(xs.max()) + 1, int(ys.max()) + 1),
+                                      mask_to_svg_path(mask), 1)
+        return ImageResult(fi, t, parts, {"total_s": 0.0, "attempts": {}}, None,
+                           self.w, self.h)
+
+    def try_submit(self, jpeg: bytes, fi: int, t: float):  # tâche asyncio ou None
+        import asyncio
+        self.i += 1
+        return asyncio.get_running_loop().create_task(self._done(fi, t))
+
+    async def _done(self, fi: int, t: float):
+        return self.done_sync(fi, t)
+
+
 def build_models(procedures: dict, costs: object, fake: bool = False) -> Models:
-    """Assemble les modèles ; `fake` (replay sans réseau) arrive avec SRV-T10."""
+    """Assemble les modèles ; `fake` rejoue sans aucun réseau (SRV-T10)."""
     if fake:
-        raise NotImplementedError("modèles factices : voir SRV-T10")
+        from tests.fakes import FakeAgent, FakeMemory
+        return Models(lambda proc: SimPerception(costs=costs),
+                      FakeAgent(), FakeMemory(), costs)
     from fixloop.agent import SparkAgent
     from fixloop.memory import WonderMemory
     from fixloop.perception import LivePerception

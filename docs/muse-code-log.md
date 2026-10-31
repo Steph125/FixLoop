@@ -184,6 +184,18 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Fichiers : `server/session.py`, `server/app.py`, `tests/test_session.py`,
   `spec/05-session-server/tasks.md`.
 
+- SRV-T10 (faux modèles, [~] à vérifier hors sandbox pour le client et velo2) :
+  SimPerception (scène sim ou raw_*.txt rejoués image par image, done_sync
+  synchrone, try_submit async), build_models(fake=True) (faux Spark/Wonder de
+  tests/fakes.py, aucun réseau), scripts/ws_client.py (--video, --done,
+  1 image/s, JPEG <= 200 ko).
+  Difficile : 2 essais ratés (NotImplementedError attendu, puis masks_from_records
+  rend des images par pièce — appelé par pièce comme dans PERC-T8).
+  Preuve partielle : 2 tests sync passent ici, pytest 122 passed + 6 skipped,
+  check_spec.py OK.
+  Fichiers : server/session.py, scripts/ws_client.py, tests/test_session.py,
+  spec/05-session-server/tasks.md.
+
 ## 2026-10-30 (soir, sans interaction)
 
 - VOX-T6 (négation et formes corrigées) : listes `COMMANDS` alignées sur `design.md` 2.2

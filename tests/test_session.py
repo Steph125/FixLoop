@@ -461,6 +461,35 @@ def test_recordings_only_when_enabled(tmp_path):
     assert (tmp_path / "r" / "abc").is_dir()
 
 
+def test_fake_models_run_without_network():
+    from fixloop.procedures import load_all
+    from server.session import build_models
+    models = build_models(load_all(), costs=None, fake=True)  # SRV-R10.2, aucun réseau
+    pid, raison = models.agent.diagnose([], load_all(), "")
+    assert pid == "chain_off_chainring"
+    assert models.memory.repeated("velo", "chain_off_chainring") == 0
+    perc = models.perception_factory(next(iter(load_all().values())))
+    res = perc.done_sync(0, 0.0)
+    assert set(res.parts) == {"chain", "chainring"}  # scène synthétique (sim)
+    assert res.parts["chainring"].svg_path.startswith("M")
+    assert res.error is None
+
+
+def test_fake_perception_replays_raw_files():
+    from pathlib import Path
+
+    import pytest
+
+    from server.session import SimPerception
+    for name in ("raw_chain.txt", "raw_chainring.txt"):
+        if not (Path("probe_out2") / name).exists():
+            pytest.skip("probe_out2/ absent : rejouet brut sauté")
+    perc = SimPerception.from_raw("probe_out2", h=464, w=848)  # SRV-R10.2 : ou raw_*.txt
+    res = perc.done_sync(0, 0.0)
+    assert set(res.parts) == {"chain", "chainring"}
+    assert res.parts["chain"].mask.shape == (464, 848)
+
+
 def test_session_limits_cost_and_duration():
     from server.session import Limits, check_session_limits
     lim = Limits(max_cost_usd=1.5, max_minutes=10)

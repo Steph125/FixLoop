@@ -56,9 +56,14 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   `test_recordings_only_when_enabled` (passent ici ; écriture en fin de session
   câblée dans `LiveSession`, vérifiée bout-en-bout avec les tests async [~] de SRV-T7),
   `pytest` 120 passed + 6 skipped, `check_spec.py` OK.
-- [ ] **SRV-T10 — Client de test et faux modèles.** `scripts/ws_client.py --video … --done 18,30` ;
+- [~] **SRV-T10 — Client de test et faux modèles.** `scripts/ws_client.py --video … --done 18,30` ;
   `FIXLOOP_FAKE_MODELS=1` (perception depuis la scène synthétique ou des `raw_*.txt`, faux Spark, faux Wonder).
   Exigences : `SRV-R10.1`, `R10.2`. Fait quand : session `velo2` jouée sans réseau jusqu'à `closed`.
+  À vérifier hors sandbox : `ws_client.py` (websockets absent ici) et la session `velo2`
+  jusqu'à `closed` (sockets interdits ici).
+  Preuve partielle : `test_fake_models_run_without_network`,
+  `test_fake_perception_replays_raw_files` (passent ici),
+  `pytest` 122 passed + 6 skipped, `check_spec.py` OK.
 - [ ] **SRV-T11 — Première session réelle en local.** `ws_client.py` sur `velo2` avec les vrais modèles ;
   noter dans `eval/day3/findings.md` : délai du verdict après le geste, `dropped`, résultats écartés, appels Spark,
   coût estimé, puis comparer au coût affiché sur la page Usage.
