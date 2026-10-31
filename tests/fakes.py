@@ -64,6 +64,9 @@ class FakeMemory:
     def save(self, bike_id, report):
         self.saved.append(report)
 
+    def repeated(self, bike_id, procedure, days=30):
+        return 0
+
 
 class RaisingMemory(FakeMemory):
     """Memoire injoignable : `load` et `save` levent (spec/01-core-loop, CORE-T18)."""

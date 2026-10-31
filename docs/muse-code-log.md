@@ -72,6 +72,16 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `pytest` 91 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/state_machine.py`, `tests/test_state_machine.py`,
   `spec/04-memory-voice/tasks.md`.
+- MEM-T5 (phrase de panne répétée) : `Session.start` dit la phrase de `design.md` 1.2
+  quand `_safe_repeated` rend ≥ 2 (calcul local via `Memory.repeated`, ajouté au
+  protocole et à `FakeMemory`) ; mémoire muette → 0, sans événement (le repli est le
+  silence, pour ne pas étendre `memory_error` réservé à `load`/`save` par CORE-R4.7).
+  Aucun compteur Wonder : `repeated()` est local, pas un appel modèle (MEM-D2).
+  Passé au 1er essai après un échec authentique avant le code.
+  Preuve : `test_repeated_failure_is_said_after_diagnose`,
+  `pytest` 92 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`,
+  `tests/test_state_machine.py`, `spec/04-memory-voice/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

@@ -175,6 +175,19 @@ def test_on_command_repeat_and_help():
     assert len(r2.events("command")) == 1
 
 
+def test_repeated_failure_is_said_after_diagnose():
+    from fakes import FakeMemory
+
+    class TwiceMemory(FakeMemory):  # MEM-R1.4 : meme fiche 2 fois en 30 jours
+        def repeated(self, bike_id, procedure, days=30):
+            return 2 if procedure == "chain_off_chainring" else 0
+
+    r = Runner(memory=TwiceMemory())
+    assert any("2e fois en un mois" in s for s in r.out.said)
+    r2 = Runner()  # aucune repetition : rien de dit
+    assert not any("fois en un mois" in s for s in r2.out.said)
+
+
 def test_out_of_order_measures_are_ignored():
     r = Runner()
     r.feed("off", 4)

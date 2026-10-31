@@ -68,6 +68,7 @@ class Agent(Protocol):  # Muse Spark
 class Memory(Protocol):  # Muse Wonder
     def load(self, bike_id: str) -> str: ...
     def save(self, bike_id: str, report: dict) -> None: ...
+    def repeated(self, bike_id: str, procedure: str, days: int = 30) -> int: ...  # MEM-R1.4
 
 
 class Output(Protocol):  # téléphone
@@ -124,6 +125,18 @@ class Session:
         self.model_calls["wonder"] += 1
         return history
 
+    def _safe_repeated(self, proc_id: str) -> int:
+        """Occurrences de la fiche en 30 jours, 0 si la memoire est muette (MEM-R1.4).
+
+        Sans evenement : le repli est le silence (pas de phrase), et CORE-R4.7
+        reserve `memory_error` a `load` et `save` (test existant).
+        """
+        try:
+            n = self.memory.repeated(self.bike_id, proc_id)
+        except Exception:
+            return 0
+        return n if isinstance(n, int) and n > 0 else 0
+
     def _safe_save(self, report: dict) -> None:
         """Ecrit le rapport ; journalise `memory_error` si la memoire leve (CORE-R4.7)."""
         try:
@@ -153,6 +166,10 @@ class Session:
         self.out.say(f"Je vois : {self.procedure.get('title', proc_id)}.")  # AGT-R1.4
         if isinstance(raison, str) and raison.strip():
             self.out.say(raison.strip())
+        n = self._safe_repeated(proc_id)  # MEM-R1.4 : panne repetee, calcul local
+        if n >= 2:
+            self.out.say(f"C'est la {n}e fois en un mois que ta chaîne tombe. "
+                         "On vérifiera son usure à la fin.")
         self._enter_step(0)
         self._maybe_emit_state()
 
