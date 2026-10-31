@@ -163,6 +163,15 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   5 tests sync passent ici, 2 async ignorés ici.
   Preuve partielle : `pytest` 116 passed + 6 skipped, `check_spec.py` OK.
   Fichiers : `server/session.py`, `tests/test_session.py`, `spec/05-session-server/tasks.md`.
+- SRV-T8 (limites, [~] à vérifier hors sandbox pour `/api/costs`) : `check_session_limits`
+  (arrêt au-delà de 1,50 $ ou à 10 min), refus `budget` sans compter de refus IP au-delà
+  de `FIXLOOP_DAILY_BUDGET`, chien de garde étendu (coût dit puis clôt, durée clôt),
+  `GET /api/costs` (403 sans code, totaux du jour par modèle).
+  Passé au 1er essai après 2 échecs authentiques avant le code.
+  Preuve partielle : 2 tests sync passent ici, `pytest` 118 passed + 6 skipped,
+  `check_spec.py` OK.
+  Fichiers : `server/session.py`, `server/app.py`, `tests/test_session.py`,
+  `tests/test_server.py`, `spec/05-session-server/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

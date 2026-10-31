@@ -42,9 +42,13 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   `test_worker_stops_after_three_consecutive_errors`, `test_closed_summary_counts_rejections`
   (passent ici), `test_stop_closes_unsuccessful`, `test_fatal_result_error_closes_with_code`
   (ignorés ici), `pytest` 116 passed + 6 skipped, `check_spec.py` OK.
-- [ ] **SRV-T8 — Limites de coût et de durée.** Arrêt à 1,50 $ ou 10 min ; refus au-delà du budget du jour ;
+- [~] **SRV-T8 — Limites de coût et de durée.** Arrêt à 1,50 $ ou 10 min ; refus au-delà du budget du jour ;
   `/api/costs` protégé.
   Exigences : `SRV-R8.2` à `R8.4`. Dépend de : T2.
+  À vérifier hors sandbox : `test_costs_needs_access_code` ignoré ici (fastapi absent).
+  Preuve partielle : `test_session_limits_cost_and_duration`,
+  `test_new_session_refused_beyond_daily_budget` (passent ici),
+  `pytest` 118 passed + 6 skipped, `check_spec.py` OK.
 - [ ] **SRV-T9 — Journal et enregistrement.** `data/sessions/<id>.jsonl` ; option `FIXLOOP_RECORD=1` (images
   reçues + sorties SAM brutes dans `data/recordings/<id>/`).
   Exigences : `SRV-R9.1` à `R9.3`. Utilisé par : `RPL-T2`, `EVAL-T2`, `AGT-T11`.

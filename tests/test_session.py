@@ -430,6 +430,29 @@ def test_closed_summary_counts_rejections():
         "dropped": 2, "stale": 1, "out_of_order": 0}  # SRV-R6.3 : résumé joint à closed
 
 
+def test_session_limits_cost_and_duration():
+    from server.session import Limits, check_session_limits
+    lim = Limits(max_cost_usd=1.5, max_minutes=10)
+    assert check_session_limits(0.4, 120.0, lim) == "ok"
+    assert check_session_limits(1.5, 120.0, lim) == "ok"  # SRV-R8.2 : au-delà de 1,50 $
+    assert check_session_limits(1.51, 120.0, lim) == "cost"
+    assert check_session_limits(0.4, 600.0, lim) == "duration"  # ...ou 10 min
+
+
+def test_new_session_refused_beyond_daily_budget():
+    from server.session import Limits, SessionRegistry
+    total = [11.0]
+    reg = SessionRegistry(Limits(daily_budget_usd=10.0), access_code=None,
+                          procedures=PROCS, day_total=lambda: total[0])
+    for _ in range(6):
+        kind, body = reg.hello(hello(), "10.0.0.1", now=100.0)
+        assert (kind, body["code"]) == ("error", "budget")  # SRV-R8.3
+    assert reg.live_count == 0
+    total[0] = 0.0
+    assert reg.hello(hello(), "10.0.0.1", now=200.0)[0] == "hello_ack"  # budget OK de
+    # nouveau, et sans blocage IP : le refus budget n'est pas une attaque
+
+
 def test_stop_closes_unsuccessful():
     async def main():
         import asyncio

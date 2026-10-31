@@ -46,10 +46,11 @@ class SessionRegistry:
     """Ouverture et contrôle d'accès (SRV-R2). Pur et synchrone."""
 
     def __init__(self, limits: Limits | None = None, access_code: str | None = None,
-                 procedures: dict | None = None):
+                 procedures: dict | None = None, day_total: object = None):
         self.limits = limits or Limits()
         self.access_code = access_code
         self.procedures = procedures if procedures is not None else {}
+        self.day_total = day_total  # coût estimé du jour, câblé par le serveur (SRV-R8.3)
         self.sessions: dict[str, dict] = {}  # session_id -> bike_id, ip
         self._refusals: dict[str, list[float]] = {}  # ip -> instants des refus
         self._banned_until: dict[str, float] = {}  # ip -> fin du blocage
@@ -87,6 +88,9 @@ class SessionRegistry:
         if self.access_code is not None and parsed.get("access_code") != self.access_code:
             self._refuse(ip, now)
             return "error", {"code": "access_denied", "message": "Code d'accès refusé."}
+        if self.day_total is not None and self.day_total() > self.limits.daily_budget_usd:
+            return "error", {"code": "budget",  # SRV-R8.3 : sans compter un refus
+                             "message": "Le budget du jour est dépassé. Réessaie demain."}
         if self.live_count >= self.limits.max_sessions:
             self._refuse(ip, now)
             return "error", {"code": "busy",
@@ -271,6 +275,15 @@ def summary_for(counters: dict) -> dict:
             "out_of_order": counters.get("out_of_order", 0)}
 
 
+def check_session_limits(cost_usd: float, elapsed_s: float, limits: Limits) -> str:
+    """`ok`, `cost` ou `duration` : arrêt au-delà de 1,50 $ ou 10 min (SRV-R8.2)."""
+    if cost_usd > limits.max_cost_usd:
+        return "cost"
+    if elapsed_s >= limits.max_minutes * 60:
+        return "duration"
+    return "ok"
+
+
 class Models:
     """Modèles d'une session : perception, Spark, mémoire, coûts (design 05, section 2)."""
 
@@ -343,6 +356,7 @@ class LiveSession:
         self.fatal: tuple[str, str] | None = None  # erreur SAM fatale à remonter
         self.last_slow_said: float | None = None  # SRV-R7.3 : au plus une fois par minute
         self.last_result_at: float | None = None
+        self.started_at: float | None = None  # SRV-R8.2 : durée max 10 min
         self.consec_errors = 0  # 3 exceptions de suite -> arrêt (design 05, section 6)
 
     def note_worker_ok(self) -> None:
@@ -375,6 +389,7 @@ class LiveSession:
             await self.ws.close()
             return
         self.session_id, self.bike_id = body["session_id"], self._bike_of(body)
+        self.started_at = self.clock()
         await self.ws.send_text(json.dumps({"type": "hello_ack", **body}))
         receiver = asyncio.create_task(self._receive())
         sender = asyncio.create_task(self._send())
@@ -400,7 +415,10 @@ class LiveSession:
             await self.ws.send_text(json.dumps(msg))
 
     async def _watchdog(self) -> None:
-        """15 s sans résultat SAM : le dire (1/min) ; 60 s : abandonner (SRV-R7.3)."""
+        """15 s sans résultat SAM : le dire (1/min) ; 60 s : abandonner (SRV-R7.3).
+
+        Arrête aussi la session au-delà de 1,50 $ ou 10 min (SRV-R8.2).
+        """
         import asyncio
         while True:
             await asyncio.sleep(1.0)
@@ -414,6 +432,25 @@ class LiveSession:
                 self.output.say(SLOW_PHRASE)
             elif state == "abandon":
                 await self._abort("internal", "Aucun résultat, la session est abandonnée.")
+                return
+            outcome = check_session_limits(self._session_cost(), now - (self.started_at or now),
+                                           self.limits)
+            if outcome == "cost":
+                self.output.say(STOP_PHRASE)
+                await self._finish(False)
+                return
+            if outcome == "duration":
+                await self._finish(False)
+                return
+
+    def _session_cost(self) -> float:
+        """Coût estimé de la session, 0 sans journal (SRV-R8.1)."""
+        try:
+            if self.models.costs is None or self.session_id is None:
+                return 0.0
+            return float(self.models.costs.session_total(self.session_id))
+        except Exception:
+            return 0.0
 
     async def _receive(self) -> None:
         from .protocol import parse_binary, parse_client_message

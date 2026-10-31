@@ -27,3 +27,15 @@ def test_procedures_lists_loaded_cards():
     ids = {p["id"] for p in r.json()}
     assert "chain_off_chainring" in ids  # SRV-R1.3
     assert all(set(p) == {"id", "title"} for p in r.json())
+
+
+def test_costs_needs_access_code(monkeypatch):
+    monkeypatch.setenv("FIXLOOP_ACCESS_CODE", "sésame")
+    c = TestClient(create_app())
+    assert c.get("/api/costs").status_code == 403  # SRV-R8.4 : sans code
+    r = c.get("/api/costs", params={"access_code": "sésame"})
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body) == {"day", "total_usd", "by_model"}  # totaux du jour par modèle
+    monkeypatch.delenv("FIXLOOP_ACCESS_CODE")
+    assert TestClient(create_app()).get("/api/costs").status_code == 200  # code non défini
