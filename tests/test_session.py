@@ -430,6 +430,37 @@ def test_closed_summary_counts_rejections():
         "dropped": 2, "stale": 1, "out_of_order": 0}  # SRV-R6.3 : résumé joint à closed
 
 
+def test_journal_writes_events_counters_and_costs_without_images(tmp_path):
+    import json
+
+    from server.session import SessionRecorder
+    rec = SessionRecorder(root=tmp_path / "sessions", recordings_root=tmp_path / "rec")
+    events = [{"event": "diagnose", "t": 0.0, "procedure": "chain_off_chainring"},
+              {"event": "anomaly", "t": 3.5, "step": "x", "message": "m",
+               "image": b"\xff\xd8jpeg", "key": "MODEL_API_KEY=secret"}]
+    path = rec.finish("abc123", {"bike_id": "velo-1", "success": True, "events": events,
+                                 "counters": {"dropped": 1}, "latencies": [12.5],
+                                 "costs": {"session_usd": 0.02}})
+    lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    assert lines[0]["session_id"] == "abc123"  # SRV-R9.1 : méta + compteurs + coûts
+    assert lines[0]["costs"] == {"session_usd": 0.02} and lines[0]["latencies"] == [12.5]
+    assert [e["event"] for e in lines[1:]] == ["diagnose", "anomaly"]
+    text = path.read_text(encoding="utf-8")
+    assert "MODEL_API_KEY" not in text and "jpeg" not in text  # SRV-R9.2 : ni image ni clé
+
+
+def test_recordings_only_when_enabled(tmp_path):
+    from server.session import SessionRecorder
+    off = SessionRecorder(root=tmp_path / "s", recordings_root=tmp_path / "r", record=False)
+    assert off.record_image("abc", 3, b"jpeg") is None  # SRV-R9.3 : inactif par défaut
+    assert not list((tmp_path / "r").glob("*")) if (tmp_path / "r").exists() else True
+    on = SessionRecorder(root=tmp_path / "s", recordings_root=tmp_path / "r", record=True)
+    img = on.record_image("abc", 3, b"jpeg")
+    raw = on.record_raw("abc", 3, "<0f>1\n")
+    assert img is not None and img.exists() and raw is not None and raw.exists()
+    assert (tmp_path / "r" / "abc").is_dir()
+
+
 def test_session_limits_cost_and_duration():
     from server.session import Limits, check_session_limits
     lim = Limits(max_cost_usd=1.5, max_minutes=10)

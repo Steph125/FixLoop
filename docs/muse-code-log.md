@@ -172,6 +172,17 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `check_spec.py` OK.
   Fichiers : `server/session.py`, `server/app.py`, `tests/test_session.py`,
   `tests/test_server.py`, `spec/05-session-server/tasks.md`.
+- SRV-T9 (journal et enregistrement, [x]) : `SessionRecorder` (`finish` méta + compteurs
+  + latences + coûts + événements, `_clean` retire octets et champs sensibles ;
+  `record_image`/`record_raw` seulement si `FIXLOOP_RECORD=1`), câblé dans `LiveSession`
+  (latences, écriture à la clôture/erreur/déconnexion, une seule fois, jamais bloquant)
+  et la route WS (`recorder`).
+  Choix noté : le mode image de `LivePerception` ne garde pas le texte brut SAM —
+  l'enregistrement garde le message `overlay` (chemins SVG).
+  Passé au 2e essai (nom `latencies` contre `latencies_ms`).
+  Preuve : 2 tests sync passent ici, `pytest` 120 passed + 6 skipped, `check_spec.py` OK.
+  Fichiers : `server/session.py`, `server/app.py`, `tests/test_session.py`,
+  `spec/05-session-server/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

@@ -284,6 +284,75 @@ def check_session_limits(cost_usd: float, elapsed_s: float, limits: Limits) -> s
     return "ok"
 
 
+SENSITIVE_KEYS = {"image", "jpeg", "audio", "key", "api_key"}  # SRV-R9.2 : jamais au journal
+
+
+def _clean(value: object) -> object:
+    """Retire octets et champs sensibles avant écriture du journal (SRV-R9.2)."""
+    if isinstance(value, dict):
+        return {k: _clean(v) for k, v in value.items()
+                if k not in SENSITIVE_KEYS and not isinstance(v, (bytes, bytearray))}
+    if isinstance(value, (list, tuple)):
+        return [_clean(v) for v in value if not isinstance(v, (bytes, bytearray))]
+    return value
+
+
+class SessionRecorder:
+    """Journal `data/sessions/<id>.jsonl` et enregistrements replay (SRV-R9)."""
+
+    def __init__(self, root: object = "data/sessions",
+                 recordings_root: object = "data/recordings",
+                 record: bool = False) -> None:
+        from pathlib import Path
+        self.root, self.recordings_root = Path(root), Path(recordings_root)
+        self.record = record
+
+    def finish(self, session_id: str, report: dict) -> object:
+        """Écrit le journal : méta, compteurs, latences, coûts, puis événements."""
+        import json
+        from pathlib import Path
+        self.root.mkdir(parents=True, exist_ok=True)
+        path = self.root / f"{session_id}.jsonl"
+        head = {"type": "session", "session_id": session_id,
+                "bike_id": report.get("bike_id"), "success": report.get("success"),
+                "ended": report.get("ended", "closed"),
+                "counters": report.get("counters", {}),
+                "latencies": report.get("latencies", []),
+                "costs": report.get("costs", {})}
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(_clean(head), ensure_ascii=False) + "\n")
+            for event in report.get("events", []):
+                fh.write(json.dumps(_clean({"type": "event", **event}),
+                                     ensure_ascii=False) + "\n")
+        return path
+
+    def _recording_dir(self, session_id: str) -> object | None:
+        if not self.record:
+            return None
+        from pathlib import Path
+        out = Path(self.recordings_root) / session_id
+        out.mkdir(parents=True, exist_ok=True)
+        return out
+
+    def record_image(self, session_id: str, frame_index: int, jpeg: bytes) -> object | None:
+        """Image reçue, pour le replay (`FIXLOOP_RECORD=1`, SRV-R9.3)."""
+        out = self._recording_dir(session_id)
+        if out is None:
+            return None
+        path = out / f"frame-{frame_index:05d}.jpg"
+        path.write_bytes(jpeg)
+        return path
+
+    def record_raw(self, session_id: str, frame_index: int, raw: str) -> object | None:
+        """Sortie SAM brute, pour le replay (`FIXLOOP_RECORD=1`, SRV-R9.3)."""
+        out = self._recording_dir(session_id)
+        if out is None:
+            return None
+        path = out / f"raw-{frame_index:05d}.txt"
+        path.write_text(raw, encoding="utf-8")
+        return path
+
+
 class Models:
     """Modèles d'une session : perception, Spark, mémoire, coûts (design 05, section 2)."""
 
@@ -330,12 +399,15 @@ class LiveSession:
 
     def __init__(self, ws: object, registry: SessionRegistry, ip: str,
                  procedures: dict, models: Models, limits: Limits,
-                 clock: object = None) -> None:
+                 clock: object = None, recorder: SessionRecorder | None = None) -> None:
         self.ws = ws
         self.registry, self.ip = registry, ip
         self.session_id: str | None = None
         self.bike_id: str | None = None
         self.procedures, self.models, self.limits = procedures, models, limits
+        self.recorder = recorder  # journal + enregistrements (SRV-R9, None = sans journal)
+        self.latencies: list = []  # latences SAM acceptées, en ms (SRV-R9.1)
+        self.journal_written = False
         self.clock = clock  # horloge injectable (tests) ; sinon celle de la boucle
         self.work = WorkQueue()
         self.counters = {"dropped": 0, "stale": 0, "out_of_order": 0, "bad_message": 0,
@@ -400,6 +472,7 @@ class LiveSession:
         except Exception:
             pass  # déconnexion client : on nettoie (SRV-R7.4)
         finally:
+            self._write_journal(False, ended="disconnect")  # SRV-R9.1, une seule fois
             for task in (sender, worker, watchdog):
                 task.cancel()
             self.registry.release(self.session_id)
@@ -501,12 +574,21 @@ class LiveSession:
             return
         self._on_image(decoded["payload"], decoded["t_ms"])
 
+    def _record(self, func: str, *args: object) -> None:
+        """Enregistrement replay : n'interrompt jamais la session (SRV-R9.3)."""
+        try:
+            if self.recorder is not None and self.session_id is not None:
+                getattr(self.recorder, func)(self.session_id, *args)
+        except Exception:
+            pass
+
     def _on_image(self, jpeg: bytes, t_ms: int) -> None:
         fi = self.frame_index
         self.frame_index += 1
         if not self.fps_guard.allow(self.clock()):  # SRV-R3.2 : au-delà de 10 img/s
             self.counters["dropped"] += 1
             return
+        self._record("record_image", fi, jpeg)
         if self.t0_ms is None:  # démarrage : on retient, le diagnostic décidera (SRV-R4.1)
             self.pending_frames[fi] = (t_ms, jpeg, self.clock())
             if len(self.startup) < 3:
@@ -568,20 +650,45 @@ class LiveSession:
         contact = None if contact is None or contact != contact else round(contact, 3)
         on_max, off_min = ((step_thresholds(self.sm.step) if self.sm is not None else (None, None)))
         label = label_for(contact, on_max, off_min)
-        self._send_now(overlay_for(fi, t_ms, result.w, result.h, result.parts, contact,
-                                   label, self.sm.verdict if self.sm is not None else "0",
-                                   round(age * 1000, 1), set(self.red_parts)))
+        latency_ms = round(age * 1000, 1)
+        self.latencies.append(latency_ms)  # SRV-R9.1
+        overlay = overlay_for(fi, t_ms, result.w, result.h, result.parts, contact,
+                              label, self.sm.verdict if self.sm is not None else "0",
+                              latency_ms, set(self.red_parts))
+        self._send_now(overlay)
+        import json
+        self._record("record_raw", fi, json.dumps(overlay, ensure_ascii=False))
         self.work.put_measure((m, keyframe), None)
         self._work_event.set()
 
     # ---------------------------------------------------------- fil machine à états
+    def _write_journal(self, success: bool, ended: str = "closed") -> None:
+        """Journal de fin de session, une seule fois (SRV-R9.1, R7.4)."""
+        if self.journal_written or self.recorder is None or self.session_id is None:
+            return
+        self.journal_written = True
+        try:
+            costs = {"session_usd": round(self._session_cost(), 6)}
+            try:
+                costs["day_usd"] = round(float(self.models.costs.day_total()), 6)
+            except Exception:
+                pass
+            self.recorder.finish(self.session_id, {
+                "bike_id": self.bike_id, "success": success, "ended": ended,
+                "events": list(self.sm.log) if self.sm is not None else [],
+                "counters": {**self.counters, **summary_for(self.counters)},
+                "latencies": list(self.latencies), "costs": costs})
+        except Exception:
+            pass
+
     async def _finish(self, success: bool) -> None:
-        """`closed` (avec résumé) puis fermeture après 2 s (SRV-R6.3)."""
+        """Journal, `closed` (avec résumé) puis fermeture après 2 s (SRV-R6.3)."""
         import asyncio
         if self.closed_sent:
             return
         self.closed_sent = True
         self.closing = True
+        self._write_journal(success)
         self._send_now({"type": "closed", "success": success,
                         "summary": summary_for(self.counters)})
         await asyncio.sleep(CLOSE_DELAY_S)
@@ -597,6 +704,7 @@ class LiveSession:
             return
         self.closed_sent = True
         self.closing = True
+        self._write_journal(False, ended="error")
         if say is not None:
             self._send_now({"type": "say", "text": say})
         self._send_now({"type": "error", "code": code, "message": message})

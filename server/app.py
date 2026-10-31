@@ -42,9 +42,12 @@ def create_app(procedures: dict | None = None) -> FastAPI:
     live = os.environ.get("FIXLOOP_FAKE_MODELS") != "1"
     code_required = bool(os.environ.get("FIXLOOP_ACCESS_CODE"))
     from server.session import SessionRegistry, limits_from_env
+    from fixloop.costs import CostLog
+    day_costs = CostLog()
     app.state.registry = SessionRegistry(limits_from_env(),
                                          access_code=os.environ.get("FIXLOOP_ACCESS_CODE"),
-                                         procedures=procedures)  # SRV-R2
+                                         procedures=procedures,
+                                         day_total=day_costs.day_total)  # SRV-R8.3
 
     @app.get("/api/health")
     def health() -> dict:
@@ -76,14 +79,15 @@ def create_app(procedures: dict | None = None) -> FastAPI:
 
     @app.websocket("/ws/session")
     async def ws_session(ws):  # SRV-R4 : une session en direct par connexion
-        from server.session import LiveSession, build_models
+        from server.session import LiveSession, SessionRecorder, build_models
         from fixloop.costs import CostLog
         await ws.accept()
         ip = ws.client.host if ws.client else "unknown"
         models = build_models(app.state.procedures, CostLog(),
                               fake=os.environ.get("FIXLOOP_FAKE_MODELS") == "1")
+        recorder = SessionRecorder(record=os.environ.get("FIXLOOP_RECORD") == "1")
         session = LiveSession(ws, app.state.registry, ip, app.state.procedures,
-                              models, app.state.registry.limits)
+                              models, app.state.registry.limits, recorder=recorder)
         await session.run()
 
     return app

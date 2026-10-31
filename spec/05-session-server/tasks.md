@@ -49,9 +49,13 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   Preuve partielle : `test_session_limits_cost_and_duration`,
   `test_new_session_refused_beyond_daily_budget` (passent ici),
   `pytest` 118 passed + 6 skipped, `check_spec.py` OK.
-- [ ] **SRV-T9 — Journal et enregistrement.** `data/sessions/<id>.jsonl` ; option `FIXLOOP_RECORD=1` (images
+- [x] **SRV-T9 — Journal et enregistrement.** `data/sessions/<id>.jsonl` ; option `FIXLOOP_RECORD=1` (images
   reçues + sorties SAM brutes dans `data/recordings/<id>/`).
   Exigences : `SRV-R9.1` à `R9.3`. Utilisé par : `RPL-T2`, `EVAL-T2`, `AGT-T11`.
+  Preuve : `test_journal_writes_events_counters_and_costs_without_images`,
+  `test_recordings_only_when_enabled` (passent ici ; écriture en fin de session
+  câblée dans `LiveSession`, vérifiée bout-en-bout avec les tests async [~] de SRV-T7),
+  `pytest` 120 passed + 6 skipped, `check_spec.py` OK.
 - [ ] **SRV-T10 — Client de test et faux modèles.** `scripts/ws_client.py --video … --done 18,30` ;
   `FIXLOOP_FAKE_MODELS=1` (perception depuis la scène synthétique ou des `raw_*.txt`, faux Spark, faux Wonder).
   Exigences : `SRV-R10.1`, `R10.2`. Fait quand : session `velo2` jouée sans réseau jusqu'à `closed`.
