@@ -97,7 +97,23 @@ class WonderMemory:
         path = self._path(bike_id)
         if not path.exists():
             return {"bike_id": bike_id, "entries": []}
-        data = json.loads(path.read_text(encoding="utf-8"))
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            data = None
+        if not isinstance(data, dict):  # JSON invalide ou forme inattendue
+            return self._quarantine(bike_id, path)
         data.setdefault("bike_id", bike_id)
         data.setdefault("entries", [])
         return data
+
+    def _quarantine(self, bike_id: str, path: Path) -> dict:
+        """Renomme l'historique illisible en `<id>.corrupt-<date>.json` (MEM-R1.1)."""
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+        target = path.with_name(f"{bike_id}.corrupt-{stamp}.json")
+        n = 2
+        while target.exists():
+            target = path.with_name(f"{bike_id}.corrupt-{stamp}-{n}.json")
+            n += 1
+        os.replace(path, target)
+        return {"bike_id": bike_id, "entries": []}

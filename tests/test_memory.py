@@ -62,3 +62,26 @@ def test_history_contains_no_image_audio_or_transcript(tmp_path):
     assert "transcript" not in raw and "Léa" not in raw
     assert "chain_off_chainring" in raw  # MEM-R2.1 : l'entrée est écrite
     assert list((tmp_path / "bikes").glob("*.tmp")) == []  # écriture atomique (MEM-R2.4)
+
+
+def test_corrupt_history_renamed_and_empty(tmp_path):
+    m = mem(tmp_path)
+    path = tmp_path / "bikes" / "velo-1.json"
+    path.parent.mkdir(parents=True)
+    path.write_text("{ invalide", encoding="utf-8")
+    assert m.load("velo-1") == "aucun"  # MEM-R1.1 : repart vide, sans lever
+    assert not path.exists()
+    renamed = list((tmp_path / "bikes").glob("velo-1.corrupt-*.json"))
+    assert len(renamed) == 1 and "invalide" in renamed[0].read_text(encoding="utf-8")
+    assert m.repeated("velo-1", "chain_off_chainring") == 0
+    m.save("velo-1", report())  # reecriture possible apres renommage
+    assert "chain_off_chainring" in m.load("velo-1")
+
+
+def test_non_dict_history_renamed_and_empty(tmp_path):
+    m = mem(tmp_path)
+    path = tmp_path / "bikes" / "velo-1.json"
+    path.parent.mkdir(parents=True)
+    path.write_text("[1, 2]", encoding="utf-8")  # JSON valide mais inutilisable
+    assert m.load("velo-1") == "aucun"
+    assert len(list((tmp_path / "bikes").glob("velo-1.corrupt-*.json"))) == 1

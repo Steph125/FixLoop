@@ -3,6 +3,17 @@
 Tenu par Muse Code à chaque tâche terminée (date, prompt, fichiers, corrections à la main).
 Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la raison.
 
+## 2026-10-31 (sans interaction, choix prudent noté sans question)
+
+- MEM-T7 (commit du reste de la veille) : le code et les tests dataient du 30 oct. au soir
+  mais n'étaient pas committés (arbre sale) ; vérifié `tests/test_memory.py` 7 passed,
+  `test_voice.py` + `test_state_machine.py` 29 passed, `check_spec.py` OK
+  (82 exigences, 299 critères, 46 décisions, 104 tâches), puis commit nominatif.
+  Choix prudent : `git add` nominatif (pas `-A`) pour ne pas embarquer `latency_out/`,
+  `prompt_serie2.md`, `pytest-of-nguen/`, `tmp*/` (fichiers de l'utilisateur et résidus).
+  VOX-T6 et CORE-T18 déjà committés le 30 oct., vérifiés sans changement.
+  Fichiers : `fixloop/memory.py`, `tests/test_memory.py`, `spec/04-memory-voice/tasks.md`.
+
 ## 2026-10-30 (soir, sans interaction)
 
 - VOX-T6 (négation et formes corrigées) : listes `COMMANDS` alignées sur `design.md` 2.2
@@ -22,6 +33,11 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve : `test_raising_memory_falls_back_and_closes`.
   Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`, `tests/test_state_machine.py`,
   `spec/01-core-loop/tasks.md`.
+- MEM-T7 (historique illisible) : `_read` attrape JSON invalide/illisible et forme non-dict,
+  renomme en `<id>.corrupt-<date>.json` (suffixe si doublon) via `_quarantine`, repart vide
+  sans lever. Passé du 1er coup.
+  Preuve : `test_corrupt_history_renamed_and_empty`, `test_non_dict_history_renamed_and_empty`.
+  Fichiers : `fixloop/memory.py`, `tests/test_memory.py`, `spec/04-memory-voice/tasks.md`.
 
 ## 2026-10-30
 
