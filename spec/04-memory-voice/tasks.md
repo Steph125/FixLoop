@@ -12,9 +12,11 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
 - [x] **MEM-T7 — Historique illisible.** `_read` : JSON invalide → renommage `.corrupt-<date>.json`, historique
   vide ; test. Exigences : `MEM-R1.1`. Trouvé à la relecture.
   Preuve : `tests/test_memory.py::test_corrupt_history_renamed_and_empty`.
-- [ ] **MEM-T2 — Rapport enrichi.** `Session._close` fournit étapes validées, anomalies (étape, instant, message)
+- [x] **MEM-T2 — Rapport enrichi.** `Session._close` fournit étapes validées, anomalies (étape, instant, message)
   et durée ; adapter `test_happy_path_to_closure`.
   Fichiers : `state_machine.py`. Exigences : `MEM-R2.1`. Touche `01-core-loop`.
+  Preuve : `tests/test_state_machine.py::test_close_report_lists_anomalies_with_step_time_and_message`,
+  `pytest` 91 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
 - [ ] **MEM-T3 — Sonde Wonder.** `probe/wonder_probe.py` : une synthèse sur un historique de 5 entrées ; noter
   durée et réponse dans `eval/day3/findings.md`. Coût : quelques centimes.
   Exigences : `MEM-R1.2`. Fait quand : durée notée, réponse < 60 mots.

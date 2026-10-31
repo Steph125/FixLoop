@@ -44,6 +44,30 @@ def test_happy_path_to_closure():
     assert r.s.state == State.CLOTURE
     assert r.memory.saved and r.memory.saved[0]["success"]
     assert r.s.model_calls == {"spark": 1, "wonder": 2}
+    report = r.memory.saved[0]  # MEM-R2.1 : rapport enrichi
+    assert report["steps_validated"] == ["frame_view", "engage_top_teeth", "turn_backward"]
+    assert report["anomalies"] == []
+    assert report["duration_s"] == r.s.t
+
+
+def test_close_report_lists_anomalies_with_step_time_and_message():
+    r = Runner()
+    r.feed("off", 4)
+    r.s.on_user_done()
+    r.feed("off", 4)                      # anomalie sur engage_top_teeth
+    assert len(r.events("anomaly")) == 1
+    r.feed("on", 4)
+    r.s.on_user_done()
+    r.feed("on", 4)
+    assert r.s.state == State.ESSAI_DYNAMIQUE
+    r.feed("on", 8)
+    assert r.s.state == State.CLOTURE
+    report = r.memory.saved[0]  # MEM-R2.1 : etape, instant, message
+    assert report["steps_validated"] == ["frame_view", "engage_top_teeth", "turn_backward"]
+    assert len(report["anomalies"]) == 1
+    logged = r.events("anomaly")[0]
+    assert report["anomalies"][0] == {"step": logged["step"], "t": logged["t"], "message": logged["message"]}
+    assert report["anomalies"][0]["step"] == "engage_top_teeth"
 
 
 def test_anomaly_then_correction():

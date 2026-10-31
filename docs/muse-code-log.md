@@ -62,6 +62,16 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `test_spark_tokens_estimated_without_usage`,
   `pytest` 90 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
+- MEM-T2 (rapport enrichi) : `Session` suit `steps_validated` (ajouté à `_validate`),
+  `_close` écrit `duration_s`, `steps_validated`, `anomalies` (`step`, `t`, `message`
+  repris du journal) à la place de la clé brute `events` (que `Memory.save` ignorait
+  déjà par son allowlist — aucun changement de fichier induit).
+  `test_happy_path_to_closure` adapté comme la tâche l'exige (noté ici).
+  Passé au 1er essai après 2 échecs authentiques avant le code (`KeyError`).
+  Preuve : `test_close_report_lists_anomalies_with_step_time_and_message`,
+  `pytest` 91 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/state_machine.py`, `tests/test_state_machine.py`,
+  `spec/04-memory-voice/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

@@ -99,6 +99,7 @@ class Session:
         self.state = State.DEMARRAGE
         self.procedure: dict | None = None
         self.k = 0
+        self.steps_validated: list[str] = []  # MEM-R2.1 : etapes validees, dans l'ordre
         self.window: list[Measures] = []
         self.user_done = False
         self.verdict = "0"
@@ -294,6 +295,7 @@ class Session:
 
     def _validate(self, v: Verdict) -> None:
         self.state = State.ETAPE_VALIDEE
+        self.steps_validated.append(self.step["id"])
         self._event("validated", step=self.step["id"], evidence=v.evidence)
         self.out.say("C'est bon.")
         if self.k + 1 < len(self.procedure["steps"]):
@@ -363,8 +365,11 @@ class Session:
 
     def _close(self, success: bool) -> None:
         self.state = State.CLOTURE
-        report = {"procedure": self.procedure["id"], "success": success,
-                  "events": [e for e in self.log if e["event"] in ("validated", "anomaly")],
+        report = {"procedure": self.procedure["id"], "success": success,  # MEM-R2.1 : rapport enrichi
+                  "duration_s": round(self.t, 2),
+                  "steps_validated": list(self.steps_validated),
+                  "anomalies": [{"step": e.get("step"), "t": e.get("t"), "message": e.get("message")}
+                                for e in self.log if e["event"] == "anomaly"],
                   "model_calls": dict(self.model_calls)}
         self._safe_save(report)
         self.out.say("Réparation validée. Je l'ai ajoutée à l'historique de ton vélo.")
