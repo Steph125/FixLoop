@@ -42,9 +42,12 @@
   Preuve : `tests/test_agent.py::test_spark_tokens_logged_and_reported_to_costs`,
   `test_spark_tokens_estimated_without_usage`,
   `pytest` 90 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
-- [ ] **AGT-T10 — Gros plans depuis la perception.** Le serveur transmet comme image clé le gros plan découpé avec
+- [x] **AGT-T10 — Gros plans depuis la perception.** Le serveur transmet comme image clé le gros plan découpé avec
   `PartResult.box` du plateau (image entière à défaut).
   Exigences : `AGT-R3.2`. Dépend de : `PERC-T4`, `SRV-T5`.
+  Preuve : `tests/test_session.py::test_keyframe_cropped_with_chainring_box`,
+  `tests/test_state_machine.py::test_agent_calls_always_carry_keyframes` (passent ici),
+  `pytest` 124 passed + 6 skipped, `check_spec.py` OK.
 - [ ] **AGT-T11 — Compter les appels par session.** Mesurer sur 3 sessions de démo enregistrées ; noter le nombre
   d'appels Spark dans `eval/benchmark/report.md`.
   Exigences : `AGT-R7.3`. Dépend de : `SRV-T9`.

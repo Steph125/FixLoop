@@ -81,6 +81,35 @@ def test_anomaly_then_correction():
     assert r.s.step["id"] == "turn_backward"
 
 
+def test_agent_calls_always_carry_keyframes():
+    import numpy as np
+
+    seen = []
+
+    class RecAgent(FakeAgent):  # AGT-T10 : image clé dans chaque appel Spark
+        def arbitrate(self, step, keyframes, window):
+            seen.append(("arbitrate", list(keyframes)))
+            return super().arbitrate(step, keyframes, window)
+
+        def explain(self, step, verdict, keyframes):
+            seen.append(("explain", list(keyframes)))
+            return super().explain(step, verdict, keyframes)
+
+    kf = np.zeros((60, 80, 3), np.uint8)
+    s = Session(PROCS, RecAgent(), FakeMemory(), FakeOutput(), bike_id="velo-key")
+    s.start(images=[])
+    for i in range(4):
+        s.on_measures(measure(frame("off", i, i * 0.5), s.procedure), kf)
+    for i in range(4, 10):
+        s.on_measures(measure(frame("hidden", i, i * 0.5), s.procedure), kf)  # ? -> arbitre
+    s.on_user_done()
+    for i in range(10, 14):
+        s.on_measures(measure(frame("off", i, i * 0.5), s.procedure), kf)  # anomalie -> explique
+    assert [k for k, _ in seen] == ["arbitrate", "explain"]
+    assert all(len(kfs) > 0 for _, kfs in seen)
+    assert all(np.array_equal(k, kf) for _, kfs in seen for k in kfs)
+
+
 def test_uncertain_asks_spark_once_then_geometry_decides():
     r = Runner(FakeAgent(arbitrate_to="0"))
     r.feed("off", 4)

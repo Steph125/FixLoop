@@ -85,6 +85,41 @@ def test_refusals_are_per_ip_and_expire():
     assert kind == "hello_ack"  # SRV-R2.4 : refusés d'il y a plus d'1 min oubliés
 
 
+def test_keyframe_cropped_with_chainring_box():
+    import concurrent.futures as cf
+    import queue
+
+    import numpy as np
+
+    from fixloop.agent import crop_around
+    from fixloop.perception import ImageResult, PartResult
+    ws, sess = make_live({5: "off"})
+    sess._out_queue = queue.Queue()
+
+    class Event:
+        def set(self):
+            pass
+
+    sess._work_event = Event()
+    sess.t0_ms = 0
+    sess.clock = lambda: 100.0
+    jpeg = jpeg_bytes()  # 160 x 120
+    mask = np.zeros((120, 160), bool)
+    mask[30:70, 40:80] = True
+    box = (40, 30, 80, 70)
+    res = ImageResult(5, 5.0, {"chainring": PartResult(mask, 0.9, box, "M", 1)},
+                      {"total_s": 0.0, "attempts": {}}, None, 160, 120)
+    sess.pending_frames[5] = (5000, jpeg, 99.9)
+    fut = cf.Future()
+    fut.set_result(res)
+    sess._on_result(fut, 5)  # AGT-R3.1, R3.2 : gros plan transmis avec la boîte
+    kind, payload, _ = sess.work.take()
+    assert kind == "measure"
+    _, keyframe = payload
+    assert keyframe is not None
+    assert np.array_equal(keyframe, crop_around(sess._decode(jpeg), box, margin=0.6))
+
+
 def test_malformed_hello_is_rejected():
     reg = make_reg(Limits(), code=None)
     kind, body = reg.hello({"type": "hello"}, "10.0.0.1", now=100.0)

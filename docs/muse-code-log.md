@@ -62,6 +62,18 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `test_spark_tokens_estimated_without_usage`,
   `pytest` 90 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
+- AGT-T10 (gros plans, dépendait de PERC-T4 et SRV-T5, [x]) : LiveSession recadre
+  avec PartResult.box du plateau (keyframe_image, marge 60 %, image entière à
+  défaut) et la transmet à Session ; chaque appel arbitrate/explain porte des
+  images clés non vides.
+  Difficile : 1er essai raté — arbitrate ne se déclenche que sur incertitude (?),
+  pas sur anomalie (passage masqué ajouté au test).
+  Preuve : test_keyframe_cropped_with_chainring_box,
+  test_agent_calls_always_carry_keyframes,
+  pytest 124 passed + 6 skipped, check_spec.py OK.
+  Fichiers : server/session.py (déjà), tests/test_session.py,
+  tests/test_state_machine.py, spec/03-agent-spark/tasks.md.
+
 - MEM-T2 (rapport enrichi) : `Session` suit `steps_validated` (ajouté à `_validate`),
   `_close` écrit `duration_s`, `steps_validated`, `anomalies` (`step`, `t`, `message`
   repris du journal) à la place de la clé brute `events` (que `Memory.save` ignorait
