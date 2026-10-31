@@ -154,6 +154,15 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve partielle : `pytest` 111 passed + 4 skipped, `check_spec.py` OK.
   Fichiers : `server/session.py`, `server/app.py`, `tests/test_session.py`,
   `spec/05-session-server/tasks.md`.
+- SRV-T7 (clôture et erreurs, [~] à vérifier hors sandbox) : `closed` avec résumé puis
+  fermeture après 2 s (`_finish`), `error` + fermeture (`_abort`, phrase dite pour budget),
+  `FpsGuard` (10 img/s), `map_result_error` (douces ignorées), chien de garde (15 s dit
+  1/min, 60 s abandon), 3 exceptions de suite → arrêt (`_apply`), `stop` via la file.
+  Difficile : 1er essai raté (annotation multiple invalide) + relecture des exigences
+  (phrases exactes R7.2/R7.3, résumé dans `closed`, 3 exceptions manquantes — corrigé).
+  5 tests sync passent ici, 2 async ignorés ici.
+  Preuve partielle : `pytest` 116 passed + 6 skipped, `check_spec.py` OK.
+  Fichiers : `server/session.py`, `tests/test_session.py`, `spec/05-session-server/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

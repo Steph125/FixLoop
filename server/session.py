@@ -219,6 +219,58 @@ def overlay_for(frame_index: int, t_ms: int, w: int, h: int, parts: dict,
             "latency_ms": latency_ms}
 
 
+MAX_FPS = 10  # SRV-R3.2 : 10 img/s max, au-delà les images sont écartées
+SLOW_S = 15.0  # SRV-R7.5 : dire le retard après 15 s sans résultat SAM
+ABANDON_S = 60.0  # SRV-R7.6 : abandon après 60 s sans résultat
+CLOSE_DELAY_S = 2.0  # SRV-R6.3 : `closed` puis fermeture après 2 s
+
+
+class FpsGuard:
+    """Fenêtre glissante : au plus `max_per_s` images par seconde (SRV-R3.2)."""
+
+    def __init__(self, max_per_s: int = MAX_FPS) -> None:
+        self.max_per_s: int = max_per_s
+        self.times: list = []
+
+    def allow(self, now: float) -> bool:
+        self.times = [t for t in self.times if now - t < 1.0]
+        if len(self.times) >= self.max_per_s:
+            return False
+        self.times.append(now)
+        return True
+
+
+def map_result_error(error: str | None) -> tuple[str, str] | None:
+    """Erreur SAM fatale -> (code, message) puis fermeture (SRV-R7.1, R7.2).
+
+    Rend None pour les erreurs douces : la session continue d'observer.
+    """
+    if error == "Clé API refusée":
+        return ("api_key", "Ta clé API est refusée. Vérifie-la puis reconnecte-toi.")
+    if error in ("Crédit épuisé", "Trop de requêtes"):
+        return ("budget", "Le crédit est épuisé pour aujourd'hui.")
+    return None
+
+
+SLOW_PHRASE = "La connexion est lente, je continue d'essayer."  # SRV-R7.3, au plus 1/min
+STOP_PHRASE = "Je dois m'arrêter : plus de crédit pour aujourd'hui."  # SRV-R7.2, dit avec budget
+
+
+def watchdog_state(age_s: float, can_warn: bool) -> str:
+    """État du chien de garde SAM : `ok`, `warn` ou `abandon` (SRV-R7.3 + tâche)."""
+    if age_s > ABANDON_S:
+        return "abandon"  # 60 s sans résultat : abandon (design 05, section 6)
+    if age_s > SLOW_S and can_warn:
+        return "warn"
+    return "ok"
+
+
+def summary_for(counters: dict) -> dict:
+    """Résumé joint à `closed` (SRV-R6.3) : images écartées et résultats rejetés."""
+    return {"dropped": counters.get("dropped", 0), "stale": counters.get("stale", 0),
+            "out_of_order": counters.get("out_of_order", 0)}
+
+
 class Models:
     """Modèles d'une session : perception, Spark, mémoire, coûts (design 05, section 2)."""
 
@@ -287,6 +339,19 @@ class LiveSession:
         self.started = False  # message `start` reçu : les images comptent
         self.closing = False
         self.closed_sent = False
+        self.fps_guard = FpsGuard()
+        self.fatal: tuple[str, str] | None = None  # erreur SAM fatale à remonter
+        self.last_slow_said: float | None = None  # SRV-R7.3 : au plus une fois par minute
+        self.last_result_at: float | None = None
+        self.consec_errors = 0  # 3 exceptions de suite -> arrêt (design 05, section 6)
+
+    def note_worker_ok(self) -> None:
+        self.consec_errors = 0
+
+    def note_worker_error(self) -> bool:
+        """Rend True à la 3e exception de suite : il faut arrêter (SRV-T7)."""
+        self.consec_errors += 1
+        return self.consec_errors >= 3
         self._work_event: object = None
         self._out_queue: object = None
         self.output: object = None
@@ -314,12 +379,13 @@ class LiveSession:
         receiver = asyncio.create_task(self._receive())
         sender = asyncio.create_task(self._send())
         worker = asyncio.create_task(self._sm_worker())
+        watchdog = asyncio.create_task(self._watchdog())
         try:
             await receiver
         except Exception:
             pass  # déconnexion client : on nettoie (SRV-R7.4)
         finally:
-            for task in (sender, worker):
+            for task in (sender, worker, watchdog):
                 task.cancel()
             self.registry.release(self.session_id)
 
@@ -332,6 +398,22 @@ class LiveSession:
         while True:
             msg = await self._out_queue.get()
             await self.ws.send_text(json.dumps(msg))
+
+    async def _watchdog(self) -> None:
+        """15 s sans résultat SAM : le dire (1/min) ; 60 s : abandonner (SRV-R7.3)."""
+        import asyncio
+        while True:
+            await asyncio.sleep(1.0)
+            if not self.started or self.paused or self.closed_sent or self.last_result_at is None:
+                continue
+            now = self.clock()
+            can_warn = self.last_slow_said is None or now - self.last_slow_said >= 60.0
+            state = watchdog_state(now - self.last_result_at, can_warn)
+            if state == "warn":
+                self.last_slow_said = now
+                self.output.say(SLOW_PHRASE)
+            elif state == "abandon":
+                await self._abort("internal", "Aucun résultat, la session est abandonnée.")
 
     async def _receive(self) -> None:
         from .protocol import parse_binary, parse_client_message
@@ -367,7 +449,8 @@ class LiveSession:
         elif kind == "resume":
             self.paused = False
         elif kind == "stop":
-            self.closing = True
+            self.work.put_control("stop")
+            self._work_event.set()
 
     def _on_binary(self, decoded: dict | None) -> None:
         if decoded is None:
@@ -384,6 +467,9 @@ class LiveSession:
     def _on_image(self, jpeg: bytes, t_ms: int) -> None:
         fi = self.frame_index
         self.frame_index += 1
+        if not self.fps_guard.allow(self.clock()):  # SRV-R3.2 : au-delà de 10 img/s
+            self.counters["dropped"] += 1
+            return
         if self.t0_ms is None:  # démarrage : on retient, le diagnostic décidera (SRV-R4.1)
             self.pending_frames[fi] = (t_ms, jpeg, self.clock())
             if len(self.startup) < 3:
@@ -419,6 +505,13 @@ class LiveSession:
             self.counters["stale"] += 1
             self.pending_frames.pop(fi, None)
             return
+        self.last_result_at = self.clock()
+        fatal = map_result_error(result.error)
+        if fatal is not None:  # SRV-R7.2, R7.3 : erreur SAM fatale -> fermer
+            self.pending_frames.pop(fi, None)
+            self.fatal = fatal
+            self._work_event.set()
+            return
         t_ms, jpeg, recv_t = self.pending_frames.pop(fi, (0, b"", self.clock()))
         age = self.clock() - recv_t
         verdict = check_result(age, fi, self.last_applied)
@@ -445,12 +538,62 @@ class LiveSession:
         self._work_event.set()
 
     # ---------------------------------------------------------- fil machine à états
+    async def _finish(self, success: bool) -> None:
+        """`closed` (avec résumé) puis fermeture après 2 s (SRV-R6.3)."""
+        import asyncio
+        if self.closed_sent:
+            return
+        self.closed_sent = True
+        self.closing = True
+        self._send_now({"type": "closed", "success": success,
+                        "summary": summary_for(self.counters)})
+        await asyncio.sleep(CLOSE_DELAY_S)
+        try:
+            await self.ws.close()
+        except Exception:
+            pass
+
+    async def _abort(self, code: str, message: str, say: str | None = None) -> None:
+        """Erreur fatale : phrase éventuelle, `error`, puis fermeture (SRV-R7)."""
+        import asyncio
+        if self.closed_sent:
+            return
+        self.closed_sent = True
+        self.closing = True
+        if say is not None:
+            self._send_now({"type": "say", "text": say})
+        self._send_now({"type": "error", "code": code, "message": message})
+        await asyncio.sleep(1.0)
+        try:
+            await self.ws.close()
+        except Exception:
+            pass
+
+    async def _apply(self, func: object, *args: object) -> bool:
+        """Un appel machine à états : True pour continuer, False pour arrêter (SRV-T7)."""
+        import asyncio
+        try:
+            await asyncio.to_thread(func, *args)
+        except Exception:
+            if self.note_worker_error():  # 3 exceptions de suite -> arrêt
+                await self._abort("internal", "La session est interrompue, reconnecte-toi.")
+                return False
+            return True
+        self.note_worker_ok()
+        return True
+
     async def _sm_worker(self) -> None:
         import asyncio
         from fixloop.state_machine import Session
         while True:
             await self._work_event.wait()
             self._work_event.clear()
+            if self.fatal is not None:  # erreur SAM fatale (SRV-R7.1, R7.2)
+                code, message = self.fatal
+                self.fatal = None
+                await self._abort(code, message,
+                                  say=STOP_PHRASE if code == "budget" else None)
+                return
             while (item := self.work.take()) is not None:
                 kind = item[0]
                 if kind == "start":
@@ -461,21 +604,26 @@ class LiveSession:
                                       self.output, self.bike_id, debounce_frames=3)
                     imgs = [self._decode(jpeg) for jpeg, _ in startup]
                     self._replay_held()
-                    await asyncio.to_thread(self.sm.start, imgs)
+                    if not await self._apply(self.sm.start, imgs):
+                        return
                 elif kind == "measure":
                     _, (m, keyframe), _ = item
-                    if self.sm is not None:
-                        await asyncio.to_thread(self.sm.on_measures, m, keyframe)
+                    if self.sm is not None and not await self._apply(self.sm.on_measures, m,
+                                                                     keyframe):
+                        return
                 elif kind == "done":
-                    if self.sm is not None:
-                        await asyncio.to_thread(self.sm.on_user_done)
+                    if self.sm is not None and not await self._apply(self.sm.on_user_done):
+                        return
                 elif kind == "command":
-                    if self.sm is not None:
-                        await asyncio.to_thread(self.sm.on_command, item[1])
-                if (self.sm is not None and self.sm.state == "CLOTURE"
-                        and not self.closed_sent):  # SRV-R6.3 (complété en SRV-T7)
-                    self.closed_sent = True
-                    self._send_now({"type": "closed", "success": True})
+                    if self.sm is not None and not await self._apply(self.sm.on_command,
+                                                                      item[1]):
+                        return
+                elif kind == "stop":
+                    await self._finish(False)
+                    return
+                if self.sm is not None and self.sm.state == "CLOTURE":
+                    await self._finish(True)  # SRV-R6.3
+                    return
 
     def _decode(self, jpeg: bytes) -> object:
         import cv2

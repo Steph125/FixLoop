@@ -312,16 +312,19 @@ def test_full_session_closes_success():
         ws.feed_text({"type": "start"})
         for t in range(0, 9000, 1000):  # fi0-8 : chaîne tombée
             ws.feed_image(t)
+            await asyncio.sleep(0.12)  # rythme client ≤ 10 img/s (SRV-R3.2)
         await wait_for(lambda: sess.sm is not None)
         complete_all(sess)
         await wait_step(sess, "engage_top_teeth")
         for t in (9000, 10000, 11000):  # fi9-11 : chaîne posée
             ws.feed_image(t)
+            await asyncio.sleep(0.12)
         complete_all(sess)
         await wait_step(sess, "turn_backward")
         ws.feed_text({"type": "user_done"})
         for t in (12000, 13000, 16000):  # fi12-14 : essai, 4 s de rotation
             ws.feed_image(t)
+            await asyncio.sleep(0.12)
         complete_all(sess)
         await wait_for(lambda: any(m.get("type") == "closed" for m in ws.sent))
         closed = [m for m in ws.sent if m.get("type") == "closed"][0]
@@ -380,3 +383,103 @@ def test_out_of_order_result_is_dropped():
     sess, overlays = arun(main())
     assert sess.counters["out_of_order"] == 1  # SRV-R4.3 : antérieur au dernier appliqué
     assert overlays == [2]
+
+
+def test_fps_guard_caps_images_per_second():
+    from server.session import FpsGuard
+    g = FpsGuard(10)  # SRV-R3.2 : 10 img/s max
+    assert all(g.allow(100.0 + i * 0.05) for i in range(10))
+    assert not g.allow(100.0 + 10 * 0.05)  # 11e image dans la même seconde : écartée
+    assert g.allow(101.05)  # fenêtre glissante : acceptée ensuite
+
+
+def test_result_errors_map_to_close_codes():
+    from server.session import STOP_PHRASE, map_result_error
+    assert map_result_error("Clé API refusée") == (
+        "api_key", "Ta clé API est refusée. Vérifie-la puis reconnecte-toi.")  # SRV-R7.1
+    assert map_result_error("Crédit épuisé")[0] == "budget"  # SRV-R7.2
+    assert map_result_error("Trop de requêtes")[0] == "budget"
+    assert STOP_PHRASE == "Je dois m'arrêter : plus de crédit pour aujourd'hui."
+    assert map_result_error("Cadrage perdu") is None  # erreur douce : on continue
+    assert map_result_error(None) is None
+
+
+def test_watchdog_states():
+    from server.session import SLOW_PHRASE, watchdog_state
+    assert watchdog_state(3.0, True) == "ok"
+    assert watchdog_state(16.0, True) == "warn"  # SRV-R7.3 : dire le retard à 15 s
+    assert SLOW_PHRASE == "La connexion est lente, je continue d'essayer."
+    assert watchdog_state(20.0, False) == "ok"  # dit il y a moins d'1 min : silence
+    assert watchdog_state(61.0, False) == "abandon"  # 60 s sans résultat : abandon
+
+
+def test_worker_stops_after_three_consecutive_errors():
+    from server.session import LiveSession
+    sess = LiveSession.__new__(LiveSession)
+    sess.consec_errors = 0
+    assert sess.note_worker_error() is False
+    assert sess.note_worker_error() is False
+    assert sess.note_worker_error() is True  # 3e de suite -> arrêt
+    sess.note_worker_ok()
+    assert sess.note_worker_error() is False  # un succès remet à zéro
+
+
+def test_closed_summary_counts_rejections():
+    from server.session import summary_for
+    assert summary_for({"dropped": 2, "stale": 1, "out_of_order": 0, "autre": 9}) == {
+        "dropped": 2, "stale": 1, "out_of_order": 0}  # SRV-R6.3 : résumé joint à closed
+
+
+def test_stop_closes_unsuccessful():
+    async def main():
+        import asyncio
+        ws, sess = make_live({i: "off" for i in range(9)})
+        run = asyncio.create_task(sess.run())
+        ws.feed_text({"type": "hello", "bike_id": "velo-1"})
+        await wait_for(lambda: any(m.get("type") == "hello_ack" for m in ws.sent))
+        ws.feed_text({"type": "start"})
+        for t in range(0, 9000, 1000):
+            ws.feed_image(t)
+            await asyncio.sleep(0.12)
+        await wait_for(lambda: sess.sm is not None)
+        complete_all(sess)
+        await wait_step(sess, "engage_top_teeth")
+        ws.feed_text({"type": "stop"})
+        await wait_for(lambda: any(m.get("type") == "closed" for m in ws.sent))
+        closed = [m for m in ws.sent if m.get("type") == "closed"][0]
+        assert closed["success"] is False  # SRV-R6.3 : arrêt demandé, non réussi
+        await asyncio.wait_for(run, 10)
+    arun(main())
+
+
+def test_fatal_result_error_closes_with_code():
+    async def main():
+        import asyncio
+        from fixloop.perception import ImageResult
+        ws, sess = make_live({0: "off"})
+        run = asyncio.create_task(sess.run())
+        ws.feed_text({"type": "hello", "bike_id": "velo-1"})
+        await wait_for(lambda: any(m.get("type") == "hello_ack" for m in ws.sent))
+        ws.feed_text({"type": "start"})
+        for t in (0, 1000, 2000):
+            ws.feed_image(t)
+            await asyncio.sleep(0.12)
+        await wait_for(lambda: sess.sm is not None)
+        for fi in sorted(sess.perception.futs):
+            fut, _ = sess.perception.futs[fi]
+            if not fut.done():
+                fut.set_result(None)
+        await wait_for(lambda: sess.sm is not None)
+
+        async def boom():
+            return ImageResult(9, 9.0, {}, {"total_s": 0.0, "attempts": {}},
+                               "Clé API refusée", 160, 120)
+
+        sess.pending_frames[9] = (9000, jpeg_bytes(), sess.clock())
+        task = asyncio.get_running_loop().create_task(boom())
+        task.add_done_callback(lambda t: sess._on_result(t, 9))
+        await wait_for(lambda: any(m.get("type") == "error" for m in ws.sent))
+        err = [m for m in ws.sent if m.get("type") == "error"][0]
+        assert err["code"] == "api_key"  # SRV-R7.2 : clé refusée -> error puis fermeture
+        await asyncio.wait_for(run, 10)
+    arun(main())

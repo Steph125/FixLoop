@@ -33,9 +33,15 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
 - [ ] **SRV-T6 — Commandes et voix.** `user_done`, `command`, `speaking`, `pause` / `resume`, `stop` ; audio
   binaire vers `VoiceBridge` ; `voice_status`.
   Exigences : `SRV-R5.4`. Dépend de : T5, `VOX-T3`.
-- [ ] **SRV-T7 — Clôture et erreurs.** `closed` puis fermeture après 2 s ; 401, 402 / 429, budget, lenteur 15 s,
+- [~] **SRV-T7 — Clôture et erreurs.** `closed` puis fermeture après 2 s ; 401, 402 / 429, budget, lenteur 15 s,
   exceptions (3 de suite → arrêt), déconnexion.
   Exigences : `SRV-R6.3`, `R7.1` à `R7.4`.
+  À vérifier hors sandbox : les 2 tests de fermeture sont async (sockets interdits ici).
+  Preuve partielle : `test_fps_guard_caps_images_per_second`,
+  `test_result_errors_map_to_close_codes`, `test_watchdog_states`,
+  `test_worker_stops_after_three_consecutive_errors`, `test_closed_summary_counts_rejections`
+  (passent ici), `test_stop_closes_unsuccessful`, `test_fatal_result_error_closes_with_code`
+  (ignorés ici), `pytest` 116 passed + 6 skipped, `check_spec.py` OK.
 - [ ] **SRV-T8 — Limites de coût et de durée.** Arrêt à 1,50 $ ou 10 min ; refus au-delà du budget du jour ;
   `/api/costs` protégé.
   Exigences : `SRV-R8.2` à `R8.4`. Dépend de : T2.
