@@ -11,6 +11,7 @@ a été exécutée par ailleurs sur une boucle sans socket (voir le journal).
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from unittest import mock
 
 import cv2
@@ -254,3 +255,55 @@ def test_failed_request_is_logged_not_ok():
     failed = [e for e in costs.entries if e["part"] == "chain"]
     assert len(failed) == 1 and failed[0]["ok"] is False  # echec journalise aussi
     assert [e for e in costs.entries if e["part"] == "chainring"][0]["ok"] is True
+
+
+def video_line(obj, fi, left, top, bw, bh, conf):
+    """Une vraie ligne de sortie SAM vidéo : <Nf>id<|box…|><|mask…|>."""
+    bits = np.ones((bh, bw), dtype=bool)
+    payload = _encode_raster(bytes(int(v) for v in bits.reshape(-1)), bw, bh)
+    return (f"<{fi}f>{obj}<|box;x1={left};y1={top};x2={left + bw};y2={top + bh};"
+            f"w={W};h={H};c={conf}|>"
+            f"<|mask;x=0;y=0;c={conf};data={bh},{bw},{payload}|>\n")
+
+
+def video_client(tmp_path, uploads):
+    texts = {"bicycle chain": video_line(1, 0, 5, 7, 12, 10, 0.9) + video_line(1, 1, 5, 7, 12, 10, 0.9),
+             "chainring": video_line(2, 0, 40, 30, 8, 8, 0.8) + video_line(2, 1, 40, 30, 8, 8, 0.8)}
+    client = FakeSamClient(texts=texts)
+
+    async def fake_upload(path):
+        uploads.append(Path(path).name)
+        return "file-123"
+
+    client.upload = fake_upload
+    return client
+
+
+def fake_prepare(src, out_dir, fps, width, chunk_seconds):
+    out = Path(out_dir)
+    c0 = out / "chunk_00.mp4"
+    c0.write_bytes(b"chunk-zero")
+    c1 = out / "chunk_01.mp4"
+    c1.write_bytes(b"chunk-one")
+    return (out / "prepared.mp4", H, W, 4, [(c0, 0, 2), (c1, 2, 4)])
+
+
+def test_video_cache_skips_second_pass(tmp_path):
+    from fixloop.perception import segment_video
+
+    async def main():
+        uploads = []
+        client = video_client(tmp_path, uploads)
+        kw = {"client": client, "prepare": fake_prepare,
+              "uploader": client.upload, "out_dir": tmp_path / "out"}
+        first = await segment_video("video.mp4", PROC, **kw)
+        n_calls = len(client.created)
+        assert n_calls == 4  # PERC-R3.3 : 2 morceaux x 2 pieces
+        second = await segment_video("video.mp4", PROC, **kw)
+        assert len(client.created) == n_calls  # PERC-R3.5 : 2e passage sans requete
+        return first, second
+
+    first, second = arun(main())
+    assert [f.frame_index for f in first] == [0, 1, 2, 3]  # PERC-R3.4 : morceaux recolles
+    assert first[0].masks["chain"].shape == (H, W)
+    assert [f.frame_index for f in second] == [0, 1, 2, 3]

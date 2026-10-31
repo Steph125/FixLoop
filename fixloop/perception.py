@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import os
 import re
 import time
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -346,6 +348,187 @@ def shift_frames(text: str, offset: int) -> str:
         return ""
     text = FRAME_MARK.sub(lambda m: f"<{int(m.group(1)) + offset}f>", text)
     return text if text.endswith("\n") else text + "\n"
+
+
+VIDEO_RETRY_S = 10.0  # PERC-R4.2 : 10 s x tentative en mode vidéo
+VIDEO_ATTEMPTS = 3  # 1 essai + 2 relances (PERC-R4.1)
+VIDEO_MIN_IMAGES = 50  # facturation minimale par requête vidéo (PERC-R3.6, PERC-R7.2)
+
+
+class VideoCancelled(RuntimeError):
+    """L'appelant a refusé la facturation estimée (confirmation, PERC-R3.6)."""
+
+
+def chunk_key(chunk_bytes: bytes, prompt: str) -> str:
+    """Empreinte d'un morceau : contenu + prompt + modèle (PERC-R3.5)."""
+    return hashlib.sha256(b"|".join([chunk_bytes, prompt.encode(), SAM_MODEL.encode()])).hexdigest()[:16]
+
+
+def _prepare_video(src: Path, out_dir: Path, fps: float, width: int,
+                   chunk_seconds: float) -> tuple[Path, int, int, int, list[tuple[Path, int, int]]]:
+    """ffmpeg : fps img/s, largeur max, sans son, H.264, puis découpage (PERC-R3.1, R3.2)."""
+    import shutil
+    import subprocess
+
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError("ffmpeg introuvable : installe-le puis relance.")
+    src, out_dir = Path(src), Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    small = out_dir / "input_small.mp4"
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
+                    "-vf", f"fps={fps},scale='min({width},iw)':-2",
+                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+                    "-pix_fmt", "yuv420p", "-an", str(small)], check=True)
+    cap = cv2.VideoCapture(str(small))
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    cap.release()
+    chunk_frames = int(round(chunk_seconds * fps)) if chunk_seconds > 0 else 0
+    ranges = plan_chunks(n, max(chunk_frames, 50) if chunk_frames else 0)
+    chunks = []
+    for ci, (a, b) in enumerate(ranges):
+        path = small if len(ranges) == 1 else out_dir / f"chunk_{ci:02d}.mp4"
+        if len(ranges) > 1:
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(small),
+                            "-vf", f"select=between(n\\,{a}\\,{b - 1}),setpts=N/({fps}*TB)",
+                            "-r", str(fps), "-c:v", "libx264", "-preset", "veryfast",
+                            "-crf", "23", "-pix_fmt", "yuv420p", "-an", str(path)], check=True)
+        chunks.append((path, a, b))
+    return small, h, w, n, chunks
+
+
+async def segment_video(video: str | Path, procedure: dict, out_dir: str | Path, *,
+                        client: Any | None = None, costs: Any | None = None,
+                        chunk_seconds: float = CHUNK_SECONDS, fps: float = VIDEO_FPS,
+                        width: int = 960, confirm=None, prepare=None,
+                        uploader=None) -> list[FrameMasks]:
+    """Segmente une vidéo entière, morceau par morceau (PERC-R3, replay et évaluation).
+
+    `prepare` (ffmpeg) et `uploader` (Files API) sont injectables pour les tests ;
+    `confirm(billed_images) -> bool` valide la facturation estimée (PERC-R3.6).
+    Rend un `FrameMasks` par image (temps = indice / fps).
+    """
+    if client is None:  # jamais dans les tests : la clé ne quitte pas le serveur
+        from openai import AsyncOpenAI
+        client = AsyncOpenAI(base_url=BASE_URL, api_key=os.environ["MODEL_API_KEY"], timeout=900)
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    prepare = prepare or _prepare_video
+    _, h, w, _, chunks = await asyncio.to_thread(prepare, Path(video), out, fps, width,
+                                                 chunk_seconds)
+    parts = list(procedure.get("parts", {}))
+    prompts = {p: procedure["parts"][p] for p in parts}
+    raws: dict[str, dict[int, str]] = {p: {} for p in parts}
+    jobs: list[tuple[str, int, int, int, str]] = []
+    for p in parts:
+        for ci, (path, a, b) in enumerate(chunks):
+            key = chunk_key(Path(path).read_bytes(), prompts[p])
+            f, kf = out / f"raw_{p}_{ci:02d}.txt", out / f"raw_{p}_{ci:02d}.key"
+            if f.exists() and kf.exists() and kf.read_text(encoding="utf-8").strip() == key:
+                raws[p][ci] = f.read_text(encoding="utf-8")  # PERC-R3.5 : cache réutilisé
+            else:
+                jobs.append((p, ci, a, b, key))
+    if jobs:
+        billed = sum(max(b - a, VIDEO_MIN_IMAGES) for _, _, a, b, _ in jobs)
+        if confirm is not None and not confirm(billed):  # PERC-R3.6
+            raise VideoCancelled(f"facturation estimée refusée : {billed} images")
+        uploads: dict[int, str] = {}
+
+        async def file_for(ci: int, path: Path) -> str:
+            if ci not in uploads:
+                if uploader is not None:
+                    uploads[ci] = await uploader(path)
+                else:
+                    with open(path, "rb") as fh:
+                        uploads[ci] = (await client.files.create(
+                            file=fh, purpose="user_data")).id
+            return uploads[ci]
+
+        for p, ci, a, b, key in jobs:  # morceaux en série (coupures, PERC, design 4)
+            raw = await _segment_video_part(client, costs, p, prompts[p],
+                                            await file_for(ci, chunks[ci][0]), b - a)
+            if raw is not None:
+                (out / f"raw_{p}_{ci:02d}.txt").write_text(raw, encoding="utf-8")
+                (out / f"raw_{p}_{ci:02d}.key").write_text(key)
+                raws[p][ci] = raw
+    merged: dict[str, str] = {}
+    for p in parts:
+        merged[p] = "".join(shift_frames(raws[p][ci], a) for ci, (_, a, _) in enumerate(chunks)
+                            if ci in raws[p])
+        (out / f"raw_{p}.txt").write_text(merged[p], encoding="utf-8")
+    return assemble_frames(merged, h, w, fps, procedure.get("select", {}))
+
+
+def assemble_frames(merged: dict[str, str], h: int, w: int, fps: float,
+                    select: dict[str, str] | None = None) -> list[FrameMasks]:
+    """Textes bruts recollés par pièce -> un FrameMasks par image (PERC-R3.4, synchrone)."""
+    select = select or {}
+    per_frame: dict[int, dict[str, PartResult]] = {}
+    for p, text in merged.items():
+        if not text:
+            continue
+        for fi, pr in masks_from_records(parse_raw(text).records, h, w, CONF_THR,
+                                         select.get(p) == "largest").items():
+            per_frame.setdefault(fi, {})[p] = pr
+    frames = []
+    for fi in sorted(per_frame):
+        kept = {p: pr for p, pr in per_frame[fi].items() if pr.mask is not None}
+        frames.append(FrameMasks(frame_index=fi, t=fi / fps,
+                                 masks={p: pr.mask for p, pr in kept.items()},
+                                 confidence={p: pr.confidence for p, pr in kept.items()}))
+    return frames
+
+
+async def _segment_video_part(client: Any, costs: Any, part: str, prompt: str,
+                              file_id: str, n_images: int) -> str | None:
+    """Une pièce d'un morceau, avec relances ; rend la sortie brute ou None (morceau en échec)."""
+    attempts = 0
+    t0 = time.monotonic()
+
+    def vcost(ok: bool, attempts: int) -> None:
+        if costs is None:
+            return
+        try:  # PERC-R7 : facturation vidéo max(images, 50) dans CostLog.add
+            costs.add(model=SAM_MODEL, kind="video", units=n_images,
+                      seconds=round(time.monotonic() - t0, 3), ok=ok,
+                      part=part, attempts=attempts)
+        except Exception:
+            pass
+
+    while True:
+        attempts += 1
+        try:
+            stream = await client.responses.create(
+                model=SAM_MODEL,
+                input=[{"type": "message", "role": "user", "content": [
+                    {"type": "input_text", "text": prompt},
+                    {"type": "input_video", "file_id": file_id},
+                ]}],
+                metadata={"include_confidence": "true", "mask_encoding": "one_bit"},
+                stream=True,
+            )
+            try:
+                result = await parse_responses_stream(
+                    stream, video_segmentation_format()).final_result()
+            finally:
+                await stream.close()  # PERC-R4.5, y compris après une erreur
+        except ResponsesStreamRefusalError:  # morceau en échec, autres continués (design 4)
+            vcost(False, attempts)
+            return None
+        except RETRYABLE:
+            if attempts >= VIDEO_ATTEMPTS:
+                vcost(False, attempts)
+                return None
+            await asyncio.sleep(VIDEO_RETRY_S * attempts)  # PERC-R4.2 : 10 s, puis 20 s
+            continue
+        except Exception as e:  # 401, 402, 429… : pas de relance, arrêt (design 6)
+            vcost(False, attempts)
+            if getattr(e, "status_code", None) in (401, 402, 429):
+                raise
+            return None
+        vcost(True, attempts)
+        return result.raw_output
 
 
 def plan_chunks(n_frames: int, chunk_frames: int, min_frames: int = 50) -> list[tuple[int, int]]:

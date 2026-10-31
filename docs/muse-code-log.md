@@ -102,6 +102,19 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve partielle : `pytest` 94 passed + 11 skipped, `check_spec.py` OK.
   Fichiers : `tests/test_perception.py`, `tests/test_perception_live.py`,
   `spec/02-perception/tasks.md`.
+- PERC-T5 (mode vidéo, [~] à vérifier hors sandbox) : `segment_video` (préparation
+  ffmpeg reprise de la sonde, morceaux, Files API, cache `raw_<pièce>_NN.txt` + `.key`,
+  confirmation de facturation `VideoCancelled`, relances 10 s × tentative, 401/402/429
+  remontés, `assemble_frames` synchrone extrait) ; `probe/sam_api_probe.py` inchangé.
+  Difficile : 1re sonde async jetable bloquée 30 min sans sortie (boucle proactor + UDP
+  sans issue) — arrêtée et supprimée ; vérification repliée sur 2 tests synchrones
+  (parseur vidéo + recollement, passent ici), le test de cache async restant [~].
+  Choix prudent : tâche marquée [~] (test principal ignoré ici).
+  Preuve partielle : `test_assemble_frames_merges_shifted_chunks`,
+  `test_chunk_key_stable_and_content_bound`, `pytest` 96 passed + 12 skipped,
+  `check_spec.py` OK.
+  Fichiers : `fixloop/perception.py`, `tests/test_perception.py`,
+  `tests/test_perception_live.py`, `spec/02-perception/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

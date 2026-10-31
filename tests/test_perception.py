@@ -145,6 +145,32 @@ def test_cost_log_called_per_request():
     LivePerception({"parts": {}}, client=object())._cost("chain", 1.0, True, 1)  # sans journal : rien
 
 
+def test_chunk_key_stable_and_content_bound():
+    from fixloop.perception import chunk_key
+    assert chunk_key(b"abc", "bicycle chain") == chunk_key(b"abc", "bicycle chain")
+    assert chunk_key(b"abc", "bicycle chain") != chunk_key(b"abd", "bicycle chain")
+    assert chunk_key(b"abc", "bicycle chain") != chunk_key(b"abc", "chainring")
+
+
+def video_raw(obj, fi, left, top, bw, bh, conf, w=80, h=60):
+    bits = np.ones((bh, bw), dtype=bool)
+    payload = _encode_raster(bytes(int(v) for v in bits.reshape(-1)), bw, bh)
+    return (f"<{fi}f>{obj}<|box;x1={left};y1={top};x2={left + bw};y2={top + bh};"
+            f"w={w};h={h};c={conf}|>"
+            f"<|mask;x=0;y=0;c={conf};data={bh},{bw},{payload}|>\n")
+
+
+def test_assemble_frames_merges_shifted_chunks():
+    from fixloop.perception import assemble_frames
+    chunk0 = video_raw(1, 0, 5, 7, 12, 10, 0.9) + video_raw(1, 1, 5, 7, 12, 10, 0.9)
+    chunk1 = video_raw(1, 0, 5, 7, 12, 10, 0.9) + video_raw(1, 1, 5, 7, 12, 10, 0.9)
+    merged = {"chain": chunk0 + shift_frames(chunk1, 2)}  # PERC-R3.4 : morceaux recolles
+    frames = assemble_frames(merged, 60, 80, 10.0, {})
+    assert [f.frame_index for f in frames] == [0, 1, 2, 3]
+    assert frames[2].t == 0.2 and frames[2].masks["chain"].shape == (60, 80)
+    assert assemble_frames({"chain": ""}, 60, 80, 10.0, {}) == []
+
+
 RAW_CHUNK = Path("probe_out2/raw_chain_00.txt")
 
 
