@@ -112,17 +112,19 @@ def _measures_summary(window: list[Measures]) -> list[dict]:
 
 
 class SparkAgent:
-    def __init__(self, procedures: dict[str, dict], client=None, model: str = MODEL):
+    def __init__(self, procedures: dict[str, dict], client=None, model: str = MODEL, costs=None):
         if client is None:
             from openai import OpenAI
             client = OpenAI(base_url=BASE_URL, api_key=os.environ["MODEL_API_KEY"], timeout=60)
         self.client, self.model, self.procedures = client, model, procedures
+        self.costs = costs  # CostLog (SRV-T2), câblé par le serveur ; ignoré sinon
         self.calls: list[dict] = []   # journal : utile pour le benchmark (nombre d'appels, latence)
 
     # ------------------------------------------------------------------ appel commun
     def _ask(self, kind: str, text: str, images: list[Any]) -> dict | None:
         content = [{"type": "input_text", "text": text}]
         content += [{"type": "input_image", "image_url": image_to_data_url(im)} for im in images[:MAX_IMAGES]]
+        n_images = len(images[:MAX_IMAGES])
         t0 = time.time()
         try:
             r = self.client.responses.create(
@@ -135,12 +137,41 @@ class SparkAgent:
             raw = r.output_text or ""
         except Exception as e:  # réseau, quota… : la machine continue d'observer
             raw = ""
-            self.calls.append({"kind": kind, "s": round(time.time() - t0, 2), "error": type(e).__name__})
+            self.calls.append({"kind": kind, "s": round(time.time() - t0, 2), "error": type(e).__name__,
+                               "input_tokens": None, "output_tokens": None})
             return None
         data = extract_json(raw)
-        self.calls.append({"kind": kind, "s": round(time.time() - t0, 2), "ok": data is not None,
-                           "raw": raw[:500]})
+        seconds = round(time.time() - t0, 2)
+        usage = getattr(r, "usage", None)
+        in_tok = getattr(usage, "input_tokens", None)
+        out_tok = getattr(usage, "output_tokens", None)
+        in_tok = in_tok if isinstance(in_tok, int) else None
+        out_tok = out_tok if isinstance(out_tok, int) else None
+        self.calls.append({"kind": kind, "s": seconds, "ok": data is not None,
+                           "raw": raw[:500], "input_tokens": in_tok, "output_tokens": out_tok})
+        self._cost(kind, n_images, in_tok, out_tok, seconds, data is not None)
         return data
+
+    def _cost(self, kind: str, n_images: int, in_tok: int | None, out_tok: int | None,
+              seconds: float, ok: bool) -> None:
+        """Reporte l'appel dans le journal des coûts (AGT-R7.2) ; n'interrompt jamais."""
+        if self.costs is None:
+            return
+        try:
+            if in_tok is None:  # estimation (design 05, section 5) : 1 500 par image, 200 en sortie
+                self.costs.add(model=self.model, kind="in", units=n_images * 1500,
+                               seconds=seconds, ok=ok, estimated=True, call=kind)
+            else:
+                self.costs.add(model=self.model, kind="in", units=in_tok,
+                               seconds=seconds, ok=ok, call=kind)
+            if out_tok is None:
+                self.costs.add(model=self.model, kind="out", units=200,
+                               seconds=seconds, ok=ok, estimated=True, call=kind)
+            else:
+                self.costs.add(model=self.model, kind="out", units=out_tok,
+                               seconds=seconds, ok=ok, call=kind)
+        except Exception:
+            pass
 
     def _procedure_of(self, step: dict) -> dict | None:
         for p in self.procedures.values():

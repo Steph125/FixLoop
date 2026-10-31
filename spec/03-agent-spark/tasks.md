@@ -36,9 +36,12 @@
   Exigences : `AGT-R5.1`, `R5.2`. Bloque : `CORE-T15`.
   Preuve : `tests/test_agent.py::test_help_returns_hint_and_falls_back_to_instruction`,
   `pytest` 87 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
-- [ ] **AGT-T9 — Jetons et coûts.** Lire `r.usage` ; ajouter `input_tokens`, `output_tokens` au journal ; reporter
+- [x] **AGT-T9 — Jetons et coûts.** Lire `r.usage` ; ajouter `input_tokens`, `output_tokens` au journal ; reporter
   dans `CostLog` (`model="muse-spark-1.3"`).
   Exigences : `AGT-R7.1`, `R7.2`. Dépend de : `SRV-T2`.
+  Preuve : `tests/test_agent.py::test_spark_tokens_logged_and_reported_to_costs`,
+  `test_spark_tokens_estimated_without_usage`,
+  `pytest` 90 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
 - [ ] **AGT-T10 — Gros plans depuis la perception.** Le serveur transmet comme image clé le gros plan découpé avec
   `PartResult.box` du plateau (image entière à défaut).
   Exigences : `AGT-R3.2`. Dépend de : `PERC-T4`, `SRV-T5`.

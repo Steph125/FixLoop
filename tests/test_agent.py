@@ -21,6 +21,8 @@ class FakeClient:
         self.sent.append(kw)
         if isinstance(self.answer, Exception):
             raise self.answer
+        if hasattr(self.answer, "output_text"):  # reponse complete (avec usage) : telle quelle
+            return self.answer
         return types.SimpleNamespace(output_text=self.answer)
 
 
@@ -131,6 +133,45 @@ def test_help_returns_hint_and_falls_back_to_instruction():
     assert mute.help(STEP, [IMG]) == STEP["instruction"]  # AGT-R5.2 : repli sur la consigne
     down = SparkAgent(PROCS, client=FakeClient(ConnectionError("coupé")))
     assert down.help(STEP, [IMG]) == STEP["instruction"]
+
+
+class FakeCosts:
+    """Capte les appels à CostLog.add sans écrire sur disque (AGT-T9)."""
+
+    def __init__(self):
+        self.entries = []
+
+    def add(self, **kw):
+        self.entries.append(kw)
+        return 0.0
+
+
+def test_spark_tokens_logged_and_reported_to_costs():
+    import types
+
+    costs = FakeCosts()
+    resp = types.SimpleNamespace(
+        output_text='{"verdict": "ratee", "confiance": 0.9}',
+        usage=types.SimpleNamespace(input_tokens=1200, output_tokens=80))
+    agent = SparkAgent(PROCS, client=FakeClient(resp), costs=costs)
+    assert agent.arbitrate(STEP, [IMG, IMG], []).value == "eps"
+    assert agent.calls[-1]["input_tokens"] == 1200  # AGT-R7.1 : jetons journalises
+    assert agent.calls[-1]["output_tokens"] == 80
+    billed = {(e["model"], e["kind"]): e for e in costs.entries}
+    assert billed[("muse-spark-1.3", "in")]["units"] == 1200  # AGT-R7.2 : report dans les couts
+    assert billed[("muse-spark-1.3", "out")]["units"] == 80
+    assert not any(e.get("estimated") for e in costs.entries)
+
+
+def test_spark_tokens_estimated_without_usage():
+    costs = FakeCosts()
+    agent = SparkAgent(PROCS, client=FakeClient('{"verdict": "ratee", "confiance": 0.9}'), costs=costs)
+    agent.arbitrate(STEP, [IMG, IMG], [])
+    assert agent.calls[-1]["input_tokens"] is None and agent.calls[-1]["output_tokens"] is None
+    billed = {(e["model"], e["kind"]): e for e in costs.entries}
+    assert billed[("muse-spark-1.3", "in")]["units"] == 2 * 1500  # 1 500 par image
+    assert billed[("muse-spark-1.3", "out")]["units"] == 200
+    assert all(e.get("estimated") for e in costs.entries)
 
 
 def test_spark_calls_send_timeout_20_and_timeout_is_logged():

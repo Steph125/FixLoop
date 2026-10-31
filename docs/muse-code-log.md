@@ -52,6 +52,16 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `pytest` 88 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`,
   `tests/test_state_machine.py`, `spec/01-core-loop/tasks.md`.
+- AGT-T9 (jetons et coûts, dépendait de SRV-T2, fait) : `SparkAgent` accepte `costs`,
+  lit `r.usage` (`input_tokens`, `output_tokens` journalisés), reporte chaque appel
+  (`in`/`out`, `call=<type>`) ; sans `usage`, estimation 1 500 par image + 200,
+  marquée `estimated` (design 05, section 5). `FakeClient` local transmet désormais
+  une réponse complète (avec `usage`) telle quelle — sans changer le cas texte.
+  Passé au 1er essai après 2 échecs authentiques avant le code (`costs` inconnu).
+  Preuve : `test_spark_tokens_logged_and_reported_to_costs`,
+  `test_spark_tokens_estimated_without_usage`,
+  `pytest` 90 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 
