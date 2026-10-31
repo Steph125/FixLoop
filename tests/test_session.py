@@ -4,6 +4,8 @@ Sans FastAPI ni boucle asyncio : testé ici. Seule la boucle d'I/O WebSocket
 (`LiveSession.run`) demande un environnement réseau (ignorée ici, [~]).
 """
 
+import pytest
+
 from server.session import Limits, SessionRegistry
 
 PROCS = {"chain_off_chainring": {}}
@@ -87,3 +89,294 @@ def test_malformed_hello_is_rejected():
     reg = make_reg(Limits(), code=None)
     kind, body = reg.hello({"type": "hello"}, "10.0.0.1", now=100.0)
     assert (kind, body["code"]) == ("error", "bad_message")
+
+
+def test_client_time_to_session_time():
+    from server.session import session_time
+    assert session_time(12_000, 10_000) == 2.0  # SRV-R4.5 : secondes depuis start
+
+
+def test_result_filters_stale_and_out_of_order():
+    from server.session import check_result
+    assert check_result(1.2, 7, 5) == "ok"
+    assert check_result(6.0, 9, 5) == "stale"  # SRV-R4.3 : plus vieux que 5 s
+    assert check_result(5.0, 7, 7) == "ok"  # limite incluse
+    assert check_result(0.4, 4, 5) == "out_of_order"  # index inférieur au dernier appliqué
+
+
+def test_work_queue_keeps_only_latest_measure():
+    from server.session import WorkQueue
+    q = WorkQueue()
+    for i in range(5):
+        q.put_measure(f"m{i}", None)
+    assert q.dropped_measures == 4  # SRV-R5.3 : 1 seule appliquée ensuite
+    assert q.take() == ("measure", "m4", None)
+    assert q.take() is None
+
+
+def test_work_queue_never_drops_controls_and_keeps_order():
+    from server.session import WorkQueue
+    q = WorkQueue()
+    q.put_measure("m1", None)
+    q.put_control("done", None)
+    q.put_measure("m2", None)
+    q.put_control("command", "help")
+    assert [q.take()[0] for _ in range(3)] == ["done", "measure", "command"]  # SRV-R5.4
+    assert q.dropped_measures == 1
+
+
+def test_step_thresholds_and_labels():
+    from server.session import label_for, step_thresholds
+    step = {"success": [{"type": "contact_ratio_max", "a": "chain", "b": "chainring",
+                         "threshold": 0.18}],
+            "anomaly": [{"type": "contact_ratio_min", "a": "chain", "b": "chainring",
+                         "threshold": 0.26, "message": "x"}]}
+    assert step_thresholds(step) == (0.18, 0.26)
+    assert label_for(0.09, 0.18, 0.26) == "en place"  # SRV-R6.2
+    assert label_for(0.34, 0.18, 0.26) == "tombée"
+    assert label_for(0.22, 0.18, 0.26) == "incertain"
+    assert label_for(float("nan"), 0.18, 0.26) == "non vu"
+    assert label_for(None, 0.18, 0.26) == "non vu"
+
+
+def test_queue_output_emits_in_order():
+    import queue
+
+    from server.session import QueueOutput
+    out, box = queue.Queue(), queue.Queue()
+    qo = QueueOutput(None, box)
+    qo.say("C'est bon.")
+    qo.highlight(["chain"], "red")
+    qo.state({"state": "OBSERVATION"})
+    assert box.get_nowait() == {"type": "say", "text": "C'est bon."}  # SRV-R6.1 : dans l'ordre
+    assert box.get_nowait() == {"type": "highlight", "parts": ["chain"], "color": "red"}
+    assert box.get_nowait() == {"type": "state", "state": "OBSERVATION"}
+
+
+def test_keyframe_crop_around_chainring_box():
+    import numpy as np
+
+    from server.session import keyframe_image
+    img = np.zeros((100, 200, 3), np.uint8)
+    crop = keyframe_image(img, (80, 20, 120, 60))  # SRV-R4.4 / AGT-R3.2 : gros plan plateau
+    assert crop.shape[1] <= img.shape[1] and crop.shape[0] <= img.shape[0]
+    assert crop.shape[0] > 40 and crop.shape[1] > 40  # boîte + marge de 60 %
+    assert keyframe_image(img, None).shape == img.shape  # sans boîte : image entière
+
+
+def test_overlay_message_shape():
+    from fixloop.perception import PartResult
+
+    from server.session import overlay_for
+    parts = {"chain": PartResult(mask=None, confidence=0.9, box=(1, 2, 3, 4),
+                                 svg_path="M 1,2 L 3,4 Z", n_objects=1)}
+    msg = overlay_for(7, 1500, 80, 60, parts, 0.09, "en place", "0", 12.5)
+    assert msg["type"] == "overlay"  # SRV-R6.2
+    assert (msg["frame_index"], msg["t_ms"], msg["w"], msg["h"]) == (7, 1500, 80, 60)
+    assert msg["parts"] == {"chain": {"path": "M 1,2 L 3,4 Z", "color": "blue"}}
+    assert (msg["contact"], msg["label"], msg["verdict"]) == (0.09, "en place", "0")
+    red = overlay_for(7, 1500, 80, 60, parts, 0.34, "tombée", "eps", 12.5,
+                      red_parts={"chain"})
+    assert red["parts"]["chain"]["color"] == "red"  # anomalie : pièce en rouge
+
+
+# ---------------------------------------------------------- boucle (ignorée ici)
+
+def arun(coro):
+    import asyncio
+    try:
+        return asyncio.run(coro)
+    except OSError:
+        coro.close()  # évite "coroutine was never awaited" dans les avertissements
+        pytest.skip("boucle asyncio interdite ici : à vérifier hors sandbox")
+
+
+def jpeg_bytes(w=160, h=120):
+    import cv2
+    import numpy as np
+    ok, buf = cv2.imencode(".jpg", np.zeros((h, w, 3), np.uint8))
+    assert ok
+    return bytes(buf)
+
+
+def result_for(kind, fi, t):
+    import numpy as np
+
+    from fixloop.perception import ImageResult, PartResult
+    from fixloop.sim import frame as sim_frame
+    fm = sim_frame(kind, fi, t)
+    parts = {}
+    for p, mask in fm.masks.items():
+        ys, xs = np.nonzero(mask)
+        parts[p] = PartResult(mask, 0.9, (int(xs.min()), int(ys.min()),
+                                         int(xs.max()) + 1, int(ys.max()) + 1), "", 1)
+    return ImageResult(fi, t, parts, {"total_s": 0.01, "attempts": {}}, None, 160, 120)
+
+
+class ManualPerception:
+    """Perception factice à complétion manuelle : `kinds[fi]` donne les masques."""
+
+    def __init__(self, kinds):
+        self.kinds = kinds
+        self.futs = {}
+
+    def try_submit(self, jpeg, fi, t):
+        import asyncio
+        loop = asyncio.get_running_loop()
+        fut = loop.create_future()
+        self.futs[fi] = (fut, t)
+
+        async def done():
+            await fut
+            return result_for(self.kinds[fi], fi, t)
+
+        return loop.create_task(done())
+
+    def complete(self, fi):
+        self.futs[fi][0].set_result(None)
+
+
+class FakeWS:
+    """WebSocket factice : file d'entrée pilotée, envois enregistrés."""
+
+    def __init__(self):
+        import collections
+        self.incoming = collections.deque()
+        self.sent = []
+        self.closed = False
+
+    async def receive(self):
+        import asyncio
+        while not self.incoming and not self.closed:
+            await asyncio.sleep(0.01)
+        if self.closed and not self.incoming:
+            raise ConnectionError("client parti")
+        return self.incoming.popleft()
+
+    async def send_text(self, data):
+        import json
+        self.sent.append(json.loads(data))
+
+    async def close(self):
+        self.closed = True
+
+    def feed_text(self, obj):
+        import json
+        self.incoming.append({"text": json.dumps(obj)})
+
+    def feed_image(self, t_ms):
+        import struct
+        self.incoming.append({"bytes": struct.pack(">Q", t_ms) + jpeg_bytes()})
+
+
+def make_live(kinds, clock=None):
+    import asyncio
+
+    from fakes import FakeAgent, FakeMemory
+    from fixloop.procedures import load_all
+    from server.session import Limits, LiveSession, Models, SessionRegistry
+    procs = load_all()
+    models = Models(lambda proc: ManualPerception(kinds), FakeAgent(), FakeMemory(), None)
+    ws = FakeWS()
+    sess = LiveSession(ws, SessionRegistry(Limits(), procedures=procs), "127.0.0.1",
+                       procs, models, Limits(), clock=clock)
+    return ws, sess
+
+
+async def wait_for(pred, timeout=15.0):
+    import asyncio
+    async def go():
+        while not pred():
+            await asyncio.sleep(0.02)
+    await asyncio.wait_for(go(), timeout)
+
+
+def complete_all(sess):
+    for fi in sorted(sess.perception.futs):
+        fut, _ = sess.perception.futs[fi]
+        if not fut.done():
+            fut.set_result(None)
+
+
+async def wait_step(sess, step_id, timeout=15.0):
+    await wait_for(lambda: sess.sm is not None and sess.sm.step["id"] == step_id, timeout)
+
+
+def test_full_session_closes_success():
+    async def main():
+        import asyncio
+        ws, sess = make_live({i: ("off" if i < 9 else "on") for i in range(16)})
+        run = asyncio.create_task(sess.run())
+        ws.feed_text({"type": "hello", "bike_id": "velo-1"})
+        await wait_for(lambda: any(m.get("type") == "hello_ack" for m in ws.sent))
+        ws.feed_text({"type": "start"})
+        for t in range(0, 9000, 1000):  # fi0-8 : chaîne tombée
+            ws.feed_image(t)
+        await wait_for(lambda: sess.sm is not None)
+        complete_all(sess)
+        await wait_step(sess, "engage_top_teeth")
+        for t in (9000, 10000, 11000):  # fi9-11 : chaîne posée
+            ws.feed_image(t)
+        complete_all(sess)
+        await wait_step(sess, "turn_backward")
+        ws.feed_text({"type": "user_done"})
+        for t in (12000, 13000, 16000):  # fi12-14 : essai, 4 s de rotation
+            ws.feed_image(t)
+        complete_all(sess)
+        await wait_for(lambda: any(m.get("type") == "closed" for m in ws.sent))
+        closed = [m for m in ws.sent if m.get("type") == "closed"][0]
+        assert closed["success"] is True  # SRV-T5 : session complète jusqu'au bout
+        said = [m["text"] for m in ws.sent if m.get("type") == "say"]
+        assert any("Montre-moi" in s for s in said)
+        assert any("tourne" in s for s in said)
+        await ws.close()
+        await asyncio.wait_for(run, 10)
+        return sess
+    sess = arun(main())
+    assert sess.counters["stale"] == 0 and sess.counters["out_of_order"] == 0
+
+
+def test_stale_result_is_dropped():
+    async def main():
+        import asyncio
+        now = [1000.0]
+        ws, sess = make_live({0: "off", 1: "off"}, clock=lambda: now[0])
+        sess._out_queue = asyncio.Queue()
+        sess._work_event = asyncio.Event()
+        sess.t0_ms = 0
+        sess.perception = sess.models.perception_factory(None)
+        sess._submit(jpeg_bytes(), 0, 0)
+        sess.perception.complete(0)
+        await asyncio.sleep(0.05)
+        sess._submit(jpeg_bytes(), 1, 1000)
+        now[0] += 6.0  # le résultat met 6 s à revenir...
+        sess.perception.complete(1)
+        await asyncio.sleep(0.05)
+        overlays = [m["frame_index"] for m in list(sess._out_queue._queue)
+                    if m.get("type") == "overlay"]
+        return sess, overlays
+    sess, overlays = arun(main())
+    assert sess.counters["stale"] == 1  # SRV-R4.3 : plus vieux que 5 s, écarté
+    assert overlays == [0]
+
+
+def test_out_of_order_result_is_dropped():
+    async def main():
+        import asyncio
+        ws, sess = make_live({1: "off", 2: "off"})
+        sess._out_queue = asyncio.Queue()
+        sess._work_event = asyncio.Event()
+        sess.t0_ms = 0
+        sess.perception = sess.models.perception_factory(None)
+        sess._submit(jpeg_bytes(), 1, 1000)
+        sess._submit(jpeg_bytes(), 2, 2000)
+        sess.perception.complete(2)
+        await asyncio.sleep(0.05)
+        sess.perception.complete(1)
+        await asyncio.sleep(0.05)
+        overlays = [m["frame_index"] for m in list(sess._out_queue._queue)
+                    if m.get("type") == "overlay"]
+        return sess, overlays
+    sess, overlays = arun(main())
+    assert sess.counters["out_of_order"] == 1  # SRV-R4.3 : antérieur au dernier appliqué
+    assert overlays == [2]

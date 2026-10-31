@@ -143,6 +143,17 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Difficile : 1er essai raté sur un nom (`reg` variable contre aide) dans mes propres tests.
   Preuve : `pytest` 103 passed + 1 skipped, `check_spec.py` OK.
   Fichiers : `server/session.py`, `tests/test_session.py`, `spec/05-session-server/tasks.md`.
+- SRV-T5 (boucle de session, [~] à vérifier hors sandbox) : `LiveSession` sans FastAPI
+  (hello dans `run()`, 3 images de démarrage, `Session.start` en fil, `try_submit`,
+  filtres âge/ordre, overlay + `pending`, `sm_worker`, `QueueOutput`, route
+  `/ws/session` dans `server/app.py`, `debounce_frames = 3`).
+  16 tests sync passent ici (temps, filtres, file, seuils, sortie, recadrage, overlay) ;
+  3 tests async (`complète`, `âge`, `ordre`) ignorés ici.
+  Difficile : 2 essais ratés sur mes propres tests (`pytest` manquant dans `arun`,
+  scénario `user_done` trop tôt — resynchronisé par étapes).
+  Preuve partielle : `pytest` 111 passed + 4 skipped, `check_spec.py` OK.
+  Fichiers : `server/session.py`, `server/app.py`, `tests/test_session.py`,
+  `spec/05-session-server/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

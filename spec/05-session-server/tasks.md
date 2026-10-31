@@ -22,11 +22,14 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   Preuve : `tests/test_session.py` (8 tests, logique synchrone sans FastAPI, passent ici),
   le câblage WebSocket vient avec SRV-T5.
   `pytest` 103 passed + 1 skipped (+ live/équivalence hors de cette passe), `check_spec.py` OK.
-- [ ] **SRV-T5 — Boucle de session.** `LiveSession` : images de démarrage, `Session.start` dans un fil, soumission
+- [~] **SRV-T5 — Boucle de session.** `LiveSession` : images de démarrage, `Session.start` dans un fil, soumission
   à la perception, filtre âge et ordre, mesures, `overlay`, `sm_worker` avec `pending`, `QueueOutput`,
   `send_loop`, `debounce_frames = 3`, temps client, image clé recadrée.
   Exigences : `SRV-R4.1` à `R4.5`, `R5.1` à `R5.3`, `R6.1`, `R6.2`, `CORE-R9.2`.
   Dépend de : T1, T3, `PERC-T4`. Fait quand : tests de session complète, d'âge, d'ordre et de `pending` passent.
+  À vérifier hors sandbox : les 3 tests de boucle sont async (sockets interdits ici).
+  Preuve partielle : 16 tests sync de `tests/test_session.py` passent ici,
+  `pytest` 111 passed + 4 skipped, `check_spec.py` OK.
 - [ ] **SRV-T6 — Commandes et voix.** `user_done`, `command`, `speaking`, `pause` / `resume`, `stop` ; audio
   binaire vers `VoiceBridge` ; `voice_status`.
   Exigences : `SRV-R5.4`. Dépend de : T5, `VOX-T3`.

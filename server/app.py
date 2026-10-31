@@ -41,6 +41,10 @@ def create_app(procedures: dict | None = None) -> FastAPI:
     app.state.procedures = procedures
     live = os.environ.get("FIXLOOP_FAKE_MODELS") != "1"
     code_required = bool(os.environ.get("FIXLOOP_ACCESS_CODE"))
+    from server.session import SessionRegistry, limits_from_env
+    app.state.registry = SessionRegistry(limits_from_env(),
+                                         access_code=os.environ.get("FIXLOOP_ACCESS_CODE"),
+                                         procedures=procedures)  # SRV-R2
 
     @app.get("/api/health")
     def health() -> dict:
@@ -54,6 +58,19 @@ def create_app(procedures: dict | None = None) -> FastAPI:
     web = ROOT / "web"
     if web.is_dir():  # SRV-R1.1 : l'appli statique arrive avec 06-phone-app
         app.mount("/", StaticFiles(directory=web, html=True), name="web")
+
+    @app.websocket("/ws/session")
+    async def ws_session(ws):  # SRV-R4 : une session en direct par connexion
+        from server.session import LiveSession, build_models
+        from fixloop.costs import CostLog
+        await ws.accept()
+        ip = ws.client.host if ws.client else "unknown"
+        models = build_models(app.state.procedures, CostLog(),
+                              fake=os.environ.get("FIXLOOP_FAKE_MODELS") == "1")
+        session = LiveSession(ws, app.state.registry, ip, app.state.procedures,
+                              models, app.state.registry.limits)
+        await session.run()
+
     return app
 
 
