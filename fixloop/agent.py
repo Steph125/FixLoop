@@ -23,7 +23,8 @@ BASE_URL = "https://api.meta.ai/v1"
 MODEL = "muse-spark-1.3"
 MAX_IMAGES = 3
 IMAGE_WIDTH = 768           # largeur max ; une image plus petite n'est jamais agrandie (aucun détail gagné)
-EFFORT = {"diagnose": "low", "arbitrate": "medium", "explain": "low"}   # valeurs : minimal … max
+EFFORT = {"diagnose": "low", "arbitrate": "medium", "explain": "low", "help": "low"}  # minimal … max
+HELP_MAX_WORDS = 25  # AGT-R5.1 : une indication de moins de 25 mots
 ACCEPT_FAILURE_CONF = 0.6
 
 # Règle de sécurité (eval/day2) : Muse Spark ne valide JAMAIS une étape. Sur le vélo de test, il a jugé
@@ -213,3 +214,16 @@ class SparkAgent:
             phrase = verdict.message or "Il y a un problème, regarde la pièce en rouge."
         part = data.get("piece") if data.get("piece") in parts else None
         return phrase, part
+
+    def help(self, step: dict, keyframes: list[Any]) -> str:
+        """Une indication pour l'étape en cours ; la consigne si Spark est muet (AGT-R5)."""
+        proc = self._procedure_of(step) or {}
+        text = (
+            f"Étape en cours : « {step['instruction']} »\n"
+            f"{proc.get('visual_cues', GENERIC_CUES)}\n\n"
+            "Donne une seule indication concrète pour réussir cette étape, "
+            "moins de 25 mots. "
+            '{"phrase": "<indication>"}'
+        )
+        data = self._ask("help", text, keyframes) or {}
+        return fit_one_sentence(data.get("phrase"), HELP_MAX_WORDS) or step["instruction"]

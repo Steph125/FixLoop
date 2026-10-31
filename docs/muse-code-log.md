@@ -36,6 +36,12 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve : `test_explain_truncates_long_phrase`, `test_low_confidence_failure_keeps_observing`,
   `pytest` 86 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
+- AGT-T8 (`help`) : prompt de `design.md` section 3 (consigne, `visual_cues`,
+  « moins de 25 mots », `{"phrase"}`), effort `low`, repli sur la consigne.
+  Passé au 1er essai après un échec authentique (méthode absente) avant le code.
+  Preuve : `test_help_returns_hint_and_falls_back_to_instruction`,
+  `pytest` 87 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

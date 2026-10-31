@@ -120,6 +120,19 @@ def test_explain_truncates_long_phrase():
     assert text2 == "Chaîne pas en place."  # 1re phrase trop longue : message de la règle
 
 
+def test_help_returns_hint_and_falls_back_to_instruction():
+    c = FakeClient('{"phrase": "Vise les dents du haut du plateau."}')
+    hint = SparkAgent(PROCS, client=c).help(STEP, [IMG, IMG])
+    assert hint == "Vise les dents du haut du plateau."  # AGT-R5.1 : une indication
+    prompt = c.sent[0]["input"][0]["content"][0]["text"]
+    assert "disque noir" in prompt  # visual_cues de la fiche
+    assert c.sent[0]["reasoning"] == {"effort": "low"}
+    mute = SparkAgent(PROCS, client=FakeClient("???"))
+    assert mute.help(STEP, [IMG]) == STEP["instruction"]  # AGT-R5.2 : repli sur la consigne
+    down = SparkAgent(PROCS, client=FakeClient(ConnectionError("coupé")))
+    assert down.help(STEP, [IMG]) == STEP["instruction"]
+
+
 def test_spark_calls_send_timeout_20_and_timeout_is_logged():
     from openai import APITimeoutError
 

@@ -32,8 +32,10 @@
   Preuve : `tests/test_agent.py::test_explain_truncates_long_phrase`,
   `test_low_confidence_failure_keeps_observing`,
   `pytest` 86 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
-- [ ] **AGT-T8 — `help(step, keyframes)`.** Prompt de `design.md` section 3 ; repli sur la consigne.
+- [x] **AGT-T8 — `help(step, keyframes)`.** Prompt de `design.md` section 3 ; repli sur la consigne.
   Exigences : `AGT-R5.1`, `R5.2`. Bloque : `CORE-T15`.
+  Preuve : `tests/test_agent.py::test_help_returns_hint_and_falls_back_to_instruction`,
+  `pytest` 87 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
 - [ ] **AGT-T9 — Jetons et coûts.** Lire `r.usage` ; ajouter `input_tokens`, `output_tokens` au journal ; reporter
   dans `CostLog` (`model="muse-spark-1.3"`).
   Exigences : `AGT-R7.1`, `R7.2`. Dépend de : `SRV-T2`.
