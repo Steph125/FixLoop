@@ -135,6 +135,14 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve partielle : `py_compile` OK, `pytest` 97 passed + 13 skipped, `check_spec.py` OK.
   Fichiers : `server/app.py`, `tests/test_server.py`, `requirements.txt`,
   `spec/05-session-server/tasks.md`.
+- SRV-T4 (contrôle d'accès, [x]) : `server/session.py` sans FastAPI (duck-typing) avec
+  `Limits`, `limits_from_env` et `SessionRegistry.hello` (`hello_ack` avec limites/fiches,
+  `access_denied`/`busy`/`bad_message`, 2 sessions max, 6e refus en 1 min → blocage 5 min
+  sans prolongation, refus oubliés après 1 min, par IP). `tests/test_session.py` séparé de
+  `test_server.py` pour tourner sans fastapi : 8 tests, passent ici.
+  Difficile : 1er essai raté sur un nom (`reg` variable contre aide) dans mes propres tests.
+  Preuve : `pytest` 103 passed + 1 skipped, `check_spec.py` OK.
+  Fichiers : `server/session.py`, `tests/test_session.py`, `spec/05-session-server/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 
