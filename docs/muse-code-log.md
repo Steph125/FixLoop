@@ -5,6 +5,52 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
 
 ## 2026-10-31 (sans interaction, choix prudent noté sans question)
 
+- PERC-T8 (suivi) : le test d'équivalence passait seul mais échouait dans la suite
+  complète (`cv2.OutOfMemory` : 1 140 masques gardés d'un coup). Test restructuré en
+  streaming (grouper les records par image, puis une image à la fois : 2 masques max),
+  sémantique inchangée (images sans objet exclues comme avant).
+  Preuve : suite finale ci-dessous. Fichiers : `tests/test_perception.py`.
+
+## Résumé final (31 oct. 2026, sans interaction)
+
+Tâches faites [x] (16) : VOX-T6, CORE-T18, MEM-T7 (relecture, vérifiées + MEM-T7
+committé), AGT-T5, AGT-T6, AGT-T7, AGT-T8, CORE-T15 (dépendait d'AGT-T8, faite),
+AGT-T9, MEM-T2, MEM-T5, MEM-T6, PERC-T8 (`probe_out2/` présent), SRV-T4, SRV-T9,
+AGT-T10 (dépendait de PERC-T4 et SRV-T5).
+
+Tâches [~] à vérifier hors sandbox (7) : PERC-T7 (2 tests async bout-en-bout),
+PERC-T5 (test de cache async), SRV-T1 + `test_costs_needs_access_code` (TestClient,
+fastapi absent), SRV-T5 (3 tests de boucle), SRV-T7 (2 tests de fermeture),
+SRV-T8 (route `/api/costs`), SRV-T10 (`ws_client.py` + session `velo2` jusqu'à
+`closed`). Chaque [~] a une preuve partielle (tests sync passés ici + `py_compile`).
+
+Tâches bloquées : aucune abandonnée après 3 essais de code. Blocage
+d'environnement : PyPI injoignable depuis la sandbox (pip muet, 3 tentatives tuées,
+dont une bornée `--timeout 15 --retries 1`) — `fastapi`, `uvicorn`, `websockets`,
+`httpx` non installés ici (ajoutés à `requirements.txt` pour l'installation hors
+sandbox). Conséquence : tests serveur et async ignorés ici, `curl` local impossible.
+
+SPEC À REVOIR (spec non modifiée, à trancher) :
+1. `spec/01-core-loop/design.md` 6.3 montre `diagnose -> str` alors que le protocole
+   rend `(id, raison)` depuis AGT-T6.
+2. Événement `diagnose` avec champ `fallback: true` non documenté en 6.5/§7.
+3. Code d'erreur pour IP bannie non nommé en SRV-R2.4 (choisi : `access_denied`).
+4. Enregistrement : en mode image, `LivePerception` ne garde pas le texte brut SAM —
+   `record_raw` garde le message `overlay` (chemins SVG).
+5. Abandon à 60 s sans résultat : exigé par la tâche SRV-T7 et le design (section 6),
+   absent des 4 clauses de SRV-R7 dans `requirements.md`.
+
+Résultat final : `python -m pytest -q -rs tests` → 126 passed, 18 skipped, 0 failed
+(14 min 38 s) ; `python scripts/check_spec.py` → OK (82 exigences, 299 critères,
+46 décisions, 104 tâches).
+Ignorés : 1 module `test_server.py` (fastapi absent, PyPI injoignable) ; 12
+`test_perception_live.py` + 5 `test_session.py` async (boucle asyncio : `socketpair`
+interdit, WinError 10013). Avertissements restants = bruit d'environnement préexistant
+(GC `ProactorEventLoop`, cache pytest non inscriptible).
+Règle appliquée partout : `git add` nominatif (jamais `-A`) ; aucun `push`/merge/
+changement de branche ; `.env` ni lu ni touché ; aucun appel API Meta ;
+`probe/sam_api_probe.py` inchangé.
+
 - MEM-T7 (commit du reste de la veille) : le code et les tests dataient du 30 oct. au soir
   mais n'étaient pas committés (arbre sale) ; vérifié `tests/test_memory.py` 7 passed,
   `test_voice.py` + `test_state_machine.py` 29 passed, `check_spec.py` OK

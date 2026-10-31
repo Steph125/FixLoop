@@ -196,17 +196,27 @@ def test_recorded_equivalence_day1():
 
     proc = load_all()["chain_off_chainring"]
     h, w = 464, 848  # vidéo velo2 préparée (eval/day1)
-    per_part = {}
-    for part, largest in (("chain", False), ("chainring", True)):
-        recs = parse_raw(recorded_raw(f"raw_{part}.txt")).records
-        for fi, pr in masks_from_records(recs, h, w, CONF_THR, largest).items():
-            per_part.setdefault(fi, {})[part] = pr
+    by_frame: dict = {}
+    for part in ("chain", "chainring"):
+        for rec in parse_raw(recorded_raw(f"raw_{part}.txt")).records:
+            if getattr(rec, "kind", None) != "mask":
+                continue
+            fr = getattr(rec, "frame", None)
+            by_frame.setdefault(part, {}).setdefault(
+                fr.frame_index if fr is not None else 0, []).append(rec)
+    frames = sorted(set().union(*(d for d in by_frame.values())))
     contacts = {}
-    for fi in sorted(per_part):
-        kept = {p: pr for p, pr in per_part[fi].items() if pr.mask is not None}
-        fm = FrameMasks(frame_index=fi, t=fi / 10.0,
-                        masks={p: pr.mask for p, pr in kept.items()},
-                        confidence={p: pr.confidence for p, pr in kept.items()})
+    for fi in frames:  # image par image : 2 masques en mémoire, jamais 1 140
+        kept, confs = {}, {}
+        for part, largest in (("chain", False), ("chainring", True)):
+            found = masks_from_records(by_frame[part].get(fi, []), h, w,
+                                       CONF_THR, largest)
+            pr = found.get(fi)
+            if pr is not None and pr.mask is not None:
+                kept[part], confs[part] = pr.mask, pr.confidence
+        if not kept:
+            continue  # comme avant : sans objet retenu, pas d'entrée
+        fm = FrameMasks(frame_index=fi, t=fi / 10.0, masks=kept, confidence=confs)
         contacts[fi] = measure(fm, proc).contact[("chain", "chainring")]
     even = {fi: c for fi, c in contacts.items() if fi % 2 == 0}
     assert len(even) == 285  # eval/day1 : une image sur deux
