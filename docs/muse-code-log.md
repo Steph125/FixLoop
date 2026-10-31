@@ -20,6 +20,16 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   Preuve : `test_spark_calls_send_timeout_20_and_timeout_is_logged`,
   `pytest` 83 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
+- AGT-T6 (diagnostic avec raison) : `diagnose` rend `(id, raison)` ; `Session.start`
+  dit « Je vois : <titre>. » puis la raison, repli journalisé (`fallback: true`).
+  Difficile : 2 tests existants adaptés (contrat exigé par la tâche, noté ici) ;
+  `Session.start` garde la compatibilité avec un agent rendant l'id seul.
+  Écart spec noté (non modifié) : `design.md` 6.3 de `01-core-loop` montre encore
+  `diagnose -> str` → voir « SPEC À REVOIR » du résumé final.
+  Preuve : `test_diagnose_reason_is_said_and_fallback_logged`,
+  `pytest` 84 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `fixloop/agent.py`, `fixloop/state_machine.py`, `tests/fakes.py`,
+  `tests/test_agent.py`, `tests/test_state_machine.py`, `spec/03-agent-spark/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

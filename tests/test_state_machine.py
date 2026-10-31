@@ -124,6 +124,17 @@ def test_unknown_procedure_falls_back_to_first():
     assert r.s.procedure["id"] == "chain_off_chainring"
 
 
+def test_diagnose_reason_is_said_and_fallback_logged():
+    r = Runner()  # AGT-R1.4 : la raison est dite avec le titre de la fiche
+    assert r.out.said[0] == "Je vois : Chaîne tombée du plateau."
+    assert r.out.said[1] == "La chaîne pend sous le plateau."
+    assert r.events("diagnose")[0]["procedure"] == "chain_off_chainring"
+    r2 = Runner(agent=UnknownAgent())  # AGT-R1.3 : id inconnu, 1re fiche, repli journalise
+    assert r2.s.procedure["id"] == "chain_off_chainring"
+    assert r2.events("diagnose")[0].get("fallback") is True
+    assert r2.out.said[0] == "Je vois : Chaîne tombée du plateau."
+
+
 def test_out_of_order_measures_are_ignored():
     r = Runner()
     r.feed("off", 4)

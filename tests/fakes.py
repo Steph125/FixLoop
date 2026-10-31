@@ -10,7 +10,7 @@ class FakeAgent:
 
     def diagnose(self, images, procedures, history):
         self.calls.append("diagnose")
-        return "chain_off_chainring"
+        return "chain_off_chainring", "La chaîne pend sous le plateau."
 
     def arbitrate(self, step, keyframes, window):
         self.calls.append("arbitrate")
@@ -43,7 +43,7 @@ class UnknownAgent(FakeAgent):
 
     def diagnose(self, images, procedures, history):
         self.calls.append("diagnose")
-        return "n_existe_pas"
+        return "n_existe_pas", None
 
 
 class FakeMemory:

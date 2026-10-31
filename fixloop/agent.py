@@ -128,7 +128,9 @@ class SparkAgent:
         return None
 
     # ------------------------------------------------------------------ protocole Agent
-    def diagnose(self, images: list[Any], procedures: dict[str, dict], history: str) -> str:
+    def diagnose(self, images: list[Any], procedures: dict[str, dict], history: str
+                 ) -> tuple[str, str | None]:
+        """Rend (id de fiche, raison dite à l'utilisateur) ; repli journalisé (AGT-R1.3, R1.4)."""
         catalog = [{"id": p["id"], "titre": p["title"], "symptomes": p.get("symptoms", [])}
                    for p in procedures.values()]
         text = (
@@ -139,7 +141,13 @@ class SparkAgent:
         )
         data = self._ask("diagnose", text, images) or {}
         pid = data.get("procedure")
-        return pid if pid in procedures else next(iter(procedures))
+        raison = data.get("raison")
+        raison = raison.strip() if isinstance(raison, str) and raison.strip() else None
+        if pid in procedures:
+            return pid, raison
+        first = next(iter(procedures))
+        self.calls.append({"kind": "diagnose", "fallback": True, "procedure": first})
+        return first, None
 
     def arbitrate(self, step: dict, keyframes: list[Any], window: list[Measures]) -> Verdict:
         """Renvoie « eps » (échec confirmé) ou « 0 » (continuer d'observer), jamais « 1 »."""

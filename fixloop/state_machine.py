@@ -58,7 +58,8 @@ class State(str, Enum):
 
 
 class Agent(Protocol):  # Muse Spark
-    def diagnose(self, images: list[Any], procedures: dict[str, dict], history: str) -> str: ...
+    def diagnose(self, images: list[Any], procedures: dict[str, dict], history: str
+                 ) -> tuple[str, str | None]: ...  # (id de fiche, raison dite a l'utilisateur)
     def arbitrate(self, step: dict, keyframes: list[Any], window: list[Measures]) -> Verdict: ...
     def explain(self, step: dict, verdict: Verdict, keyframes: list[Any]) -> tuple[str, str | None]: ...
 
@@ -133,14 +134,23 @@ class Session:
     def start(self, images: list[Any]) -> None:
         history = self._safe_load()
         try:
-            proc_id = self.agent.diagnose(images, self.procedures, history)
+            result = self.agent.diagnose(images, self.procedures, history)
         except Exception:
-            proc_id = None
+            result = None
         self.model_calls["spark"] += 1
+        if isinstance(result, (tuple, list)) and len(result) == 2:  # AGT-T6 : (id, raison)
+            proc_id, raison = result
+        else:  # compatibilite : ancien protocole rendant l'id seul
+            proc_id, raison = result, None
         if proc_id not in self.procedures:  # inconnu ou agent muet : 1re fiche
-            proc_id = next(iter(self.procedures))
+            proc_id, raison = next(iter(self.procedures)), None
+            self._event("diagnose", procedure=proc_id, fallback=True)
+        else:
+            self._event("diagnose", procedure=proc_id)
         self.procedure = self.procedures[proc_id]
-        self._event("diagnose", procedure=proc_id)
+        self.out.say(f"Je vois : {self.procedure.get('title', proc_id)}.")  # AGT-R1.4
+        if isinstance(raison, str) and raison.strip():
+            self.out.say(raison.strip())
         self._enter_step(0)
         self._maybe_emit_state()
 

@@ -32,15 +32,19 @@ def test_extract_json_tolerates_fences_and_text():
 def test_diagnose_picks_known_procedure_and_sends_images():
     c = FakeClient('{"procedure": "chain_off_chainring", "raison": "chaîne pendante"}')
     agent = SparkAgent(PROCS, client=c)
-    assert agent.diagnose([IMG, IMG], PROCS, "aucun") == "chain_off_chainring"
+    pid, raison = agent.diagnose([IMG, IMG], PROCS, "aucun")
+    assert pid == "chain_off_chainring" and raison == "chaîne pendante"  # AGT-R1.4
     content = c.sent[0]["input"][0]["content"]
     assert sum(p["type"] == "input_image" for p in content) == 2
     assert c.sent[0]["model"] == "muse-spark-1.3"
 
 
 def test_diagnose_falls_back_on_unknown_id():
-    agent = SparkAgent(PROCS, client=FakeClient('{"procedure": "inventee"}'))
-    assert agent.diagnose([IMG], PROCS, "") == "chain_off_chainring"
+    c = FakeClient('{"procedure": "inventee"}')
+    agent = SparkAgent(PROCS, client=c)
+    pid, raison = agent.diagnose([IMG], PROCS, "")
+    assert pid == "chain_off_chainring" and raison is None  # AGT-R1.3 : 1re fiche, repli journalise
+    assert any(e.get("fallback") for e in agent.calls if e.get("kind") == "diagnose")
 
 
 def test_arbitrate_never_validates_but_confirms_failures():
@@ -103,7 +107,7 @@ def test_spark_calls_send_timeout_20_and_timeout_is_logged():
     from fixloop.models import Verdict
     c = FakeClient('{"procedure": "chain_off_chainring", "raison": "chaine pendante"}')
     agent = SparkAgent(PROCS, client=c)
-    assert agent.diagnose([IMG], PROCS, "aucun") == "chain_off_chainring"
+    assert agent.diagnose([IMG], PROCS, "aucun")[0] == "chain_off_chainring"
     assert c.sent[0].get("timeout") == 20  # AGT-R6.2 : delai maximal de 20 s
     c2 = FakeClient('{"verdict": "ratee", "confiance": 0.8}')
     agent2 = SparkAgent(PROCS, client=c2)
