@@ -85,3 +85,23 @@ def test_non_dict_history_renamed_and_empty(tmp_path):
     path.write_text("[1, 2]", encoding="utf-8")  # JSON valide mais inutilisable
     assert m.load("velo-1") == "aucun"
     assert len(list((tmp_path / "bikes").glob("velo-1.corrupt-*.json"))) == 1
+
+
+def test_seed_history_creates_demo_entries(tmp_path):
+    import json
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = tmp_path / "bikes"
+    r = subprocess.run(
+        [sys.executable, "scripts/seed_history.py", "--bike", "demo-velo",
+         "--root", str(root)],
+        capture_output=True, text=True, cwd=Path(__file__).resolve().parent.parent)
+    assert r.returncode == 0, r.stderr  # MEM-R4.1 : historique de demonstration
+    data = json.loads((root / "demo-velo.json").read_text(encoding="utf-8"))
+    assert len(data["entries"]) == 2
+    assert all(e["procedure"] == "chain_off_chainring" and e.get("demo") is True
+               for e in data["entries"])
+    m = mem(tmp_path)
+    assert m.repeated("demo-velo", "chain_off_chainring") == 2  # visible par MEM-T5

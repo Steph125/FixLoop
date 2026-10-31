@@ -82,6 +82,15 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `pytest` 92 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `fixloop/state_machine.py`, `tests/fakes.py`,
   `tests/test_state_machine.py`, `spec/04-memory-voice/tasks.md`.
+- MEM-T6 (historique de démo) : `scripts/seed_history.py` (`--bike`, `--root`,
+  2 entrées `chain_off_chainring` J-6/J-2 avec `demo: true`) ; `WonderMemory.save`
+  conserve désormais ce drapeau (allowlist inchangée par ailleurs).
+  Testé par sous-processus (le script est un CLI, pas un module).
+  Passé au 1er essai après un échec authentique avant le code (script absent).
+  Preuve : `test_seed_history_creates_demo_entries`,
+  `pytest` 93 passed + 9 skipped, `check_spec.py` OK.
+  Fichiers : `scripts/seed_history.py`, `fixloop/memory.py`, `tests/test_memory.py`,
+  `spec/04-memory-voice/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

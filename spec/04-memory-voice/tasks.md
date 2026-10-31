@@ -27,8 +27,10 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   `design.md` 1.2. Exigences : `MEM-R1.4`. Touche `01-core-loop`.
   Preuve : `tests/test_state_machine.py::test_repeated_failure_is_said_after_diagnose`,
   `pytest` 92 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
-- [ ] **MEM-T6 — Historique de démo.** `scripts/seed_history.py`, entrées `demo: true`.
+- [x] **MEM-T6 — Historique de démo.** `scripts/seed_history.py`, entrées `demo: true`.
   Exigences : `MEM-R4.1` ; `MEM-R4.2` couvert par `SUB-T3`, `SUB-T6`.
+  Preuve : `tests/test_memory.py::test_seed_history_creates_demo_entries`,
+  `pytest` 93 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
 
 ## Voix
 

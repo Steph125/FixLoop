@@ -72,6 +72,8 @@ class WonderMemory:
         }
         if report.get("title"):
             entry["title"] = report["title"]
+        if report.get("demo"):  # historique de demonstration (MEM-R4.1)
+            entry["demo"] = True
         if report.get("summary"):  # phrase Wonder (MEM-T4) ; absente sinon
             entry["summary"] = report["summary"]
         data = self._read(bike_id)
