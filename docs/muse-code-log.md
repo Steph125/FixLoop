@@ -91,6 +91,17 @@ Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la
   `pytest` 93 passed + 9 skipped, `check_spec.py` OK.
   Fichiers : `scripts/seed_history.py`, `fixloop/memory.py`, `tests/test_memory.py`,
   `spec/04-memory-voice/tasks.md`.
+- PERC-T7 (journal des coûts, [~] à vérifier hors sandbox) : aucun code à écrire,
+  `LivePerception._cost` appelait déjà `CostLog.add` sur les 4 chemins de `_segment_part`
+  (succès, refus, relances épuisées, erreur non réseau) — vérifié par relecture.
+  Test synchrone du mapping (`test_cost_log_called_per_request`, passe ici) + 2 tests
+  async bout-en-bout (`test_image_requests_are_logged_to_costs`,
+  `test_failed_request_is_logged_not_ok`, ignorés ici car sockets interdits).
+  Choix prudent : tâche marquée [~] selon la nouvelle règle (tests principaux ignorés),
+  le mode vidéo sera couvert par PERC-T5.
+  Preuve partielle : `pytest` 94 passed + 11 skipped, `check_spec.py` OK.
+  Fichiers : `tests/test_perception.py`, `tests/test_perception_live.py`,
+  `spec/02-perception/tasks.md`.
 
 ## 2026-10-30 (soir, sans interaction)
 

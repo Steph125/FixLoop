@@ -212,3 +212,45 @@ def test_to_frame_masks_skips_absent_parts():
     assert fm.frame_index == 7 and fm.t == 2.0
     assert set(fm.masks) == {"chainring"}  # PERC-R1.6 : pas de masque vide
     assert fm.masks["chainring"].shape == (H, W)
+
+
+class FakeCosts:
+    """Capte les appels à CostLog.add sans écrire sur disque (PERC-T7)."""
+
+    def __init__(self):
+        self.entries = []
+
+    def add(self, **kw):
+        self.entries.append(kw)
+        return 0.0
+
+
+def test_image_requests_are_logged_to_costs():
+    async def main():
+        costs = FakeCosts()
+        client = client_two_parts()
+        res = await LivePerception(PROC, client=client, costs=costs, retry_s=0).segment_image(
+            jpeg_bytes(), 0, 0.0)
+        return costs, res
+
+    costs, res = arun(main())
+    assert res.error is None
+    assert {e["part"] for e in costs.entries} == {"chain", "chainring"}  # PERC-R7.1 : chaque requete
+    for e in costs.entries:
+        assert (e["model"], e["kind"], e["units"]) == ("sam-3.1", "image", 1)
+        assert e["ok"] is True and e["attempts"] == 1 and e["seconds"] >= 0
+
+
+def test_failed_request_is_logged_not_ok():
+    async def main():
+        costs = FakeCosts()
+        client = client_two_parts(failures={"bicycle chain": [FakeAuthError()]})
+        res = await LivePerception(PROC, client=client, costs=costs, retry_s=0).segment_image(
+            jpeg_bytes(), 0, 0.0)
+        return costs, res
+
+    costs, res = arun(main())
+    assert res.parts["chain"].mask is None
+    failed = [e for e in costs.entries if e["part"] == "chain"]
+    assert len(failed) == 1 and failed[0]["ok"] is False  # echec journalise aussi
+    assert [e for e in costs.entries if e["part"] == "chainring"][0]["ok"] is True

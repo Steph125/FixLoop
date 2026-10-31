@@ -31,9 +31,14 @@
   20 masques enregistrés (taille, rendu) ; noter le choix dans `design.md` section 9.
   Exigences : `PERC-R6.1` à `R6.3`. Fait quand : taille médiane < 4 ko notée.
   Preuve : `test_recorded_masks_svg_median_under_4k` (médiane 303 o, max 410 o) ; décision `PERC-D6`.
-- [ ] **PERC-T7 — Journal des coûts.** Appeler `CostLog.add(model="sam-3.1", mode, part, images, seconds,
+- [~] **PERC-T7 — Journal des coûts.** Appeler `CostLog.add(model="sam-3.1", mode, part, images, seconds,
   attempts, ok)` à chaque requête ; facturation vidéo max(images, 50).
   Exigences : `PERC-R7.1`, `R7.2`. Dépend de : `SRV-T2` (`fixloop/costs.py`).
+  À vérifier hors sandbox : les 2 tests async bout-en-bout sont ignorés ici (sockets interdits).
+  Preuve partielle : `tests/test_perception.py::test_cost_log_called_per_request` (mapping vérifié),
+  `test_image_requests_are_logged_to_costs`, `test_failed_request_is_logged_not_ok` (ignorés ici),
+  `pytest` 94 passed + 11 skipped, `check_spec.py` OK. Aucun code à écrire (`_cost` couvrait déjà
+  les 4 chemins de `_segment_part`) ; le mode vidéo sera couvert par PERC-T5.
 - [ ] **PERC-T8 — Équivalence avec `eval/day1`.** Test `recorded` : rejouer `probe_out2/raw_*.txt` avec le module,
   comparer les médianes par phase (± 0,005) et le classement des 285 images (0 erreur).
   Exigences : `PERC-R9.1`, `R9.2`.

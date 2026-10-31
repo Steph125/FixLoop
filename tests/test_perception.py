@@ -125,6 +125,26 @@ def test_lines_for():
     assert lines_for("", {0}) == ""
 
 
+def test_cost_log_called_per_request():
+    from fixloop.perception import LivePerception
+
+    entries = []
+
+    class FakeCosts:
+        def add(self, **kw):
+            entries.append(kw)
+            return 0.0
+
+    lp = LivePerception({"parts": {}}, client=object(), costs=FakeCosts())
+    lp._cost("chain", 1.2, True, 1)
+    lp._cost("chainring", 0.3, False, 3)
+    assert [(e["model"], e["kind"], e["units"]) for e in entries] == [
+        ("sam-3.1", "image", 1), ("sam-3.1", "image", 1)]  # PERC-R7.1
+    assert [(e["part"], e["seconds"], e["ok"], e["attempts"]) for e in entries] == [
+        ("chain", 1.2, True, 1), ("chainring", 0.3, False, 3)]
+    LivePerception({"parts": {}}, client=object())._cost("chain", 1.0, True, 1)  # sans journal : rien
+
+
 RAW_CHUNK = Path("probe_out2/raw_chain_00.txt")
 
 
