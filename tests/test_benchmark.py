@@ -195,6 +195,62 @@ def test_fixloop_approach_arbitrates_hidden_and_replays_offline(tmp_path):
         (e["event"], e.get("t")) for e in online.log]  # RPL-R2.3 : identique hors ligne
 
 
+def test_spark_only_machine_validates_first_success():
+    from fixloop.benchmark import false_validations, run_spark_only
+    answers = iter([{"verdict": "impossible_a_dire", "confiance": 0.4, "raison": "flou"},
+                    {"verdict": "reussie", "confiance": 0.9, "raison": "en place"}])
+    images = [(float(t), object()) for t in range(0, 9, 3)]
+    out = run_spark_only(images, [3.0], lambda img: next(answers))
+    assert [e["event"] for e in out["events"]] == ["validated"]
+    assert out["events"][0]["t"] == 3.0 and out["calls"] == 2
+    lab = [{"t": i, "state": "off", "done": 0} for i in range(10)]
+    assert false_validations(out["events"], lab)["false"] == 1  # fausse validation construite
+
+
+def test_spark_only_anomaly_on_failure_after_done():
+    from fixloop.benchmark import run_spark_only
+    answers = iter([{"verdict": "ratee", "confiance": 0.8, "raison": "tombée"},
+                    {"verdict": "ratee", "confiance": 0.8, "raison": "tombée"}])
+    images = [(float(t), object()) for t in range(0, 9, 3)]
+    out = run_spark_only(images, [1.0], lambda img: next(answers))
+    kinds = [e["event"] for e in out["events"]]
+    assert kinds == ["anomaly"]  # EVAL-R3.1 : « ratée » après « c'est fait »
+    assert out["events"][0]["t"] == 1.0  # requête à l'instant du done, puis arrêt
+
+
+def test_spark_only_queries_done_instants():
+    from fixloop.benchmark import run_spark_only
+    seen = []
+    images = [(float(t), object()) for t in range(0, 12, 3)]
+    run_spark_only(images, [4.0],
+                   lambda img: seen.append(img) or {"verdict": "", "confiance": 0.0,
+                                                    "raison": None})
+    assert len(seen) == 5  # 0, 3, 6, 9 + le « c'est fait » de t = 4
+
+
+def test_spark_only_answers_are_cached(tmp_path):
+    from fixloop.cached_models import CachedAgent, OfflineError
+    import pytest
+
+    class FakeSparkOnly:
+        def __init__(self, answers):
+            self.answers, self.model, self.n = answers, "muse-spark-1.3", 0
+
+        def spark_only_verdict(self, images, step):
+            self.n += 1
+            return dict(self.answers[min(self.n - 1, len(self.answers) - 1)])
+
+    cache = tmp_path / "spark_only.json"
+    online = CachedAgent(FakeSparkOnly([{"verdict": "reussie", "confiance": 0.9,
+                                         "raison": "ok"}]), cache)
+    first = online.spark_only(["img"], {"id": "s"})
+    assert first["verdict"] == "reussie"
+    offline = CachedAgent(None, cache)
+    assert offline.spark_only(["img"], {"id": "s"}) == first  # EVAL-R5.2
+    with pytest.raises(OfflineError):
+        CachedAgent(None, tmp_path / "vide.json").spark_only(["autre"], {"id": "s"})
+
+
 def test_read_labels_rejects_bad_state(tmp_path):
     import pytest
     lp = tmp_path / "labels.csv"

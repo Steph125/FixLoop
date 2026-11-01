@@ -584,3 +584,11 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   comptait le cadrage, validé légitimement sur chaîne tombée) — exclusion du cadrage + SPEC À REVOIR.
   Preuve : `tests/test_benchmark.py` 17 passed, `check_spec.py` OK.
   Fichiers : `fixloop/benchmark.py`, `tests/test_benchmark.py`, `spec/08-evaluation/tasks.md`.
+
+- EVAL-T5 (Spark seul, [x]) : `run_spark_only` (requêtes 3 s + instants `done`, validé au 1er
+  « réussie », anomalie au 1er « ratée » après `done`, arrêt au 1er terminal) + `CachedAgent.spark_only`
+  (cache partagé, `OfflineError` sur clé absente). Tests d'abord, 1 essai raté sur mon code (garde
+  hors ligne avant consultation du cache) — ordre corrigé, vert (25 passed avec `test_replay.py`).
+  Preuve : `tests/test_benchmark.py`, `check_spec.py` OK.
+  Fichiers : `fixloop/benchmark.py`, `fixloop/cached_models.py`, `tests/test_benchmark.py`,
+  `spec/08-evaluation/tasks.md`.

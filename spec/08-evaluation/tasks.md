@@ -26,9 +26,11 @@
   sans fausse validation, arbitrage sur `hidden` rejoué à l'identique hors ligne).
   Choix : `false_validations` exclut le cadrage (`frame_view`, visibilité seule) — sinon la cible 0
   du design serait inatteignable → SPEC À REVOIR (design 08, section 4).
-- [ ] **EVAL-T5 — Approche Spark seul.** Image toutes les 3 s et à chaque « c'est fait », machine minimale,
+- [x] **EVAL-T5 — Approche Spark seul.** Image toutes les 3 s et à chaque « c'est fait », machine minimale,
   cache des réponses.
-  Exigences : `EVAL-R3.1`, `R3.4`. Dépend de : `AGT-T12`.
+  Exigences : `EVAL-R3.1`, `R3.4`. Dépend de : `AGT-T12` ([x]).
+  Preuve : `run_spark_only` (requêtes 3 s + `done`, arrêt au 1er terminal) + `CachedAgent.spark_only` ;
+  `tests/test_benchmark.py` (fausse validation construite sur `off`, anomalie après `done`, cache rejoué).
 - [ ] **EVAL-T6 — Script `benchmark.py`.** Estimation et confirmation du coût, exécution en ligne puis hors
   ligne, `results.csv`, journal des coûts.
   Exigences : `EVAL-R5.1`, `R5.2`, `R6.1`, `R6.2`, `R7.3`.

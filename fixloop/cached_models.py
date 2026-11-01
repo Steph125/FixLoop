@@ -157,8 +157,6 @@ class CachedAgent:
 
         Réservé au benchmark (EVAL-R3.1) : montre ce que la règle de sécurité évite.
         """
-        if self.inner is None or not hasattr(self.inner, "spark_only_verdict"):
-            raise OfflineError("spark_only indisponible hors ligne sans cache")
         payload = {"step": step, "images": self._images(images)}
         return self._cached("spark_only", payload,
                             lambda: self.inner.spark_only_verdict(images, step))

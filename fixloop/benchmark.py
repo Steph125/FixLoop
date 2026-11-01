@@ -260,6 +260,34 @@ def drive_session(procedure_id: str, segments: list[tuple[str, float]],
     return session, measures
 
 
+def run_spark_only(images: list, done_at: list[float], ask,
+                   every_s: float = 3.0) -> dict:
+    """Approche Spark seul : une image toutes les 3 s et à chaque « c'est fait ».
+
+    Machine minimale (design 08, section 3.6) : étape validée au premier
+    « réussie », anomalie au premier « ratée » après « c'est fait » ; arrêt au
+    premier événement terminal. `ask(image)` rend `{"verdict", ...}` (EVAL-T5 :
+    réponses en cache via `CachedAgent.spark_only`).
+    """
+    queries = sorted({round(i * every_s, 2) for i in range(int(images[-1][0] / every_s) + 1)}
+                     | {float(d) for d in done_at})
+    events, calls, done_seen = [], 0, False
+    for q in queries:
+        img = next(img for t, img in images if t >= q - 1e-9)
+        out = ask(img) or {}
+        calls += 1
+        if any(d <= q + 1e-9 for d in done_at):
+            done_seen = True
+        v = str(out.get("verdict", "")).lower()
+        if v.startswith(("reuss", "réuss")):
+            events.append({"event": "validated", "t": q})
+            break
+        if done_seen and v.startswith("rat"):
+            events.append({"event": "anomaly", "t": q, "message": out.get("raison")})
+            break
+    return {"events": events, "calls": calls}
+
+
 def approach_counts(events: list[dict], measures: list) -> dict:
     """Appels Spark et images SAM d'un extrait (EVAL-R4.6, coût estimé en T6)."""
     calls = {"spark": 0, "wonder": 0}
