@@ -37,6 +37,10 @@ fichiers en CRLF comme le reste du dépôt ; VOX en PCM16 24 kHz / 80 ms
 
 - APP-T6 (surimpression) : `partColor`/`formatMeasure`/`verdictLabel`/`stepLabel`/`stateAt`/`staleOverlay` dans `lib.js`, `drawOverlay`/`onHighlight`/`onState`/estompage 500 ms dans `live.js`, couleurs en `style.css`. SRV-T5 et PERC-T6 [x] : dépendances faites. Passé au 2e essai (ancre de script sur `live.js`, code bon dès le 1er).
   Preuve : `test_overlay_drawing`, `node web/selftest.mjs` 15/15, `check_spec.py` OK.
+
+- APP-T7 (voix en sortie) : `VALIDATION_PHRASE`/`pickFrenchVoice`/`shouldInterruptSay` dans `lib.js`, `onSay`/`speak`/`unlockSpeech`/sous-titres/`speaking`, validation non interrompue, bandeau d’anomalie avec la dernière explication. Passé au 1er essai.
+  Preuve : `test_spoken_voice_output`, `node web/selftest.mjs` 16/16, `check_spec.py` OK.
+  Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/style.css`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/style.css`, `web/selftest.mjs`, `tests/test_phone_app.py`.

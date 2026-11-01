@@ -4,6 +4,7 @@ import { isScreen, makeBikeId, isBikeId, codeRequired, cameraConstraints, startM
   helloMessage, userDoneMessage, commandMessage, pauseMessage, resumeMessage, stopMessage,
   packBinary, imageTargetSize, MSG_IMAGE, JPEG_QUALITY,
   partColor, formatMeasure, verdictLabel, stepLabel, staleOverlay, GREEN_MS,
+  pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE,
   backoffDelay, screenFor, errorMessage, HISTORY_MESSAGE, CAMERA_MESSAGE } from "./lib.js";
 
 export const app = {
@@ -24,6 +25,8 @@ export const app = {
   greenUntil: 0,
   stepIndex: 0,
   lastSay: "",
+  speakingText: "",
+  pendingSay: null,
 };
 
 export function showScreen(name) {
@@ -130,6 +133,7 @@ export async function onStartPressed() {
     if (btn) btn.textContent = "Réessayer";
     return;
   }
+  unlockSpeech(); // premier speak("") dans le geste : déblocage iOS
   showScreen("cadrage");
   connect();
 }
@@ -180,6 +184,7 @@ export function onServerMessage(msg) {
     return;
   }
   if (msg.type === "highlight") onHighlight(msg);
+  if (msg.type === "say") onSay(msg.text);
   if (msg.type === "state") onState(msg);
   const target = screenFor(msg, app.screen);
   if (msg.type === "error") showError(msg.code);
@@ -302,7 +307,11 @@ export function drawOverlay(msg) {
 }
 
 export function onHighlight(msg) {
-  if (msg.color === "red") app.redParts = [...msg.parts];
+  if (msg.color === "red") {
+    app.redParts = [...msg.parts];
+    const banner = document.getElementById("anomaly-banner");
+    if (banner && app.lastSay) banner.textContent = app.lastSay;
+  }
   else app.redParts = app.redParts.filter((part) => !msg.parts.includes(part));
 }
 
@@ -332,6 +341,59 @@ export function stopStaleTimer() {
     clearInterval(app.staleTimer);
     app.staleTimer = null;
   }
+}
+
+// Voix en sortie : lecture fr-FR + sous-titres, interruption, speaking (APP-R7).
+export function showSubtitle(text) {
+  for (const id of ["subtitle", "subtitle-anomaly"]) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text; // affiché jusqu'au message suivant
+  }
+}
+
+export function unlockSpeech() {
+  try {
+    if ("speechSynthesis" in window) window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+  } catch {
+    // synthèse indisponible : sous-titres seuls
+  }
+}
+
+export function onSay(text) {
+  app.lastSay = text;
+  showSubtitle(text);
+  if (!("speechSynthesis" in window)) return;
+  const synth = window.speechSynthesis;
+  if (synth.speaking && !shouldInterruptSay(app.speakingText)) {
+    app.pendingSay = text; // APP-R7.2 : la validation « C'est bon. » va au bout
+    return;
+  }
+  synth.cancel(); // APP-R7.2 : un nouveau say interrompt la lecture en cours
+  speak(text);
+}
+
+export function speak(text) {
+  const synth = window.speechSynthesis;
+  app.speakingText = text;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "fr-FR";
+  u.rate = 1.0;
+  const voice = pickFrenchVoice(synth.getVoices());
+  if (voice) u.voice = voice;
+  u.onstart = () => {
+    app.speaking = true;
+    sendJson(speakingMessage(true, Date.now())); // APP-R7.3, VOX-R2.4
+  };
+  u.onend = () => {
+    app.speaking = false;
+    sendJson(speakingMessage(false, Date.now()));
+    if (app.pendingSay) {
+      const next = app.pendingSay;
+      app.pendingSay = null;
+      speak(next);
+    }
+  };
+  synth.speak(u);
 }
 
 function go(name) {

@@ -1,6 +1,6 @@
 // FixLoop : vérifications de lib.js, sans DOM (APP-T10).
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
-import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay,
+import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
 
 const checks = [];
@@ -125,6 +125,20 @@ check("surimpression : couleurs et mesure (APP-R5)", () => {
   if (stateAt({ t: 31.5 }) !== 31.5 || stateAt({}) !== 0) throw new Error("instant");
   if (!staleOverlay(4000, 500) || staleOverlay(2500, 500)) throw new Error("estompage");
   if (STALE_MS !== 3000 || GREEN_MS !== 1000) throw new Error("constantes");
+});
+
+check("voix en sortie (APP-R7)", () => {
+  const voices = [{ lang: "en-US", name: "Alex" }, { lang: "fr-FR", name: "Marie" }];
+  if (pickFrenchVoice(voices)?.name !== "Marie") throw new Error("fr-FR");
+  if (pickFrenchVoice([{ lang: "fr-CA", name: "Jo" }])?.name !== "Jo") throw new Error("fr");
+  if (pickFrenchVoice([]) !== null) throw new Error("aucune");
+  if (shouldInterruptSay("Tu poses ta chaîne sur le bord noir.")) {
+    // interrompt : ok
+  } else {
+    throw new Error("interruption");
+  }
+  if (shouldInterruptSay("C'est bon.")) throw new Error("validation coupée");
+  if (VALIDATION_PHRASE !== "C'est bon.") throw new Error("validation");
 });
 
 check("texte caméra exact (APP-R1.3)", () => {

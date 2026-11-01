@@ -105,6 +105,18 @@ def test_overlay_drawing():
     assert "stepLabel" in lib  # bandeau d'étape k/K
 
 
+def test_spoken_voice_output():
+    live = read("live.js")
+    lib = read("lib.js")
+    assert "speechSynthesis" in live  # APP-R7.1 : lecture à voix haute
+    assert "fr-FR" in live  # voix française
+    assert "subtitle" in live  # sous-titres jusqu'au message suivant
+    assert "cancel" in live  # APP-R7.2 : nouveau say interrompt
+    assert "speakingMessage" in live  # APP-R7.3 : signalé au serveur
+    assert "shouldInterruptSay" in lib  # sauf la validation « C'est bon. »
+    assert "pickFrenchVoice" in lib
+
+
 def test_no_external_dependency_and_small_size():
     total = 0
     for name in ("index.html", "live.js", "style.css", "lib.js"):

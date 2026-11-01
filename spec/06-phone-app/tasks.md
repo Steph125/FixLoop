@@ -24,9 +24,10 @@ Toutes à faire. Jalon (dimanche 1er nov.) : appli sur le téléphone de l'auteu
 - [x] **APP-T6 — Surimpression.** SVG aligné sur la vidéo, couleurs, estompage après 3 s, ligne de mesure.
   Exigences : `APP-R5.1` à `R5.4`. Dépend de : `SRV-T5`, `PERC-T6`.
   Preuve : `tests/test_phone_app.py::test_overlay_drawing`, `node web/selftest.mjs` 15/15.
-- [ ] **APP-T7 — Voix en sortie.** `speechSynthesis` fr-FR, sous-titres, interruption, message `speaking`,
+- [x] **APP-T7 — Voix en sortie.** `speechSynthesis` fr-FR, sous-titres, interruption, message `speaking`,
   déblocage iOS.
   Exigences : `APP-R7.1` à `R7.3`.
+  Preuve : `tests/test_phone_app.py::test_spoken_voice_output`, `node web/selftest.mjs` 16/16.
 - [ ] **APP-T8 — Voix en entrée.** `audio-worklet.js`, PCM16 16 kHz, morceaux de 100 ms, indicateur micro,
   `voice_status`.
   Exigences : `APP-R7.4`. Dépend de : `VOX-T3`, `SRV-T6`.

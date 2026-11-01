@@ -159,3 +159,16 @@ export function stateAt(snapshot) {
 export function staleOverlay(nowMs, lastOverlayAt) {
   return nowMs - lastOverlayAt > STALE_MS;
 }
+
+// Voix en sortie : lecture fr-FR, débit 1,0 (APP-R7.1).
+export const VALIDATION_PHRASE = "C'est bon.";
+
+export function pickFrenchVoice(voices) {
+  const list = [...(voices || [])];
+  return list.find((v) => v.lang === "fr-FR") || list.find((v) => (v.lang || "").startsWith("fr")) || null;
+}
+
+// Un nouveau `say` interrompt la lecture en cours, sauf la validation (APP-R7.2).
+export function shouldInterruptSay(currentText) {
+  return currentText !== VALIDATION_PHRASE;
+}
