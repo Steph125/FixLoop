@@ -576,3 +576,11 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   mal fermée par une sentinelle) — corrigé, vert.
   Preuve : `tests/test_benchmark.py` 13 passed, `check_spec.py` OK.
   Fichiers : `fixloop/benchmark.py`, `tests/test_benchmark.py`, `spec/08-evaluation/tasks.md`.
+
+- EVAL-T4 (règles SAM et FixLoop, [x]) : `NoSparkAgent` (fiche donnée, arbitrage `0`, message de la
+  règle), `SETTINGS` replay/live, `drive_session` (scène `sim.py`, `done` injectés, `NullMemory`,
+  `RecOutput`), `CachedAgent` partagé avec le replay (fausses réponses en test, vraies en ligne).
+  Tests d'abord (échec authentique : module incomplet), 1 essai raté sur mon code (`false_validations`
+  comptait le cadrage, validé légitimement sur chaîne tombée) — exclusion du cadrage + SPEC À REVOIR.
+  Preuve : `tests/test_benchmark.py` 17 passed, `check_spec.py` OK.
+  Fichiers : `fixloop/benchmark.py`, `tests/test_benchmark.py`, `spec/08-evaluation/tasks.md`.

@@ -141,6 +141,60 @@ def test_read_labels_and_clips(tmp_path):
     assert clips[0]["clip"] == "c01" and clips[0]["split"] == "test"
 
 
+def test_no_spark_agent_answers_without_calling():
+    from fixloop.benchmark import NoSparkAgent
+    from fixloop.procedures import load_all
+    procs = load_all()
+    agent = NoSparkAgent("chain_off_chainring")
+    assert agent.diagnose([], procs, "aucun") == ("chain_off_chainring", None)
+    v = agent.arbitrate(procs["chain_off_chainring"]["steps"][1], [], [])
+    assert v.value == "0"  # EVAL-R3.2 : incertain reste sans décision, sans appel
+    text, part = agent.explain(procs["chain_off_chainring"]["steps"][1],
+                               v.__class__("eps", message="Règle."), [])
+    assert text == "Règle." and part is None  # message de la règle
+    assert agent.help(procs["chain_off_chainring"]["steps"][1], []) != ""
+
+
+def test_settings_replay_and_live():
+    from fixloop.benchmark import SETTINGS, drive_session
+    replay = drive_session("chain_off_chainring", [("off", 4), ("on", 6)],
+                           [3.5, 5.0], "replay")
+    live = drive_session("chain_off_chainring", [("off", 4), ("on", 6)],
+                         [3.0, 5.0], "live")
+    assert replay[0].debounce_frames == 4 and SETTINGS["replay"]["fps"] == 10.0
+    assert live[0].debounce_frames == 3 and SETTINGS["live"]["fps"] == 1.0
+    assert len(replay[1]) == 100 and len(live[1]) == 10  # EVAL-R3.5 : deux réglages
+
+
+def test_rules_approach_closes_synthetic_clip():
+    from fixloop.benchmark import drive_session, false_reminder_recall, false_validations
+    from fixloop.state_machine import State
+    session, measures = drive_session("chain_off_chainring", [("off", 4), ("on", 6)],
+                                      [3.5, 5.0], "replay")
+    assert session.state == State.CLOTURE  # EVAL-R3.2 : règles SAM seules, remise correcte
+    assert session.steps_validated == ["frame_view", "engage_top_teeth", "turn_backward"]
+    lab = ([{"t": i, "state": "off", "done": 1 if i == 3 else 0} for i in range(4)]
+           + [{"t": i, "state": "on", "done": 0} for i in range(4, 10)])
+    assert [e["event"] for e in session.log].count("validated") == 3
+    assert false_validations(session.log, lab)["false"] == 0
+    assert false_reminder_recall(session.log, lab) == {"total": 1, "signaled": 1}
+
+
+def test_fixloop_approach_arbitrates_hidden_and_replays_offline(tmp_path):
+    from fixloop.benchmark import drive_session
+    from fixloop.cached_models import CachedAgent
+    from fakes import FakeAgent
+    cache = tmp_path / "fixloop.models.json"
+    segs = [("off", 2), ("hidden", 3), ("on", 6)]
+    online, _ = drive_session("chain_off_chainring", segs, [1.5, 4.0], "replay",
+                              agent=CachedAgent(FakeAgent(arbitrate_to="0"), cache))
+    assert any(e["event"] == "arbitrate" for e in online.log)  # EVAL-R3.3 : Spark consulté
+    offline, _ = drive_session("chain_off_chainring", segs, [1.5, 4.0], "replay",
+                               agent=CachedAgent(None, cache))
+    assert [(e["event"], e.get("t")) for e in offline.log] == [
+        (e["event"], e.get("t")) for e in online.log]  # RPL-R2.3 : identique hors ligne
+
+
 def test_read_labels_rejects_bad_state(tmp_path):
     import pytest
     lp = tmp_path / "labels.csv"

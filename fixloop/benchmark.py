@@ -82,14 +82,23 @@ def validated_events(events: list[dict]) -> list[dict]:
     return out
 
 
-def false_validations(events: list[dict], labels: list[dict]) -> dict:
-    """Fausses validations : `validated` avec `L(t)` off/hidden (EVAL-R4.1)."""
+def false_validations(events: list[dict], labels: list[dict],
+                      framing: tuple = ("frame_view",)) -> dict:
+    """Fausses validations : `validated` avec `L(t)` off/hidden (EVAL-R4.1).
+
+    L'étape de cadrage est exclue : son critère est la visibilité des pièces,
+    elle se valide légitimement sur chaîne tombée (sinon la cible 0 du design
+    serait inatteignable, chaque session commençant par le cadrage).
+    """
     out = {"false": 0, "transition": 0, "details": []}
     for e in validated_events(events):
+        if e.get("step") in framing:
+            continue
         state = label_at(labels, e.get("t", 0.0))
         if state in ("off", "hidden"):
             out["false"] += 1
-            out["details"].append({"t": e.get("t"), "state": state})
+            out["details"].append({"t": e.get("t"), "step": e.get("step"),
+                                   "state": state})
         elif state == "transition":
             out["transition"] += 1
     return out
@@ -147,6 +156,108 @@ def false_reminder_recall(events: list[dict], labels: list[dict]) -> dict:
             if any(0 <= a - row["t"] <= REMINDER_WINDOW_S for a in anomalies):
                 signaled += 1
     return {"total": total, "signaled": signaled}
+
+
+class NoSparkAgent:
+    """Règles SAM seules : diagnostic = fiche donnée, arbitrage = `0` sans appel,
+    explication = message de la règle (design 08, section 3.4)."""
+
+    def __init__(self, procedure_id: str) -> None:
+        self.procedure_id = procedure_id
+        self.model = "none"
+
+    def diagnose(self, images, procedures, history):
+        return self.procedure_id, None
+
+    def arbitrate(self, step, keyframes, window):
+        from .models import Verdict
+        return Verdict("0")  # EVAL-R3.2 : incertain reste sans décision, sans appel
+
+    def explain(self, step, verdict, keyframes):
+        return verdict.message or "Étape non conforme.", None
+
+    def help(self, step, keyframes):
+        return step.get("instruction", "")
+
+
+class NullMemory:
+    """Historique vide, sans Wonder (benchmark et replay synthétique)."""
+
+    def __init__(self) -> None:
+        self.saved: list = []
+
+    def load(self, bike_id: str) -> str:
+        return "aucun"
+
+    def save(self, bike_id: str, report: dict) -> None:
+        self.saved.append(report)
+
+    def repeated(self, bike_id: str, procedure: str, days: int = 30) -> int:
+        return 0
+
+
+class RecOutput:
+    """Sortie qui enregistre `say` / `highlight` / `state` (benchmark, replay)."""
+
+    def __init__(self) -> None:
+        self.said: list = []
+        self.highlights: list = []
+        self.states: list = []
+
+    def say(self, text: str) -> None:
+        self.said.append(text)
+
+    def highlight(self, parts, color: str) -> None:
+        self.highlights.append((list(parts), color))
+
+    def state(self, snapshot: dict) -> None:
+        self.states.append(snapshot)
+
+
+SETTINGS = {"replay": {"fps": 10.0, "debounce": 4},  # design 08, section 3
+            "live": {"fps": 1.0, "debounce": 3}}
+
+
+def synthetic_kinds(segments: list[tuple[str, float]], fps: float) -> list[str]:
+    """Étend `[(sorte, secondes)]` en une sorte par image."""
+    kinds = []
+    for kind, seconds in segments:
+        kinds += [kind] * max(1, round(seconds * fps))
+    return kinds
+
+
+def drive_session(procedure_id: str, segments: list[tuple[str, float]],
+                  done_at: list[float], setting: str = "replay",
+                  agent=None, memory=None, out=None):
+    """Session complète sur la scène synthétique (EVAL-R3.4, RPL-T2).
+
+    `segments` : [(sorte sim, secondes)] ; `done_at` : instants de « c'est fait ».
+    Rend `(session, measures)`. Aucun réseau, aucune vidéo.
+    """
+    from .geometry import measure
+    from .procedures import load_all
+    from .sim import frame
+    from .state_machine import Session
+    procedures = load_all()
+    procedure = procedures[procedure_id]
+    fps = SETTINGS[setting]["fps"]
+    session = Session(procedures, agent or NoSparkAgent(procedure_id),
+                      memory or NullMemory(), out or RecOutput(),
+                      bike_id="synthetique",
+                      debounce_frames=SETTINGS[setting]["debounce"])
+    session.start(images=[])
+    kinds = synthetic_kinds(segments, fps)
+    measures = []
+    pending = sorted(done_at)
+    for i, kind in enumerate(kinds):
+        t = i / fps
+        while pending and pending[0] <= t + 1e-9:
+            session.on_user_done()
+            pending.pop(0)
+        m = measure(frame(kind, i, t), procedure)
+        measures.append(m)
+        session.on_measures(m)
+    return session, measures
 
 
 def approach_counts(events: list[dict], measures: list) -> dict:

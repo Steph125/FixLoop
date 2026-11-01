@@ -19,9 +19,13 @@
   Preuve : `fixloop/benchmark.py` + `tests/test_benchmark.py` 12 passed (fausse validation off/hidden,
   clôture dynamique, validation manquée, délai depuis `done`, rappel des fausses remises, confusion
   par image hors transition, lecture `labels.csv` / `clips.csv`).
-- [ ] **EVAL-T4 — Approches règles SAM et FixLoop.** `NoSparkAgent`, réglages `replay` et `live`
+- [x] **EVAL-T4 — Approches règles SAM et FixLoop.** `NoSparkAgent`, réglages `replay` et `live`
   (sous-échantillonnage, anti-rebond 3 / 4), `CachedAgent` partagé avec le replay.
-  Exigences : `EVAL-R3.2` à `R3.5`. Dépend de : `CORE-T9`, `PERC-T5`, `RPL-T1`.
+  Exigences : `EVAL-R3.2` à `R3.5`. Dépend de : `CORE-T9` ([x]), `PERC-T5` ([~]), `RPL-T1` ([x]).
+  Preuve : `tests/test_benchmark.py` (NoSparkAgent, réglages 10 fps/4 et 1 fps/3, clôture synthétique
+  sans fausse validation, arbitrage sur `hidden` rejoué à l'identique hors ligne).
+  Choix : `false_validations` exclut le cadrage (`frame_view`, visibilité seule) — sinon la cible 0
+  du design serait inatteignable → SPEC À REVOIR (design 08, section 4).
 - [ ] **EVAL-T5 — Approche Spark seul.** Image toutes les 3 s et à chaque « c'est fait », machine minimale,
   cache des réponses.
   Exigences : `EVAL-R3.1`, `R3.4`. Dépend de : `AGT-T12`.
