@@ -2,7 +2,7 @@
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
 import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
-import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor, relabelFrames } from "./replay.js";
+import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor, relabelFrames, filmedDate, loadLinks, REPO_URL } from "./replay.js";
 
 const checks = [];
 
@@ -260,20 +260,39 @@ check("replay : courbe du contact (RPL-T6)", () => {
   if (g.d === "") throw new Error("tracé");
 });
 
-check("replay : honnêteté et liens (RPL-T7)", () => {
-  const meta = { built: "2026-11-04T10:00:00+00:00",
-    mode: "session synthétique 10 images/s, anti-rebond 4 (RPL-R5.2)",
-    bike_id: "demo-velo", demo_history: false, name: "syn-A" };
+check("replay : honnêteté et liens (RPL-T7)", async () => {
+  const meta = { filmed: "2026-10-31", source: "video",
+    mode: "vidéo 10 images/s, anti-rebond 4 (RPL-R5.2)",
+    bike_id: "demo-velo", demo_history: false, name: "vid-A" };
   const banner = honestyText(meta);
-  if (!banner.includes("Rejoué le")) throw new Error("date");
-  if (!banner.includes("synthétique")) throw new Error("mode");
-  const links = linksFor(meta, [{ name: "syn-A", title: "A" }, { name: "syn-B", title: "B" }]);
-  if (!links.some((l) => l.text.includes("Benchmark"))) throw new Error("rapport");
-  if (!links.some((l) => l.href.includes("?session=syn-B"))) throw new Error("brève B");
-  if (links.some((l) => l.href.includes("?session=syn-A"))) throw new Error("soi-même");
-  if (!honestyText({ ...meta, demo_history: true }).includes("démonstration")) {
-    throw new Error("historique");
-  }
+  if (!banner.includes("Replay d'une session réelle, filmée le")) throw new Error("RPL-R5.1");
+  if (!banner.includes("31 octobre 2026")) throw new Error(`date : ${banner}`);
+  if (!banner.includes("calculées par FixLoop")) throw new Error("calcul");
+  if (!banner.includes("obtenues ce jour-là")) throw new Error("modèles");
+  if (!banner.includes("10 images/s")) throw new Error("mode RPL-R5.2");
+  const syn = honestyText({ source: "synthetic", mode: meta.mode, demo_history: true });
+  if (!syn.includes("Session synthétique de test")) throw new Error("synthétique");
+  if (!syn.includes("démonstration")) throw new Error("historique RPL-R5.3");
+  if (filmedDate(null) !== "date inconnue") throw new Error("date inconnue");
+  const index = [{ name: "vid-A", title: "A" }, { name: "vid-B", title: "B" }];
+  const full = linksFor(meta, index,
+    { repo: REPO_URL, benchmark: "https://example.invalid/rapport", video: "https://example.invalid/video" });
+  if (!full.some((l) => l.text === "Dépôt GitHub" && l.href === REPO_URL)) throw new Error("dépôt");
+  if (!full.some((l) => l.text === "Rapport du benchmark")) throw new Error("rapport");
+  if (!full.some((l) => l.text === "Vidéo de démonstration")) throw new Error("vidéo");
+  if (full.some((l) => l.text === "Direct")) throw new Error("direct absent affiché");
+  if (!full.some((l) => l.href.includes("?session=vid-B"))) throw new Error("brève B");
+  if (full.some((l) => l.href.includes("?session=vid-A"))) throw new Error("soi-même");
+  const bare = linksFor(meta, index, {});
+  if (!bare.some((l) => l.href === REPO_URL)) throw new Error("repli dépôt");
+  if (bare.some((l) => l.text === "Rapport du benchmark")) throw new Error("rapport absent affiché");
+  const got = await loadLinks(async (p) => {
+    if (p === "build/links.json") return { json: async () => ({ repo: REPO_URL }) };
+    throw new Error(`chemin inattendu : ${p}`);
+  });
+  if (got.repo !== REPO_URL) throw new Error("links.json");
+  const missing = await loadLinks(async () => { throw new Error("404"); });
+  if (Object.keys(missing).length !== 0) throw new Error("repli sans liens");
 });
 
 check("replay : seuils simulés (RPL-T10)", () => {

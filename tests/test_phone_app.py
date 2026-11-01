@@ -164,9 +164,15 @@ def test_replay_honesty_and_links():
     html = read("replay.html")
     js = read("replay.js")
     for token in ("honesty", "links", "renderHonesty", "renderLinks",
-                  "honestyText", "linksFor", "?session="):
+                  "honestyText", "linksFor", "loadLinks", "links.json",
+                  "filmedDate", "?session="):
         assert token in (html + js), f"{token} manquant"  # RPL-R5.1 à R5.3, R7.2
-    assert "Benchmark" in (html + js)
+    # Spec RPL-R5.1 : phrase exacte dans le lecteur, pas l'ancien « Rejoué le ».
+    assert "Replay d'une session réelle, filmée le" in js
+    assert "Session synthétique de test" in js
+    assert "Rejoué le" not in js
+    assert "Rapport du benchmark" in js
+    assert "../eval/benchmark/report.md" not in (html + js)  # cassé sur Pages : links.json
 
 
 def test_replay_threshold_simulation():
@@ -185,6 +191,16 @@ def test_voice_fallback_status():
     assert "voiceStatusText" in live
     assert "Commande vocale indisponible" in lib  # repli bouton seul
     assert "Micro actif" in live  # APP-R7.4 : indicateur micro
+
+
+def test_wake_lock_during_session():
+    live = read("live.js")
+    assert "wakeLock" in live  # APP-R9.1 : écran allumé pendant la session
+    assert '"screen"' in live  # verrou d'écran, pas système
+    assert "requestWakeLock" in live and "releaseWakeLock" in live
+    assert "catch" in live  # sans échec si l'API manque (repli silencieux)
+    assert "requestWakeLock()" in live  # demandé quand la session devient active
+    assert live.count("releaseWakeLock()") >= 2  # relâché en fin et en erreur
 
 
 def test_voice_input_worklet():

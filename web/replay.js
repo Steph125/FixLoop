@@ -57,6 +57,7 @@ export function nextSpeed(s) {
 
 export const app = {
   index: [],
+  links: {},
   onMax: 0.18,
   offMin: 0.26,
   meta: null,
@@ -92,7 +93,21 @@ export async function loadSession(name, fetchFn = fetch) {
 
 export async function loadIndex(fetchFn = fetch) {
   app.index = await (await fetchFn("build/index.json")).json();
+  app.links = await loadLinks(fetchFn);
   return app.index;
+}
+
+// Liens du bandeau : lus dans `build/links.json` (RPL-T7, écrit par
+// `replay/publish.py`). `repo` sauf, tous facultatifs : absent = non affiché.
+export async function loadLinks(fetchFn = fetch) {
+  try {
+    const r = await fetchFn("build/links.json");
+    if (r && r.ok === false) return {};
+    const data = await r.json();
+    return data && typeof data === "object" ? data : {};
+  } catch {
+    return {}; // pas de liens : seul le dépôt par défaut reste
+  }
 }
 
 // Rendu pour currentTime : contours, bandeau, sous-titre, mesure (RPL-R4.1).
@@ -320,27 +335,44 @@ export function seekTo(t) {
   render(t);
 }
 
-// Bandeau permanent : date de construction et mode de calcul (RPL-R5.1).
-export function honestyText(meta) {
-  const built = meta && meta.built ? new Date(meta.built) : null;
-  const date = built && !Number.isNaN(+built)
-    ? built.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
-    : "date inconnue";
-  const mode = (meta && meta.mode) || "mode inconnu";
-  const history = meta && meta.demo_history
-    ? "Historique de démonstration préparé, comme indiqué."
-    : `Ton vélo : ${(meta && meta.bike_id) || "inconnu"}.`;
-  return `Rejoué le ${date} en mode ${mode}. ${history}`;
+// Dépôt FixLoop (RPL-R7.2) : repli quand `build/links.json` est absent.
+export const REPO_URL = "https://github.com/Steph125/FixLoop";
+
+// Bandeau permanent : phrase exacte de RPL-R5.1 + mode de calcul (RPL-R5.2)
+// + mention de l'historique de démo (RPL-R5.3).
+export function filmedDate(filmed) {
+  if (!filmed) return "date inconnue";
+  const d = new Date(`${filmed}T12:00:00`);
+  if (Number.isNaN(+d)) return String(filmed);
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 }
 
-// Liens : rapport du Benchmark, brèves des autres sessions (RPL-R7.2).
-export function linksFor(meta, index) {
-  const links = [{ text: "Rapport du Benchmark", href: "../eval/benchmark/report.md" }];
+export function honestyText(meta) {
+  const m = meta || {};
+  const mode = m.mode ? ` Calcul : ${m.mode}.` : "";
+  const history = m.demo_history ? " Historique de démonstration utilisé." : "";
+  if (m.source === "synthetic") {
+    return `Session synthétique de test.${mode}${history} Aucune session réelle n'est montrée.`;
+  }
+  return `Replay d'une session réelle, filmée le ${filmedDate(m.filmed)}. ` +
+    `Les décisions ont été calculées par FixLoop sur cette vidéo ; ` +
+    `les réponses des modèles Meta sont celles obtenues ce jour-là.${mode}${history}`;
+}
+
+// Liens (RPL-R7.2) : dépôt, vidéo de démonstration, rapport du benchmark,
+// direct — depuis `build/links.json`, absent = non affiché — puis les autres
+// sessions (navigation interne).
+export function linksFor(meta, index, links) {
+  const l = links || {};
+  const out = [{ text: "Dépôt GitHub", href: l.repo || REPO_URL }];
+  if (l.video) out.push({ text: "Vidéo de démonstration", href: l.video });
+  if (l.benchmark) out.push({ text: "Rapport du benchmark", href: l.benchmark });
+  if (l.live) out.push({ text: "Direct", href: l.live });
   for (const s of index || []) {
     if (meta && s.name === meta.name) continue;
-    links.push({ text: s.title || s.name, href: `replay.html?session=${s.name}` });
+    out.push({ text: s.title || s.name, href: `replay.html?session=${s.name}` });
   }
-  return links;
+  return out;
 }
 
 export function renderHonesty(meta) {
@@ -348,11 +380,11 @@ export function renderHonesty(meta) {
   if (el) el.textContent = honestyText(meta || app.meta);
 }
 
-export function renderLinks(meta, index) {
+export function renderLinks(meta, index, links) {
   const el = document.getElementById("links");
   if (!el) return;
   el.innerHTML = "";
-  for (const link of linksFor(meta || app.meta, index || app.index)) {
+  for (const link of linksFor(meta || app.meta, index || app.index, links || app.links)) {
     const a = document.createElement("a");
     a.href = link.href;
     a.textContent = link.text;
