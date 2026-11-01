@@ -291,3 +291,56 @@ def test_parse_raw_rereads_recorded_chunk():
     )
     assert one in sub and sub[one].mask.shape == (464, 848)
     assert perception.__name__ == "fixloop.perception"
+
+
+def test_sam_settings_overridable_via_env():
+    """FIXLOOP_SAM_* surchargent les constantes, repli sur defaut si invalide (PERC-R8.2)."""
+    import importlib
+    import os
+
+    import fixloop.perception as P
+
+    names = ("FIXLOOP_SAM_CONF", "FIXLOOP_SAM_WIDTH", "FIXLOOP_SAM_INFLIGHT",
+             "FIXLOOP_SAM_CHUNK_S")
+    old = {k: os.environ.get(k) for k in names}
+    os.environ.update({"FIXLOOP_SAM_CONF": "0.55", "FIXLOOP_SAM_WIDTH": "640",
+                       "FIXLOOP_SAM_INFLIGHT": "2", "FIXLOOP_SAM_CHUNK_S": "5.0"})
+    try:
+        importlib.reload(P)
+        assert P.CONF_THR == pytest.approx(0.55)
+        assert P.LIVE_WIDTH == 640
+        assert P.MAX_IN_FLIGHT == 2
+        assert P.CHUNK_SECONDS == pytest.approx(5.0)
+        os.environ.update({k: "pas-un-nombre" for k in names})
+        importlib.reload(P)
+        assert P.CONF_THR == pytest.approx(0.4) and P.LIVE_WIDTH == 848
+        assert P.MAX_IN_FLIGHT == 5 and P.CHUNK_SECONDS == pytest.approx(10.0)
+    finally:
+        for k, v in old.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        importlib.reload(P)
+
+
+def test_api_key_never_in_outputs(tmp_path, monkeypatch):
+    """MODEL_API_KEY lue depuis l'env, jamais en argument ni dans les sorties (PERC-R8.1)."""
+    import inspect
+
+    from fixloop.costs import CostLog
+    from fixloop.perception import LivePerception, _error_name
+
+    sentinel = "CLE-FACTICE-INTROUVABLE-0123456789"
+    monkeypatch.setenv("MODEL_API_KEY", sentinel)
+    params = inspect.signature(LivePerception.__init__).parameters
+    assert "api_key" not in params and "key" not in params
+    log = CostLog(tmp_path)
+    lp = LivePerception({"parts": {}}, client=object(), costs=log)
+    lp._cost("chain", 1.0, False, 3)
+    exc = Exception("401 mauvaise cle " + sentinel)
+    exc.status_code = 401
+    blob = repr(log.entries) + _error_name("chain", exc) + repr(lp.__dict__)
+    for leaf in Path(tmp_path).glob("*.jsonl"):
+        blob += leaf.read_text(encoding="utf-8")
+    assert sentinel not in blob

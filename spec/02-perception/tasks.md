@@ -54,9 +54,11 @@
 - [ ] **PERC-T9 — Vérification en direct, filtre de confiance.** Relancer `probe/sam_image_latency.py --times
   5,10,25,35` en important le module ; confirmer les 4 états. Coût : 8 images, environ 0,02 $.
   Exigences : `PERC-R1.4`, `R1.7`. Preuve à noter : `eval/day1/findings.md`.
-- [ ] **PERC-T10 — Configuration.** Surcharges `FIXLOOP_SAM_*` ; vérification que la clé n'apparaît dans aucun
+- [x] **PERC-T10 — Configuration.** Surcharges `FIXLOOP_SAM_*` ; vérification que la clé n'apparaît dans aucun
   journal (test qui cherche la valeur de `MODEL_API_KEY` dans les sorties).
   Exigences : `PERC-R8.1`, `R8.2`.
+  Preuve : `test_sam_settings_overridable_via_env` (rechargement, repli défaut),
+  `test_api_key_never_in_outputs` (sentinelle absente des journaux et erreurs).
 
 ## Couverture
 
