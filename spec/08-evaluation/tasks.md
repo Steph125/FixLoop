@@ -31,7 +31,7 @@
   Exigences : `EVAL-R3.1`, `R3.4`. Dépend de : `AGT-T12` ([x]).
   Preuve : `run_spark_only` (requêtes 3 s + `done`, arrêt au 1er terminal) + `CachedAgent.spark_only` ;
   `tests/test_benchmark.py` (fausse validation construite sur `off`, anomalie après `done`, cache rejoué).
-- [~] **EVAL-T6 — Script `benchmark.py`.** Estimation et confirmation du coût, exécution en ligne puis hors
+- [x] **EVAL-T6 — Script `benchmark.py`.** Estimation et confirmation du coût, exécution en ligne puis hors
   ligne, `results.csv`, journal des coûts.
   Exigences : `EVAL-R5.1`, `R5.2`, `R6.1`, `R6.2`, `R7.3`.
   Preuve : `scripts/benchmark.py` tourne en `--offline --fake` sur 2 extraits synthétiques
@@ -47,6 +47,9 @@
   `--model muse-spark-1.3-contributor` pour Spark seul (`EVAL-D5`). Fait quand : 2 extraits vidéo synthétiques
   (écrits avec OpenCV) passent en ligne avec un faux client SAM et un faux Spark, puis en `--offline` avec des
   `results.csv` identiques.
+  Preuve (1er nov.) : `tests/test_benchmark_real.py` 2 passed (2 extraits vidéo OpenCV en ligne
+  avec faux SAM + faux Spark, puis `--offline`, `results.csv` identiques ; `--offline` sans cache
+  refusé) ; `scripts/benchmark.py --model` (EVAL-D5), `--sam-cache`, `--spark-cache`.
 - [ ] **EVAL-T7 — Exécution.** Passage en ligne, puis deux passages hors ligne identiques ; coût réel noté.
   Exigences : `EVAL-R2.2`, `R5.1`, `R6.2`, `R8.1`.
 - [ ] **EVAL-T8 — Rapport et graphique.** `report.md` (structure section 6), `chart.svg`, limites, extraits
@@ -56,13 +59,15 @@
   vidéo, chacun avec sa source.
   Exigences : `EVAL-R7.5`, `R8.1`. Utilisé par : `SUB-T3`, `SUB-T5`.
 
-- [ ] **EVAL-T10 — Générateur du rapport et du graphique.** Ajouté à la relecture du 1er nov.
+- [x] **EVAL-T10 — Générateur du rapport et du graphique.** Ajouté à la relecture du 1er nov.
   `scripts/benchmark_report.py` lit `results.csv`, `clips.csv` et `labels.csv` et écrit `report.md` (structure de
   `design.md` section 6 : tableau principal sur les extraits `test`, réglage `live` puis `replay`, matrice de
   classement, extraits ratés, limites, commande pour reproduire, date, commit et seuils) et `chart.svg` (barres
   groupées, motifs en plus des couleurs, valeurs écrites, sans dépendance lourde). Les phrases d'analyse restent à
   écrire par l'auteur (marquées « À ÉCRIRE »). Exigences : `EVAL-R5.3`, `R7.1` à `R7.4`.
   Fait quand : rapport et graphique produits depuis un `results.csv` synthétique, test qui vérifie les sections.
+  Preuve (1er nov.) : `tests/test_benchmark_report.py` 1 passed (7 sections, « À ÉCRIRE », extraits
+  `test` seuls, seuils, versions, `chart.svg` avec motifs et valeurs).
 
 ## Couverture
 
