@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>FixLoop — replay d'une réparation</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+
+<p id="honesty" role="note"></p>
+
+<p><label for="session-select">Session</label>
+<select id="session-select"></select></p>
+
+<div class="stage">
+<video id="replay-video" playsinline controlslist="nodownload"></video>
+<svg id="replay-overlay" preserveAspectRatio="xMidMid slice" aria-hidden="true"></svg>
+</div>
+
+<p id="step-banner" role="status"></p>
+<p id="subtitle"></p>
+<p id="measure-line"></p>
+
+<div class="buttons">
+<button id="btn-play" type="button">Lecture</button>
+<button id="btn-speed" type="button">×1</button>
+<button id="btn-sound" type="button">Son : non</button>
+</div>
+
+<svg id="curve" aria-label="Courbe du contact"></svg>
+<div id="timeline" role="list"></div>
+<section id="event-detail" aria-live="polite"></section>
+
+<div id="thresholds">
+<label for="thr-on">Seuil « en place » <input id="thr-on" type="range" min="0" max="0.5" step="0.01" value="0.18"></label>
+<label for="thr-off">Seuil « tombée » <input id="thr-off" type="range" min="0" max="0.5" step="0.01" value="0.26"></label>
+<p id="sim-note" hidden>Simulation : la frise des événements réels ne change pas.</p>
+</div>
+
+<p id="links"></p>
+
+</main>
+<script type="module" src="replay.js"></script>
+</body>
+</html>

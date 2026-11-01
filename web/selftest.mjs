@@ -2,6 +2,7 @@
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
 import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
+import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner } from "./replay.js";
 
 const checks = [];
 
@@ -187,6 +188,47 @@ check("texte caméra exact (APP-R1.3)", () => {
   if (CAMERA_MESSAGE !== "FixLoop a besoin de la caméra pour vérifier ta réparation") {
     throw new Error(CAMERA_MESSAGE);
   }
+});
+
+check("replay : état rejoué (RPL-T5)", () => {
+  const events = [
+    { t: 0, event: "step", step: "frame_view" },
+    { t: 1, event: "say", text: "Place le téléphone." },
+    { t: 2, event: "highlight", parts: ["chain"], color: "red" },
+    { t: 3, event: "step", step: "engage_top_teeth" },
+  ];
+  const a = replayStateAt(events, 0.5);
+  if (a.step !== "frame_view" || a.say !== null) throw new Error("début");
+  const b = replayStateAt(events, 2.5);
+  if (b.say !== "Place le téléphone.") throw new Error("sous-titre");
+  if (b.highlight.chain !== "red") throw new Error("couleur");
+  if (replayStateAt(events, 3).step !== "engage_top_teeth") throw new Error("étape");
+});
+
+check("replay : image la plus proche (RPL-T5)", () => {
+  const frames = [{ t: 0 }, { t: 0.2 }, { t: 0.4 }];
+  if (nearestFrame(frames, 0.29).t !== 0.2) throw new Error("0.29");
+  if (nearestFrame(frames, 9).t !== 0.4) throw new Error("fin");
+  if (nearestFrame([], 1) !== null) throw new Error("vide");
+});
+
+check("replay : seuils de contact (RPL-T5)", () => {
+  if (contactLabel(0.18) !== "en place") throw new Error("0,18");
+  if (contactLabel(0.26) !== "tombée") throw new Error("0,26");
+  if (contactLabel(0.22) !== "incertain") throw new Error("0,22");
+  if (contactLabel(NaN) !== "non vu") throw new Error("NaN");
+});
+
+check("replay : validation et vitesses (RPL-T5)", () => {
+  const events = [{ t: 2, event: "validated" }];
+  if (!validatedFlash(events, 2.5)) throw new Error("vert");
+  if (validatedFlash(events, 3.5)) throw new Error("éteint");
+  if (nextSpeed(1) !== 2 || nextSpeed(2) !== 0.5 || nextSpeed(0.5) !== 1) {
+    throw new Error("vitesses");
+  }
+  const meta = { steps: [{ id: "a", instruction: "Cadre." }, { id: "b", instruction: "Pose." }] };
+  if (stepBanner(meta, "b") !== "Étape 2/2 · Pose.") throw new Error("bandeau");
+  if (stepBanner(meta, "z") !== "") throw new Error("inconnu");
 });
 
 export async function runAll() {

@@ -177,7 +177,12 @@ def build(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=None,
         {"fps": FPS / OVERLAY_EVERY, "w": dims["w"],
          "h": dims["h"], "frames": overlays},
         ensure_ascii=False, sort_keys=True), encoding="utf-8")
+    from fixloop.procedures import load_all as _procedures
+    steps = [{"id": s["id"], "instruction": s.get("instruction", "")}
+             for s in _procedures()[session_def.get("procedure",
+                                                     "chain_off_chainring")]["steps"]]
     meta = {"name": name, "title": session_def.get("title", name),
+            "steps": steps,
             "filmed": session_def.get("filmed"), "source": "synthetic",
             "fps": FPS, "debounce_frames": session_def.get("debounce_frames", 4),
             "bike_id": session_def.get("bike_id"), "demo_history": bool(session_def.get("demo_history")),

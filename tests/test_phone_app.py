@@ -132,6 +132,23 @@ def test_web_bundle_under_100k():
     assert total < 100 * 1024  # APP-R10.2 : tout web/ sous 100 ko
 
 
+def test_replay_files_exist():
+    for name in ("replay.html", "replay.js"):
+        assert (WEB / name).is_file(), f"web/{name} manquant"  # RPL-T5
+
+
+def test_replay_player_core():
+    html = read("replay.html")
+    js = read("replay.js")
+    for token in ("<video", "<svg", "step-banner", "subtitle", "measure-line",
+                  "btn-play", "btn-speed", "btn-sound", "session-select"):
+        assert token in html, f"{token} manquant"  # RPL-R4.1, R4.5
+    for token in ("stateAt", "nearestFrame", "requestVideoFrameCallback",
+                  "timeupdate", "speechSynthesis"):
+        assert token in js, f"{token} manquant"  # RPL-R4.1 : synchro ± 100 ms
+    assert 'src="http' not in html and "from 'http" not in js  # RPL-R1.4, APP-R10.1
+
+
 def test_voice_fallback_status():
     live = read("live.js")
     lib = read("lib.js")

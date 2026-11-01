@@ -614,3 +614,15 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   Preuve : `tests/test_replay.py` 9 passed, `check_spec.py` OK.
   Fichiers : `replay/build_replay.py`, `fixloop/benchmark.py` (crochet `visit`), `tests/test_replay.py`,
   `.gitignore`, `spec/07-replay-mode/tasks.md`.
+
+- RPL-T5 (lecteur : vidéo et bandeau, [x]) : `web/replay.html` (squelette complet : scène, bandeau,
+  sous-titres, mesure, commandes, frise, courbe, seuils, liens) + `web/replay.js` (`stateAt` miroir
+  Python, `nearestFrame` dichotomique, `contactLabel`, `validatedFlash`, vitesses ×0,5/×1/×2, son
+  `speechSynthesis` coupé par défaut, synchro `requestVideoFrameCallback` + repli). Compétences
+  `taste` (aucun nouveau style : même `style.css`) et `browser-app-delivery` lues (pas de serveur
+  ni de navigateur : consigne série 4, vérification par `node`).
+  Tests d'abord (échec authentique : fichiers absents), vert du 1er coup après le code ;
+  `meta.json` enrichi des étapes (bandeau k/K).
+  Preuve : `tests/test_phone_app.py` 27 passed avec `test_replay.py`, `node web/selftest.mjs` 21/21.
+  Fichiers : `web/replay.html`, `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
+  `replay/build_replay.py` (étapes dans `meta.json`), `spec/07-replay-mode/tasks.md`.

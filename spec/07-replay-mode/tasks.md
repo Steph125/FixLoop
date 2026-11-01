@@ -25,9 +25,11 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   images vidéo ≈ 0,25 $, plus quelques appels Spark et Wonder), puis `--offline` pour vérifier l'identité.
   Commiter `replay/cache/*.models.json` et `replay/sessions/*.json`.
   Exigences : `RPL-R2.1`, `R2.3`, `R2.4`, `R3.1`.
-- [ ] **RPL-T5 — Lecteur : vidéo, contours, bandeau, sous-titres.** `web/replay.html`, `replay.js`, `stateAt`,
+- [x] **RPL-T5 — Lecteur : vidéo, contours, bandeau, sous-titres.** `web/replay.html`, `replay.js`, `stateAt`,
   synchronisation ± 100 ms, commandes de lecture, son.
   Exigences : `RPL-R4.1`, `R4.5`, `R1.3`, `R1.4`.
+  Preuve : `tests/test_phone_app.py` (fichiers + câblage synchro/son), `node web/selftest.mjs`
+  21/21 (miroir Python de `state_at`, overlay le plus proche, seuils, vitesses).
 - [ ] **RPL-T6 — Frise, détail des événements, courbe.** Événements cliquables, modèle et preuve, réponse brute et
   confiance, courbe du contact avec seuils et curseur.
   Exigences : `RPL-R4.2` à `R4.4`.

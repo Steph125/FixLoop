@@ -102,6 +102,9 @@ def test_synthetic_build_is_deterministic(tmp_path):
     assert [e["event"] for e in events].count("validated") == 3
     assert (out1 / "syn-A" / "video.mp4").exists()
     assert (out1 / "index.json").exists()  # sélecteur de session du lecteur
+    meta = json.loads((out1 / "syn-A" / "meta.json").read_text(encoding="utf-8"))
+    assert [s["id"] for s in meta["steps"]] == ["frame_view", "engage_top_teeth",
+                                                "turn_backward"]  # RPL-T5 : bandeau k/K
 
 
 def test_synthetic_overlays_under_2mb_for_60_seconds(tmp_path):
