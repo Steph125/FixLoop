@@ -46,8 +46,10 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   navigation privée, sur téléphone en 4G, Chrome, Firefox, Safari ; temps d'affichage de la 1re image noté dans
   `eval/day5/replay-check.md`.
   Exigences : `RPL-R1.1` à `R1.3`, `R8.1`, `R8.2`.
-- [ ] **RPL-T10 — Explorer les seuils (Could).** Curseurs, recalcul des `label`, mention « simulation ».
+- [x] **RPL-T10 — Explorer les seuils (Could).** Curseurs, recalcul des `label`, mention « simulation ».
   Exigences : `RPL-R6.1`, `R6.2`.
+  Preuve : `tests/test_phone_app.py::test_replay_threshold_simulation`, `node web/selftest.mjs`
+  25/25 (`relabelFrames` sans mutation, seuils croisés ignorés).
 
 ## Couverture
 

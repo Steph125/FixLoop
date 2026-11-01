@@ -2,7 +2,7 @@
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
 import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
-import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor } from "./replay.js";
+import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor, relabelFrames } from "./replay.js";
 
 const checks = [];
 
@@ -274,6 +274,14 @@ check("replay : honnêteté et liens (RPL-T7)", () => {
   if (!honestyText({ ...meta, demo_history: true }).includes("démonstration")) {
     throw new Error("historique");
   }
+});
+
+check("replay : seuils simulés (RPL-T10)", () => {
+  const frames = [{ t: 0, contact: 0.22 }, { t: 1, contact: 0.3 }];
+  const relabeled = relabelFrames(frames, 0.25, 0.26);
+  if (relabeled[0].label !== "en place") throw new Error("0,22 < 0,25");
+  if (relabeled[1].label !== "tombée") throw new Error("0,3 >= 0,26");
+  if (frames[0].label !== undefined) throw new Error("copie, pas mutation");
 });
 
 export async function runAll() {

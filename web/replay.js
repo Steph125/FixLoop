@@ -57,6 +57,8 @@ export function nextSpeed(s) {
 
 export const app = {
   index: [],
+  onMax: 0.18,
+  offMin: 0.26,
   meta: null,
   events: [],
   frames: [],
@@ -232,6 +234,26 @@ export function cursorX(t, width, duration) {
   return (duration > 0 ? t / duration : 0) * width;
 }
 
+// Simulation : recalcule les interprétations avec d'autres seuils (RPL-R7.3).
+// Rend une copie : la frise des événements réels ne change jamais.
+export function relabelFrames(frames, onMax = 0.18, offMin = 0.26) {
+  return frames.map((f) => ({ ...f, label: contactLabel(f.contact, onMax, offMin) }));
+}
+
+export function onThresholdInput(ev) {
+  const onMax = parseFloat(document.getElementById("thr-on").value);
+  const offMin = parseFloat(document.getElementById("thr-off").value);
+  if (!(onMax < offMin)) return; // seuils croisés : on ignore la frappe
+  app.onMax = onMax;
+  app.offMin = offMin;
+  app.frames = relabelFrames(app.frames, onMax, offMin);
+  const note = document.getElementById("sim-note");
+  if (note) note.hidden = false;
+  renderCurve(onMax, offMin);
+  if (app.video) render(app.video.currentTime);
+  if (ev && ev.currentTarget) ev.currentTarget.blur();
+}
+
 export function renderTimeline() {
   const el = document.getElementById("timeline");
   if (!el) return;
@@ -267,13 +289,14 @@ export function renderDetail(e) {
   }
 }
 
-export function renderCurve() {
+export function renderCurve(onMax, offMin) {
   const el = document.getElementById("curve");
   if (!el || !app.frames.length) return;
   const width = 300;
   const height = 80;
   const duration = Math.max(...app.frames.map((f) => f.t), 0.01);
-  const g = curveGeometry(app.frames, width, height, duration);
+  const g = curveGeometry(app.frames, width, height, duration,
+    onMax ?? app.onMax ?? 0.18, offMin ?? app.offMin ?? 0.26);
   el.setAttribute("viewBox", `0 0 ${width} ${height}`);
   el.innerHTML =
     `<line x1="0" y1="${g.onY}" x2="${width}" y2="${g.onY}" stroke="green"/>` +

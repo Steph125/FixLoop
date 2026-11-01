@@ -643,3 +643,11 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   Preuve : `node web/selftest.mjs` 24/24, `tests/test_phone_app.py` ciblé vert.
   Fichiers : `web/replay.html`, `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
   `spec/07-replay-mode/tasks.md`.
+
+- RPL-T10 (seuils modifiables, [x]) : `relabelFrames` (copie, seuils en paramètres), `onThresholdInput`
+  (seuils croisés ignorés, mention « simulation » affichée, courbe + mesure recalculées), curseurs
+  câblés dans `web/replay.html`.
+  Tests d'abord (échec authentique : exports absents), vert du 1er coup après le code.
+  Preuve : `node web/selftest.mjs` 25/25, `tests/test_phone_app.py` ciblé vert.
+  Fichiers : `web/replay.html`, `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
+  `spec/07-replay-mode/tasks.md`.

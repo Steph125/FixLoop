@@ -43,7 +43,7 @@
 
 </main>
 <script type="module">
-import { wire, loadIndex, selectSession, onPlayPressed, onSpeedPressed, onSoundPressed } from "./replay.js";
+import { wire, loadIndex, selectSession, onPlayPressed, onSpeedPressed, onSoundPressed, onThresholdInput } from "./replay.js";
 
 const video = document.getElementById("replay-video");
 const svg = document.getElementById("replay-overlay");
@@ -62,6 +62,8 @@ select.addEventListener("change", () => selectSession(select.value));
 document.getElementById("btn-play").addEventListener("click", onPlayPressed);
 document.getElementById("btn-speed").addEventListener("click", onSpeedPressed);
 document.getElementById("btn-sound").addEventListener("click", onSoundPressed);
+document.getElementById("thr-on").addEventListener("input", onThresholdInput);
+document.getElementById("thr-off").addEventListener("input", onThresholdInput);
 </script>
 </body>
 </html>

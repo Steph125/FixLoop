@@ -169,6 +169,15 @@ def test_replay_honesty_and_links():
     assert "Benchmark" in (html + js)
 
 
+def test_replay_threshold_simulation():
+    html = read("replay.html")
+    js = read("replay.js")
+    for token in ("thr-on", "thr-off", "sim-note"):
+        assert token in html, f"{token} manquant"  # RPL-R7.3
+    for token in ("relabelFrames", "onThresholdInput"):
+        assert token in js, f"{token} manquant"  # seuils modifiables (Could)
+
+
 def test_voice_fallback_status():
     live = read("live.js")
     lib = read("lib.js")
