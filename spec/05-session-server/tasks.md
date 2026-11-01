@@ -38,12 +38,13 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   garde-fou limité à `PermissionError` ; file des mesures qui ne jette plus rien quand la machine à états est libre
   (`SRV-D7`) ; temps de session faux quand l'horodatage client vaut 0 ; scénario du test complété (test dynamique).
   Les 3 tests passent ; nouveau test `test_work_queue_keeps_burst_in_order_when_idle`.
-- [~] **SRV-T6 — Commandes et voix.** `user_done`, `command`, `speaking`, `pause` / `resume`, `stop` ; audio
+- [x] **SRV-T6 — Commandes et voix.** `user_done`, `command`, `speaking`, `pause` / `resume`, `stop` ; audio
   binaire vers `VoiceBridge` ; `voice_status`.
-  Exigences : `SRV-R5.4`. Dépend de : T5 ([~]), `VOX-T3` ([~]).
+  Exigences : `SRV-R5.4`. Dépend de : T5 ([x]), `VOX-T3` ([x]).
   À vérifier hors sandbox : `test_voice_run_reports_on_and_drains` (pont réel, file voix → mesures).
   Preuve partielle : `test_speaking_mutes_detector_then_releases`, `test_audio_dropped_without_bridge`,
   `test_audio_queued_with_ready_bridge`, `test_voice_final_routes_done_help_repeat` (passent ici).
+  Preuve hors sandbox (1er nov.) : `test_voice_run_reports_on_and_drains` passe ; suite complète 237 passed, 0 skipped.
 - [x] **SRV-T7 — Clôture et erreurs.** `closed` puis fermeture après 2 s ; 401, 402 / 429, budget, lenteur 15 s,
   exceptions (3 de suite → arrêt), déconnexion.
   Exigences : `SRV-R6.3`, `R7.1` à `R7.4`.
@@ -71,7 +72,7 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   `test_recordings_only_when_enabled` (passent ici ; écriture en fin de session
   câblée dans `LiveSession`, vérifiée bout-en-bout avec les tests async [~] de SRV-T7),
   `pytest` 120 passed + 6 skipped, `check_spec.py` OK.
-- [~] **SRV-T10 — Client de test et faux modèles.** `scripts/ws_client.py --video … --done 18,30` ;
+- [x] **SRV-T10 — Client de test et faux modèles.** `scripts/ws_client.py --video … --done 18,30` ;
   `FIXLOOP_FAKE_MODELS=1` (perception depuis la scène synthétique ou des `raw_*.txt`, faux Spark, faux Wonder).
   Exigences : `SRV-R10.1`, `R10.2`. Fait quand : session `velo2` jouée sans réseau jusqu'à `closed`.
   À vérifier hors sandbox : `ws_client.py` (websockets absent ici) et la session `velo2`
@@ -83,6 +84,10 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   `closed` (`success: true`) avec `uvicorn` + `ws_client.py` sur une vidéo synthétique. Corrigé dans `ws_client.py` :
   `user_done` sans `t_ms` (refusé par le protocole), envoi sans rythme (plafond de 10 img/s), index de `--done`,
   lecture des messages pendant l'envoi. Reste : la même session sur `velo2` chez l'auteur, puis [x].
+  Preuve (1er nov., poste de l'auteur, Windows) : `FIXLOOP_FAKE_MODELS=1` + `uvicorn`, puis
+  `ws_client.py --video probe_out2/input_small.mp4 --done 18,30` : 3 étapes validées, test dynamique, `closed`
+  `success: True`, `dropped` 0, `stale` 0 ; aucun appel réseau. Perception : scène synthétique (`SimPerception`), les
+  images de `velo2` sont envoyées mais pas analysées.
 - [x] **SRV-T11 — Première session réelle en local.** `ws_client.py` sur `velo2` avec les vrais modèles ;
   noter dans `eval/day3/findings.md` : délai du verdict après le geste, `dropped`, résultats écartés, appels Spark,
   coût estimé, puis comparer au coût affiché sur la page Usage.

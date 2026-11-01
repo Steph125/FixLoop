@@ -14,3 +14,14 @@ __pycache__/
 probe_out*/
 # sortie du replay (construite, jamais committée)
 replay/build/
+# mesures locales (steering/tech.md : jamais commitées)
+latency_out/
+# prompts et journaux de Muse Code, sortie du client de test
+/prompt_*.md
+/muse_*.log
+eval/srv_t11.log
+# fichiers temporaires (tests, pip) et fichiers système
+/tmp*
+/pip-*/
+/pytest-of-*/
+desktop.ini
