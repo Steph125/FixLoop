@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>FixLoop — répare ton vélo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+
+<section data-screen="accueil">
+<h1>FixLoop</h1>
+<p>Ton téléphone filme ta transmission, FixLoop vérifie chaque étape et te guide à la voix.</p>
+<p id="history-note" hidden></p>
+<label id="code-label" hidden>Code d'accès <input id="code" type="text" inputmode="text" autocomplete="off"></label>
+<button id="btn-start" type="button">Commencer</button>
+<p><a id="link-replay" href="replay.html">Voir la démo</a></p>
+<p id="home-error" role="alert" hidden></p>
+</section>
+
+<section data-screen="cadrage" hidden>
+<div class="stage">
+<video id="video" playsinline muted autoplay></video>
+<svg id="frame-guide" viewBox="0 0 100 60" aria-hidden="true"><rect x="18" y="10" width="64" height="40" rx="6"/></svg>
+</div>
+<p>Pose le téléphone à 30–50 cm du plateau, face à la chaîne. Ni visage ni papier dans l'image.</p>
+<button id="btn-framed" type="button">C'est cadré</button>
+</section>
+
+<section data-screen="session" hidden>
+<div class="stage">
+<video id="video-live" playsinline muted autoplay></video>
+<svg id="overlay" preserveAspectRatio="xMidMid slice" aria-hidden="true"></svg>
+</div>
+<p id="step-banner" role="status"></p>
+<p id="subtitle"></p>
+<p id="measure"></p>
+<div class="buttons">
+<button id="btn-done" type="button">C'est fait</button>
+<button id="btn-help" type="button">Aide</button>
+<button id="btn-repeat" type="button">Répète</button>
+<button id="btn-pause" type="button">Pause</button>
+</div>
+<p id="mic-indicator" hidden>Micro actif</p>
+</section>
+
+<section data-screen="anomalie" hidden>
+<div class="stage">
+<video id="video-anomaly" playsinline muted autoplay></video>
+<svg id="overlay-anomaly" preserveAspectRatio="xMidMid slice" aria-hidden="true"></svg>
+</div>
+<p id="anomaly-banner" role="alert"></p>
+<p id="subtitle-anomaly"></p>
+<div class="buttons">
+<button id="btn-done2" type="button">C'est fait</button>
+<button id="btn-help2" type="button">Aide</button>
+<button id="btn-repeat2" type="button">Répète</button>
+<button id="btn-pause2" type="button">Pause</button>
+</div>
+</section>
+
+<section data-screen="fin" hidden>
+<h1 id="end-title">Réparation validée</h1>
+<p id="end-summary"></p>
+<button id="btn-again" type="button">Nouvelle session</button>
+</section>
+
+<section data-screen="erreur" hidden>
+<h1>Oups</h1>
+<p id="error-text" role="alert"></p>
+<button id="btn-retry" type="button">Réessayer</button>
+</section>
+
+</main>
+<script type="module" src="live.js"></script>
+</body>
+</html>

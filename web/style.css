@@ -1,0 +1,83 @@
+/* FixLoop : portrait, contrastes, gros boutons au pouce (APP-R9.2, APP-R4.1). */
+:root {
+  --fond: #101418;
+  --panneau: rgba(16, 20, 24, 0.78);
+  --texte: #f2f5f7;
+  --accent: #2f9e44;
+  --alerte: #e03131;
+  --etape: #1971c2;
+  font-size: 18px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+main { max-width: 28rem; margin: 0 auto; padding: 1rem; }
+
+section[hidden] { display: none; }
+
+h1 { font-size: 1.6rem; margin: 0.5rem 0; }
+
+p { margin: 0.6rem 0; }
+
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  background: #000;
+}
+
+.stage video, .stage svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#overlay.stale, #overlay-anomaly.stale { opacity: 0.3; }
+
+button {
+  font-size: 1rem;
+  min-height: 64px;
+  min-width: 30%;
+  padding: 0.7rem 1.2rem;
+  margin: 0.3rem 0.2rem 0.3rem 0;
+  border: none;
+  border-radius: 0.6rem;
+  background: var(--etape);
+  color: #fff;
+}
+
+button:active { filter: brightness(1.25); }
+
+#btn-done, #btn-done2 { background: var(--accent); min-width: 60%; }
+
+#step-banner, #subtitle, #measure, #anomaly-banner, #subtitle-anomaly {
+  background: var(--panneau);
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.4rem;
+}
+
+#anomaly-banner { background: rgba(224, 49, 49, 0.85); }
+
+#measure { font-size: 0.9rem; }
+
+#mic-indicator { background: var(--panneau); padding: 0.3rem 0.6rem; border-radius: 0.4rem; }
+
+input {
+  font-size: 1rem;
+  padding: 0.6rem;
+  min-height: 64px;
+  width: 100%;
+}
+
+a { color: #99d0ff; }

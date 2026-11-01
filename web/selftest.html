@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FixLoop — auto-test</title>
+</head>
+<body>
+<h1>FixLoop — auto-test</h1>
+<pre id="result">…</pre>
+<script type="module">
+import { runAll } from "./selftest.mjs";
+runAll().then((lines) => {
+  document.getElementById("result").textContent = lines.join("\n");
+});
+</script>
+</body>
+</html>
