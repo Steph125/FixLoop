@@ -14,6 +14,9 @@ __pycache__/
 probe_out*/
 # sortie du replay (construite, jamais committée)
 replay/build/
+# publication Pages (RPL-T11) : sessions choisies + liens, vidéos incluses
+!replay/published/
+!replay/published/*/video.mp4
 # mesures locales (steering/tech.md : jamais commitées)
 latency_out/
 # prompts et journaux de Muse Code, sortie du client de test

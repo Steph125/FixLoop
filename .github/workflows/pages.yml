@@ -15,11 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Assembler le site (5 chemins autorisés seulement)
+      - name: Assembler le site (sessions publiées seulement)
         run: |
           mkdir -p public/build
           cp web/replay.html web/replay.js web/style.css web/lib.js public/
-          cp -r replay/build/. public/build/
+          cp web/replay.html public/index.html
+          cp -r replay/published/. public/build/
       - name: Vérifier avant publication
         run: python replay/deploy_check.py --site public
       - name: Téléverser le site
