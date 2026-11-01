@@ -27,6 +27,11 @@ fichiers en CRLF comme le reste du dépôt ; VOX en PCM16 24 kHz / 80 ms
 - APP-T3 (caméra et cadrage) : `cameraConstraints`/`startMessage` dans `lib.js`, `requestCamera` (relance sans micro, message + bouton Réessayer si caméra refusée), `onFramedPressed` envoie `start`.
   Difficile : 2 essais ratés sur mes propres assertions (littéraux `environment`/`start` dans `live.js`, alors que le pur vit dans `lib.js`) — code bon dès le 1er essai, tests alignés sur le découpage.
   Preuve : `test_camera_and_framing`, `node web/selftest.mjs` 9/9, `check_spec.py` OK.
+
+- APP-T4 (WebSocket et boutons) : messages purs dans `lib.js`, `connect`/`onClose` (1 s, 2 s, 4 s puis erreur), `screenFor`, boutons avec vibration + visuel < 100 ms, `stop` sur Nouvelle session. SRV-T4 [x] : dépendance faite.
+  Difficile : 1 essai raté sur mes propres littéraux (messages purs dans `lib.js`, pas `live.js`) — test aligné, code bon dès le 1er essai. Case cochée dans le commit code (ancre dupliquée, noté ici).
+  Preuve : `test_websocket_and_buttons`, `node web/selftest.mjs` 12/12, `check_spec.py` OK.
+  Fichiers : `web/lib.js`, `web/live.js`, `web/style.css`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
 
 ## 2026-10-31 (sans interaction, choix prudent noté sans question)
