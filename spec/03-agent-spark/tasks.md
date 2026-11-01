@@ -51,9 +51,11 @@
 - [ ] **AGT-T11 — Compter les appels par session.** Mesurer sur 3 sessions de démo enregistrées ; noter le nombre
   d'appels Spark dans `eval/benchmark/report.md`.
   Exigences : `AGT-R7.3`. Dépend de : `SRV-T9`.
-- [ ] **AGT-T12 — Spark seul dans le benchmark.** Fournir au benchmark une fonction `spark_only_verdict(images,
+- [x] **AGT-T12 — Spark seul dans le benchmark.** Fournir au benchmark une fonction `spark_only_verdict(images,
   step)` qui pose la question de l'arbitrage **sans** la règle de sécurité (pour mesurer ce qu'elle évite).
   Exigences : `AGT-R8.1`. Utilisée par : `EVAL-T5`.
+  Preuve : `tests/test_agent.py` 19 passed (dont `test_spark_only_returns_raw_success_without_safety_rule`,
+  `test_spark_only_prompt_has_cues_but_no_measures`, `test_spark_only_unreadable_answer_gives_empty_verdict`).
 
 ## Couverture
 

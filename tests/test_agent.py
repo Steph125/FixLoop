@@ -192,3 +192,26 @@ def test_spark_calls_send_timeout_20_and_timeout_is_logged():
     agent3 = SparkAgent(PROCS, client=slow)
     assert agent3.arbitrate(STEP, [IMG], []).value == "0"  # delai traite comme absence de reponse
     assert agent3.calls[-1]["error"] == "APITimeoutError"
+
+
+def test_spark_only_returns_raw_success_without_safety_rule():
+    c = FakeClient('{"verdict": "reussie", "confiance": 0.9, "raison": "chaîne en place"}')
+    agent = SparkAgent(PROCS, client=c)
+    out = agent.spark_only_verdict([IMG], STEP)
+    assert out == {"verdict": "reussie", "confiance": 0.9,
+                   "raison": "chaîne en place"}  # AGT-T12 : brut, sans la règle AGT-R2
+    assert agent.arbitrate(STEP, [IMG], []).value == "0"  # même réponse, jamais validée
+
+
+def test_spark_only_prompt_has_cues_but_no_measures():
+    c = FakeClient('{"verdict": "ratee", "confiance": 0.7}')
+    SparkAgent(PROCS, client=c).spark_only_verdict([IMG], STEP)
+    prompt = c.sent[0]["input"][0]["content"][0]["text"]
+    assert "disque noir" in prompt  # EVAL-D2 : comparaison loyale, mêmes repères
+    assert "mesure" not in prompt.lower()  # EVAL-R3.1 : jugement sur images seules
+
+
+def test_spark_only_unreadable_answer_gives_empty_verdict():
+    c = FakeClient("pas du json")
+    out = SparkAgent(PROCS, client=c).spark_only_verdict([IMG], STEP)
+    assert out == {"verdict": "", "confiance": 0.0, "raison": None}

@@ -560,3 +560,11 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   allocation mémoire) → `$env:OPENBLAS_NUM_THREADS = '1'` pour tous les lancements Python de la série.
   Preuve : `tests/test_replay.py` 4 passed, `check_spec.py` OK.
   Fichiers : `fixloop/cached_models.py`, `tests/test_replay.py`, `spec/07-replay-mode/tasks.md`.
+
+- AGT-T12 (Spark seul, [x]) : `SparkAgent.spark_only_verdict(images, step)` — même question que l'arbitrage,
+  mêmes `visual_cues` (EVAL-D2), sans mesures ni règle de sécurité ; le brut est rendu tel quel.
+  Tests d'abord (échec authentique : méthode absente), vert du 1er coup après le code.
+  Environnement : `import cv2` a échoué une fois (pagination insuffisante) — pression mémoire passagère,
+  vert après 30 s de pause (2e essai, aucun changement).
+  Preuve : `tests/test_agent.py` 19 passed, `check_spec.py` OK.
+  Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.

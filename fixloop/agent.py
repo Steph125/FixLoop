@@ -228,6 +228,30 @@ class SparkAgent:
             evidence["ignore"] = "Spark ne valide jamais : on attend que la mesure SAM confirme"
         return Verdict("0", None, evidence, data.get("conseil") or None)
 
+    def spark_only_verdict(self, images: list[Any], step: dict) -> dict | None:
+        """Verdict Spark brut, SANS la règle « Spark ne valide jamais » (AGT-T12).
+
+        Réservé au benchmark (EVAL-R3.1) : même question que l'arbitrage, mêmes
+        repères visuels (comparaison loyale, EVAL-D2), mais sans mesures. Montre
+        ce que la règle de sécurité évite. Ne jamais utiliser en direct.
+        """
+        proc = self._procedure_of(step) or {}
+        text = (
+            f"Étape en cours : « {step['instruction']} »\n"
+            f"{proc.get('visual_cues', GENERIC_CUES)}\n\n"
+            "Les images sont des gros plans du plateau. L'étape est-elle réussie ? "
+            "Si tu ne vois pas clairement la chaîne et le plateau, réponds impossible_a_dire. "
+            'Réponds : {"verdict": "reussie" | "ratee" | "impossible_a_dire", '
+            '"confiance": <0 à 1>, "raison": "<une phrase>"}'
+        )
+        data = self._ask("spark_only", text, images) or {}
+        v = str(data.get("verdict", "")).lower()
+        try:
+            conf = float(data.get("confiance", 0))
+        except (TypeError, ValueError):
+            conf = 0.0
+        return {"verdict": v, "confiance": conf, "raison": data.get("raison")}
+
     def explain(self, step: dict, verdict: Verdict, keyframes: list[Any]) -> tuple[str, str | None]:
         proc = self._procedure_of(step) or {}
         parts = list(proc.get("parts", {}))
