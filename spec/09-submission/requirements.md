@@ -39,8 +39,10 @@ traduit le règlement et la grille (`steering/product.md` sections 7 et 8) en cr
 
 1. Le dépôt `Steph125/FixLoop` DOIT être public à l'envoi du formulaire (il l'est depuis le 31 oct.).
 2. Comme le dépôt est déjà public, l'historique git complet DOIT être vérifié dès maintenant puis avant chaque
-   push : aucun `.env`, aucune clé (recherche de la valeur de la clé et des motifs de clé), aucune vidéo brute,
-   aucun `data/`, `probe_out*/`, `latency_out/`.
+   push : aucun `.env`, aucune clé (recherche de la valeur de la clé et des motifs de clé), aucune vidéo brute de
+   `data/`, aucun visage ni document. Les sorties de mesure (`latency_out/`, `probe_out*/`) ne DOIVENT plus être
+   commitées ; celles déjà présentes dans l'historique avant le 1er nov. sont tolérées si elles ne contiennent ni
+   clé ni donnée personnelle : l'historique n'est pas réécrit, pour garder la preuve des dates (`SUB-R5`).
 3. SI une clé apparaît dans l'historique, ALORS elle DOIT être révoquée immédiatement sur la console Meta (elle est
    déjà exposée), remplacée dans `.env`, et l'historique nettoyé.
 4. `python -m pytest -q tests` DOIT passer sur un clone neuf, en suivant le README (installation testée de zéro).

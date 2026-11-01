@@ -60,11 +60,12 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   À vérifier hors sandbox : les 2 tests e2e (faux serveur local, sockets interdits ici, WinError 10013).
   Preuve partielle : `tests/test_voice_bridge.py` 4 sync passed + 2 skipped, `check_spec.py` OK.
   Preuve hors sandbox (1er nov.) : `tests/test_voice_bridge.py` 6 passed, 0 skipped ; suite complète 237 passed.
-- [~] **VOX-T4 — Branchement à la session.** Commande → `on_user_done` / `on_command` ; journal `command` avec texte
+- [x] **VOX-T4 — Branchement à la session.** Commande → `on_user_done` / `on_command` ; journal `command` avec texte
   normalisé ; durée audio dans les coûts.
   Exigences : `VOX-R2.5`, `R4.2`. Dépend de : T2, T3 ([x]), `SRV-T6` ([x]), `CORE-T15` ([x]).
   À vérifier hors sandbox : durée audio dans les coûts en session réelle (`test_voice_seconds_are_logged_to_costs`, voix de bout en bout).
   Preuve partielle : `test_voice_final_routes_done_help_repeat`, `test_voice_command_text_reaches_session_queue`, `test_detector_history_journals_normalized_text` (passent ici).
+  Relecture du 1er nov. (hors sandbox, Linux) : `test_voice_seconds_are_logged_to_costs` passe.
 - [x] **VOX-T5 — Repli bouton.** Côté serveur : message `voice_status` (`on`, `off`, `error`) ; côté appli : texte
   « Commande vocale indisponible ». Exigences : `VOX-R3.1`, `R3.2`. Dépend de : `APP-T5` ([x]).
   Preuve : `tests/test_phone_app.py::test_voice_fallback_status`, `tests/test_session.py::test_voice_status_shapes`.

@@ -31,7 +31,7 @@
   Exigences : `EVAL-R3.1`, `R3.4`. Dépend de : `AGT-T12` ([x]).
   Preuve : `run_spark_only` (requêtes 3 s + `done`, arrêt au 1er terminal) + `CachedAgent.spark_only` ;
   `tests/test_benchmark.py` (fausse validation construite sur `off`, anomalie après `done`, cache rejoué).
-- [x] **EVAL-T6 — Script `benchmark.py`.** Estimation et confirmation du coût, exécution en ligne puis hors
+- [~] **EVAL-T6 — Script `benchmark.py`.** Estimation et confirmation du coût, exécution en ligne puis hors
   ligne, `results.csv`, journal des coûts.
   Exigences : `EVAL-R5.1`, `R5.2`, `R6.1`, `R6.2`, `R7.3`.
   Preuve : `scripts/benchmark.py` tourne en `--offline --fake` sur 2 extraits synthétiques
@@ -39,6 +39,14 @@
   `scripts/label_clip.py` (fonctions pures testées, servira EVAL-T2).
   Fait quand (série 4) : le script tourne en `--offline` sur les extraits synthétiques — fait ;
   l'exécution réelle (EVAL-T7) n'est pas pour cette série.
+  **Relecture du 1er nov. : rouverte.** Pour EVAL-T6 : seul `--fake` fonctionne ; le chemin en ligne s'arrête
+  (« pas pour cette série ») et `--offline` exige `--fake`. Il manque : pour chaque extrait de `clips.csv`,
+  `segment_video` (chaîne et plateau, cache `data/eval/sam/<clip>/`), mesures, réglages `replay` et `live`,
+  `CachedAgent(SparkAgent)` pour FixLoop et Spark seul (cache `eval/benchmark/cache/`), images clés lues dans la
+  vidéo ; `--offline` relit ces caches sans aucun appel et s'arrête si une réponse manque ; option
+  `--model muse-spark-1.3-contributor` pour Spark seul (`EVAL-D5`). Fait quand : 2 extraits vidéo synthétiques
+  (écrits avec OpenCV) passent en ligne avec un faux client SAM et un faux Spark, puis en `--offline` avec des
+  `results.csv` identiques.
 - [ ] **EVAL-T7 — Exécution.** Passage en ligne, puis deux passages hors ligne identiques ; coût réel noté.
   Exigences : `EVAL-R2.2`, `R5.1`, `R6.2`, `R8.1`.
 - [ ] **EVAL-T8 — Rapport et graphique.** `report.md` (structure section 6), `chart.svg`, limites, extraits
@@ -47,6 +55,14 @@
 - [ ] **EVAL-T9 — Gel des chiffres.** Mardi 3 nov. à midi : chiffres copiés dans le README et le script de la
   vidéo, chacun avec sa source.
   Exigences : `EVAL-R7.5`, `R8.1`. Utilisé par : `SUB-T3`, `SUB-T5`.
+
+- [ ] **EVAL-T10 — Générateur du rapport et du graphique.** Ajouté à la relecture du 1er nov.
+  `scripts/benchmark_report.py` lit `results.csv`, `clips.csv` et `labels.csv` et écrit `report.md` (structure de
+  `design.md` section 6 : tableau principal sur les extraits `test`, réglage `live` puis `replay`, matrice de
+  classement, extraits ratés, limites, commande pour reproduire, date, commit et seuils) et `chart.svg` (barres
+  groupées, motifs en plus des couleurs, valeurs écrites, sans dépendance lourde). Les phrases d'analyse restent à
+  écrire par l'auteur (marquées « À ÉCRIRE »). Exigences : `EVAL-R5.3`, `R7.1` à `R7.4`.
+  Fait quand : rapport et graphique produits depuis un `results.csv` synthétique, test qui vérifie les sections.
 
 ## Couverture
 

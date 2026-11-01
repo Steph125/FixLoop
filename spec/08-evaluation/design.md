@@ -65,7 +65,7 @@ Soit `L(t)` l'étiquette à la seconde `floor(t)`.
 
 | Mesure | Définition |
 |---|---|
-| Fausse validation | événement `validated` (ou clôture du test dynamique) à l'instant `t` avec `L(t) ∈ {off, hidden}` ; `transition` compte à part (« validation pendant transition ») |
+| Fausse validation | événement `validated` d'une étape dont une règle de succès porte sur le contact (pas l'étape de cadrage, qui ne demande que de voir les pièces), ou clôture du test dynamique, à l'instant `t` avec `L(t) ∈ {off, hidden}` ; `transition` compte à part (« validation pendant transition ») |
 | Validation manquée | segment `on` de ≥ 5 s consécutives (après le dernier `done` si l'étape exige « c'est fait ») sans `validated` pendant le segment |
 | Délai de validation | `t_validated − t_début_du_segment_on` (et, si l'étape exige « c'est fait », depuis `max(début, done)`) |
 | Fausse remise | seconde avec `done = 1` et `L = off` ; signalée si un événement `anomaly` arrive dans les 10 s |
