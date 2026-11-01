@@ -13,9 +13,12 @@
 - [ ] **EVAL-T2 — Étiquetage.** `labels.csv` seconde par seconde (outil `scripts/label_clip.py` facultatif) ;
   commit « labels » avant toute exécution.
   Exigences : `EVAL-R1.3`, `R1.4`.
-- [ ] **EVAL-T3 — Calcul des mesures de comparaison.** Fonctions de la section 4 de `design.md`,
+- [x] **EVAL-T3 — Calcul des mesures de comparaison.** Fonctions de la section 4 de `design.md`,
   `tests/test_benchmark.py` sur extraits synthétiques.
   Exigences : `EVAL-R4.1` à `R4.6`.
+  Preuve : `fixloop/benchmark.py` + `tests/test_benchmark.py` 12 passed (fausse validation off/hidden,
+  clôture dynamique, validation manquée, délai depuis `done`, rappel des fausses remises, confusion
+  par image hors transition, lecture `labels.csv` / `clips.csv`).
 - [ ] **EVAL-T4 — Approches règles SAM et FixLoop.** `NoSparkAgent`, réglages `replay` et `live`
   (sous-échantillonnage, anti-rebond 3 / 4), `CachedAgent` partagé avec le replay.
   Exigences : `EVAL-R3.2` à `R3.5`. Dépend de : `CORE-T9`, `PERC-T5`, `RPL-T1`.

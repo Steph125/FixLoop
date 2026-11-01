@@ -568,3 +568,11 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   vert après 30 s de pause (2e essai, aucun changement).
   Preuve : `tests/test_agent.py` 19 passed, `check_spec.py` OK.
   Fichiers : `fixloop/agent.py`, `tests/test_agent.py`, `spec/03-agent-spark/tasks.md`.
+
+- EVAL-T3 (mesures de comparaison, [x]) : `fixloop/benchmark.py` (étiquettes, `validated_events`,
+  fausses validations + transition à part, segments `on`, manquées ≥ 5 s, délais depuis `done`,
+  rappel des fausses remises à 10 s, confusion par image, comptes Spark/SAM, lecture CSV).
+  Tests d'abord (échec authentique : module absent), 1 essai raté sur mon code (fin de segment `on`
+  mal fermée par une sentinelle) — corrigé, vert.
+  Preuve : `tests/test_benchmark.py` 13 passed, `check_spec.py` OK.
+  Fichiers : `fixloop/benchmark.py`, `tests/test_benchmark.py`, `spec/08-evaluation/tasks.md`.
