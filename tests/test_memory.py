@@ -173,6 +173,28 @@ def test_save_background_writes_first_without_summary(tmp_path):
     assert second["summary"] == "Résumé."  # …ajouté par une 2e écriture atomique
 
 
+def test_load_background_returns_local_text_immediately(tmp_path):
+    import threading
+
+    from fakes import FakeWonderClient
+    from fixloop.memory import WonderMemory
+    sync = WonderMemory(root=tmp_path / "bikes",
+                        client=FakeWonderClient("Résumé."),
+                        background=False)
+    sync.save("velo-1", report())
+    gate = threading.Event()
+    m = WonderMemory(root=tmp_path / "bikes",
+                     client=FakeWonderClient("Synthèse de fond.", gate=gate),
+                     background=True)
+    text = m.load("velo-1")
+    assert "chain_off_chainring" in text  # MEM-D3 : texte local tout de suite
+    assert m.synthesis is None  # Wonder n'a pas encore répondu
+    gate.set()
+    m.join(timeout=10)
+    assert m.synthesis == "Synthèse de fond."  # journalisée quand elle arrive
+    assert m.calls[-1]["kind"] == "synthesis" and m.calls[-1]["ok"] is True
+
+
 def test_wonder_calls_are_reported_to_costs(tmp_path):
     from fixloop.costs import CostLog
     from fakes import FakeWonderClient

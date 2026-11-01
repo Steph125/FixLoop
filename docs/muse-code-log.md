@@ -544,3 +544,10 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   Choix prudent : tâche [~] (test principal async ignoré ici, WinError 10013).
   Preuve partielle : 7 tests sync de `tests/test_session.py` (voir tâche).
   Fichiers : `spec/05-session-server/tasks.md` (case + preuve).
+
+- MEM-T4 (Wonder en tâche de fond, [x]) : code du lot 3 vérifié (`_synthesize` / `_summarize`, `join`,
+  `FIXLOOP_WONDER_EFFORT`, `CostLog`) ; un comportement exigé par MEM-D3 n'avait aucun test (retour
+  immédiat du texte local pendant la synthèse de fond) → test écrit d'abord, échec authentique (mauvais
+  destinataire du `background`), corrigé, vert.
+  Preuve : `tests/test_memory.py` 15 passed, `check_spec.py` OK.
+  Fichiers : `tests/test_memory.py` (+1 test), `spec/04-memory-voice/tasks.md` (case + preuve).
