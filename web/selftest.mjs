@@ -1,6 +1,6 @@
 // FixLoop : vérifications de lib.js, sans DOM (APP-T10).
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
-import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE,
+import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
 
 const checks = [];
@@ -93,6 +93,13 @@ check("packBinary : en-tête SRV-R3.2 (APP-R2.2)", () => {
   const t = new DataView(buf.buffer).getBigUint64(1, false);
   if (t !== 11500n) throw new Error("horodatage");
   if (buf[9] !== 10 || buf[11] !== 30) throw new Error("données");
+  const pcm = new Int16Array([256, -1]); // sortie du worklet
+  const buf2 = packBinary(MSG_AUDIO, 80, pcm);
+  if (buf2[0] !== 0x01 || buf2.length !== 13) throw new Error("marqueur audio");
+  const view = new DataView(buf2.buffer, buf2.byteOffset + 9, 4);
+  if (view.getInt16(0, true) !== 256 || view.getInt16(2, true) !== -1) {
+    throw new Error("octets petit-boutistes");
+  }
 });
 
 check("taille d'image 848 px (APP-R2.2)", () => {
@@ -139,6 +146,41 @@ check("voix en sortie (APP-R7)", () => {
   }
   if (shouldInterruptSay("C'est bon.")) throw new Error("validation coupée");
   if (VALIDATION_PHRASE !== "C'est bon.") throw new Error("validation");
+  if (voiceStatusText("on") !== null) throw new Error("micro actif");
+  if (voiceStatusText("off") !== "Commande vocale indisponible") throw new Error("repli");
+  if (voiceStatusText("error") !== "Commande vocale indisponible") throw new Error("erreur");
+});
+
+check("worklet : rééchantillonnage 24 kHz (APP-T8)", async () => {
+  if (typeof globalThis.AudioWorkletProcessor === "undefined") {
+    globalThis.AudioWorkletProcessor = class {
+      constructor() { this.port = { postMessage() {} }; }
+    };
+  }
+  if (typeof globalThis.registerProcessor === "undefined") {
+    globalThis.registerProcessor = () => {};
+  }
+  const worklet = await import("./audio-worklet.js");
+  if (worklet.OUT_RATE !== 24000 || worklet.FRAME_SAMPLES !== 1920) {
+    throw new Error("constantes");
+  }
+  const half = worklet.resampleFrame(new Float32Array(480).fill(0.5), 48000);
+  if (half.length !== 240) throw new Error("longueur");
+  if (Math.abs(half[0] - 16384) > 2) throw new Error("amplitude");
+  if (worklet.resampleFrame(new Float32Array(0), 48000).length !== 0) throw new Error("vide");
+  const posted = [];
+  const node = new worklet.CaptureProcessor();
+  node.port = { postMessage: (frame) => posted.push(frame) };
+  globalThis.sampleRate = 48000;
+  try {
+    for (let i = 0; i < 30; i++) node.process([[new Float32Array(128).fill(0.25)]]);
+  } finally {
+    delete globalThis.sampleRate;
+  }
+  if (posted.length !== 1 || posted[0].length !== 1920) {
+    throw new Error(`trames : ${posted.length}`);
+  }
+  if (Math.abs(posted[0][0] - 8192) > 2) throw new Error("contenu");
 });
 
 check("texte caméra exact (APP-R1.3)", () => {

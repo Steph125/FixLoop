@@ -17,9 +17,9 @@ def read(name):
 
 def test_required_files_exist():
     for name in ("index.html", "live.js", "style.css",
-                 "lib.js", "selftest.html", "selftest.mjs"):
+                 "lib.js", "selftest.html", "selftest.mjs", "audio-worklet.js"):
         assert (WEB / name).is_file(), f"web/{name} manquant"  # design 06, sections 1 et 7
-    # audio-worklet.js arrive avec APP-T8 (voix en entrée)
+
 
 
 def test_six_screens():
@@ -132,9 +132,29 @@ def test_web_bundle_under_100k():
     assert total < 100 * 1024  # APP-R10.2 : tout web/ sous 100 ko
 
 
+def test_voice_fallback_status():
+    live = read("live.js")
+    lib = read("lib.js")
+    assert "voice_status" in live  # VOX-T5 : statut traité côté appli
+    assert "voiceStatusText" in live
+    assert "Commande vocale indisponible" in lib  # repli bouton seul
+    assert "Micro actif" in live  # APP-R7.4 : indicateur micro
+
+
+def test_voice_input_worklet():
+    worklet = read("audio-worklet.js")
+    assert "24000" in worklet and "1920" in worklet  # APP-R7.4 : 24 kHz, 80 ms
+    assert "registerProcessor" in worklet
+    lib = read("lib.js")
+    assert "MSG_AUDIO" in lib and "0x01" in lib  # marqueur audio (SRV-R3.2)
+    live = read("live.js")
+    assert "startMic" in live and "AudioWorklet" in live  # micro -> pont
+    assert "mic-indicator" in live  # APP-R7.4 : indicateur micro
+
+
 def test_no_external_dependency_and_small_size():
     total = 0
-    for name in ("index.html", "live.js", "style.css", "lib.js"):
+    for name in ("index.html", "live.js", "style.css", "lib.js", "audio-worklet.js"):
         text = read(name)
         total += len(text.encode("utf-8"))
         assert 'src="http' not in text and "from 'http" not in text  # APP-R10.1

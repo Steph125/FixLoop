@@ -151,3 +151,23 @@ class FakeOutput:
 
     def state(self, snapshot):
         self.states.append(snapshot)
+
+
+class FakeWonderClient:
+    """Imite client.responses.create pour muse-wonder-1.0 (MEM-T4, aucun réseau)."""
+
+    def __init__(self, answer, usage=None, gate=None):
+        self.answer, self.usage, self.gate = answer, usage, gate
+        self.sent = []
+        self.responses = SimpleNamespace(create=self._create)
+
+    def _create(self, **kw):
+        if self.gate is not None:
+            self.gate.wait()  # test en tâche de fond : réponse quand le test l'autorise
+        self.sent.append(kw)
+        if isinstance(self.answer, Exception):
+            raise self.answer
+        ns = SimpleNamespace(output_text=self.answer)
+        if self.usage is not None:
+            ns.usage = SimpleNamespace(**self.usage)
+        return ns

@@ -105,3 +105,83 @@ def test_seed_history_creates_demo_entries(tmp_path):
                for e in data["entries"])
     m = mem(tmp_path)
     assert m.repeated("demo-velo", "chain_off_chainring") == 2  # visible par MEM-T5
+
+
+def wonder(tmp_path, answer, **kw):
+    from fakes import FakeWonderClient
+    from fixloop.memory import WonderMemory
+    kw.setdefault("background", False)  # synchrone : déterministe sans API
+    return WonderMemory(root=tmp_path / "bikes", client=FakeWonderClient(answer), **kw)
+
+
+def test_load_with_client_returns_synthesis(tmp_path):
+    m = wonder(tmp_path, " ".join(["mot"] * 100))  # 100 mots
+    m.save("velo-1", report())
+    text = m.load("velo-1")
+    assert len(text.split()) <= 60  # MEM-R1.2 : synthèse de moins de 60 mots
+
+    assert m.calls[-1]["kind"] == "synthesis"  # journal (MEM-T4)
+    assert m.calls[-1]["ok"] is True
+
+
+def test_load_sends_effort_and_timeout(tmp_path):
+    m = wonder(tmp_path, "Synthèse courte.", effort="medium")
+    m.save("velo-1", report())
+    m.load("velo-1")
+    sent = m.client.sent[0]
+    assert sent["model"] == "muse-wonder-1.0"
+    assert sent["reasoning"] == {"effort": "medium"}  # effort réglable (MEM-T4)
+    assert sent["timeout"] == 20  # délai 20 s
+
+
+def test_load_error_falls_back_to_plain_text(tmp_path):
+    from fakes import FakeWonderClient
+    from fixloop.memory import WonderMemory
+    m = WonderMemory(root=tmp_path / "bikes", client=FakeWonderClient(ConnectionError("coupé")),
+                     background=False)
+    m.save("velo-1", report())
+    assert "chain_off_chainring" in m.load("velo-1")  # MEM-R1.6 : repli texte brut
+    assert m.calls[0]["error"] == "ConnectionError"
+
+
+def test_save_adds_summary_below_30_words(tmp_path):
+    m = wonder(tmp_path, "Chaîne remise après une tentative, test de rotation réussi.")
+    m.save("velo-1", report())
+    import json
+    entry = json.loads((tmp_path / "bikes" / "velo-1.json").read_text(encoding="utf-8"))["entries"][0]
+    assert "summary" in entry  # MEM-R2.2 : phrase de rapport
+    assert len(entry["summary"].split()) <= 30
+    assert m.calls[-1]["kind"] == "summary"
+
+
+def test_save_background_writes_first_without_summary(tmp_path):
+    import threading
+
+    from fakes import FakeWonderClient
+    from fixloop.memory import WonderMemory
+    import json
+    gate = threading.Event()
+    m = WonderMemory(root=tmp_path / "bikes", client=FakeWonderClient("Résumé.", gate=gate),
+                     background=True)
+    m.save("velo-1", report())
+    path = tmp_path / "bikes" / "velo-1.json"
+    first = json.loads(path.read_text(encoding="utf-8"))["entries"][0]
+    assert "summary" not in first  # MEM-D3 : l'entrée part sans résumé, closed aussitôt
+    gate.set()  # Wonder répond…
+    m.join()
+    second = json.loads(path.read_text(encoding="utf-8"))["entries"][0]
+    assert second["summary"] == "Résumé."  # …ajouté par une 2e écriture atomique
+
+
+def test_wonder_calls_are_reported_to_costs(tmp_path):
+    from fixloop.costs import CostLog
+    from fakes import FakeWonderClient
+    from fixloop.memory import WonderMemory
+    log = CostLog(root=tmp_path / "costs")
+    m = WonderMemory(root=tmp_path / "bikes",
+                     client=FakeWonderClient("Synthèse.", {"input_tokens": 400, "output_tokens": 25}),
+                     background=False, costs=log)
+    m.save("velo-1", report())
+    m.load("velo-1")
+    assert log.by_model().get("muse-wonder-1.0", 0) > 0  # MEM-T4 : jetons journalisés
+    assert log.entries[0]["call"] == "summary"

@@ -635,3 +635,157 @@ def test_costs_are_attributed_to_the_session(tmp_path):
     models.costs.add(model="sam-3.1", kind="image", units=360, seconds=1.0, ok=True)
     assert abs(models.costs.session_total("s-1") - 0.90) < 1e-9  # SRV-R8.2 : la limite peut jouer
     assert models.costs.session_total("autre") == 0
+
+
+def voice_live():
+    from types import SimpleNamespace
+    ws, sess = make_live({0: "off"})
+    sess.started = True
+    import queue
+    sess._out_queue = queue.Queue()
+    sess.bridge = SimpleNamespace(started=True, pushed=[], stopped=False)
+    return ws, sess
+
+
+def test_speaking_mutes_detector_then_releases():
+    from fixloop.voice import CommandDetector
+    _, sess = make_live({0: "off"})
+    sess.detector = CommandDetector()
+    t0 = sess.clock()
+    assert sess.detector.feed("c'est fait", t0) == "done"
+    sess._on_text({"type": "speaking", "on": True, "t_ms": 1000})
+    assert sess.detector.feed("c'est fait", t0 + 0.1) is None  # VOX-R2.4 : FixLoop parle
+    sess._on_text({"type": "speaking", "on": False, "t_ms": 1100})
+    assert sess.detector.feed("c'est fait", t0 + 0.2) is None  # queue de 500 ms
+    assert sess.detector.feed("aide-moi", t0 + 0.6) == "help"
+
+
+def test_user_done_and_command_keep_order_with_measures():
+    from server.session import WorkQueue
+    q = WorkQueue()
+    q.busy = True  # appel Spark en cours : la mesure seule attend
+    q.put_measure("m1", None)
+    q.put_control("done")
+    q.put_measure("m2", None)
+    q.put_control("command", "help")
+    assert [q.take()[0] for _ in range(3)] == ["done", "measure", "command"]  # SRV-R5.4
+    assert q.take() is None
+
+
+def test_audio_dropped_without_bridge():
+    _, sess = make_live({0: "off"})
+    sess.started = True
+    sess.bridge = None  # voix coupée : bouton seul (VOX-R3.2)
+    sess._on_audio(b"\x00" * 100, 1000)
+    assert sess.counters["audio_dropped"] == 1
+    assert sess.audio_pending == []
+
+
+def test_audio_queued_with_ready_bridge():
+    _, sess = voice_live()
+    sess._on_audio(b"\x01" * 3840, 1000)
+    assert sess.audio_pending == [b"\x01" * 3840]  # drainées par la tâche voix
+    sess.paused = True
+    sess._on_audio(b"\x02" * 3840, 1080)
+    assert sess.counters["audio_dropped"] == 1  # pause : micro coupé
+
+
+def test_voice_final_routes_done_help_repeat():
+    _, sess = make_live({0: "off"})
+    sess._on_voice_final("c'est fait", 200.0)
+    assert sess.work.take() == ("done", None)
+    sess._on_voice_final("aide-moi", 203.0)
+    assert sess.work.take() == ("command", "help")
+    sess._on_voice_final("répète", 206.0)
+    assert sess.work.take() == ("command", "repeat")
+    sess._on_voice_final("il fait beau", 209.0)
+    assert sess.work.take() is None  # pas de commande : rien en file
+    assert sess.detector.history[-1]["command"] == "repeat"  # VOX-R2.5 : journal texte
+
+
+def test_make_bridge_off_in_fake_mode(monkeypatch):
+    monkeypatch.setenv("FIXLOOP_FAKE_MODELS", "1")
+    _, sess = make_live({0: "off"})
+    assert sess._make_bridge() is None  # SRV-T10 : voix coupée, bouton seul
+
+
+def test_voice_run_reports_on_and_drains():
+    async def main():
+        import asyncio
+        import queue
+
+        class FakeBridge:
+            def __init__(self):
+                self.started, self.pushed, self.stopped = False, [], False
+                self.seconds_sent = 0.0
+
+            async def start(self):
+                self.started = True
+                return True
+
+            async def push_audio(self, pcm):
+                self.pushed.append(pcm)
+
+            async def stop(self):
+                self.started, self.stopped = False, True
+                self.seconds_sent = 0.08
+                return 0.08
+
+        _, sess = make_live({0: "off"})
+        sess._out_queue = asyncio.Queue()
+        sess._work_event = asyncio.Event()
+        sess.started = True
+        sess.bridge = FakeBridge()
+        run = asyncio.create_task(sess._voice_run())
+        await wait_for(lambda: sess._out_queue.qsize() > 0)
+        assert sess._out_queue.get_nowait() == {"type": "voice_status", "status": "on"}
+        bridge = sess.bridge
+        sess._on_audio(b"\x03" * 3840, 1000)
+        await wait_for(lambda: len(bridge.pushed) == 1)  # drainé vers le pont
+        assert bridge.pushed[0] == b"\x03" * 3840
+        sess.closing = True
+        await asyncio.wait_for(run, 10)
+        assert bridge.stopped is True and sess.bridge is None and sess.audio_pending == []
+    arun(main())
+
+
+def test_detector_history_journals_normalized_text():
+    from fixloop.voice import CommandDetector
+    det = CommandDetector()
+    assert det.feed("C'est FAIT !", 10.0) == "done"
+    assert det.feed("Aide-moi, s'il te plaît.", 13.0) == "help"
+    assert det.history == [
+        {"t": 10.0, "command": "done", "text": "c est fait"},
+        {"t": 13.0, "command": "help", "text": "aide moi s il te plait"},
+    ]  # VOX-R2.5 : transcription normalisée journalisée, pas l'audio
+
+
+def test_voice_command_text_reaches_session_queue():
+    _, sess = make_live({0: "off"})
+    sess._on_voice_final("C'est fait.", 300.0)
+    assert sess.work.take() == ("done", None)
+    entry = sess.detector.history[-1]
+    assert (entry["command"], entry["text"]) == ("done", "c est fait")  # VOX-T4
+
+
+def test_voice_seconds_are_logged_to_costs(tmp_path):
+    async def main():
+        from fixloop.costs import CostLog
+        from fixloop.voice import VoiceBridge
+        log = CostLog(root=tmp_path)
+        bridge = VoiceBridge("cle-test", costs=log, session_id="s-vox")
+        bridge._frames = 25  # 2 s d'audio reçues, pont déjà fermé côté test
+        assert await bridge.stop() == pytest.approx(2.0)
+        assert log.session_total("s-vox") > 0  # VOX-R4.2 : secondes Transcribe journalisées
+    arun(main())
+
+
+def test_voice_status_shapes():
+    import queue
+    _, sess = make_live({0: "off"})
+    sess._out_queue = queue.Queue()
+    sess._send_voice_status("on", None)
+    assert sess._out_queue.get_nowait() == {"type": "voice_status", "status": "on"}
+    sess._send_voice_status("error", "refused")
+    assert sess._out_queue.get_nowait() == {
+        "type": "voice_status", "status": "error", "reason": "refused"}

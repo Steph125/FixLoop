@@ -108,6 +108,7 @@ export function screenFor(msg, current) {
 // Images : réduction à 848 px au plus, JPEG 0,7, en-tête binaire SRV-R3.2.
 export const MAX_SEND_WIDTH = 848;
 export const JPEG_QUALITY = 0.7;
+export const MSG_AUDIO = 0x01; // PCM16 mono 24 kHz, 80 ms (VOX-R1.2)
 export const MSG_IMAGE = 0x02;
 
 export function imageTargetSize(videoW, videoH, maxW = MAX_SEND_WIDTH) {
@@ -117,7 +118,9 @@ export function imageTargetSize(videoW, videoH, maxW = MAX_SEND_WIDTH) {
 
 // 1 octet de type, 8 octets d’horodatage gros-boutiste, puis les données.
 export function packBinary(kind, tMs, payload) {
-  const bytes = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
+  const bytes = ArrayBuffer.isView(payload)
+    ? new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength)
+    : new Uint8Array(payload); // Int16Array du worklet comprise
   const buf = new Uint8Array(9 + bytes.byteLength);
   buf[0] = kind;
   new DataView(buf.buffer).setBigUint64(1, BigInt(tMs), false);
@@ -166,6 +169,12 @@ export const VALIDATION_PHRASE = "C'est bon.";
 export function pickFrenchVoice(voices) {
   const list = [...(voices || [])];
   return list.find((v) => v.lang === "fr-FR") || list.find((v) => (v.lang || "").startsWith("fr")) || null;
+}
+
+// Statut voix du serveur : texte affiché, ou null si tout va bien (VOX-R3.2).
+export function voiceStatusText(status) {
+  if (status === "on") return null;
+  return VOICE_MESSAGE;
 }
 
 // Un nouveau `say` interrompt la lecture en cours, sauf la validation (APP-R7.2).

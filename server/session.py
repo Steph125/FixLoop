@@ -459,7 +459,7 @@ def build_models(procedures: dict, costs: object, fake: bool = False) -> Models:
     from fixloop.memory import WonderMemory
     from fixloop.perception import LivePerception
     return Models(lambda proc: LivePerception(proc, costs=costs),
-                  SparkAgent(procedures, costs=costs), WonderMemory(), costs)
+                  SparkAgent(procedures, costs=costs), WonderMemory(costs=costs), costs)
 
 
 class _RecordingOutput(QueueOutput):
@@ -498,7 +498,7 @@ class LiveSession:
         self.clock = clock if clock is not None else time.monotonic  # horloge par défaut ; un test peut la remplacer
         self.work = WorkQueue()
         self.counters = {"dropped": 0, "stale": 0, "out_of_order": 0, "bad_message": 0,
-                         "too_big": 0}
+                         "too_big": 0, "audio_dropped": 0}
         self.red_parts: set = set()
         self.sm: object = None
         self.perception: object = None
@@ -518,6 +518,14 @@ class LiveSession:
         self.last_image_at: float | None = None  # SRV-R7.3 : le retard ne compte que si des images arrivent
         self.started_at: float | None = None  # SRV-R8.2 : durée max 10 min
         self.consec_errors = 0  # 3 exceptions de suite -> arrêt (design 05, section 6)
+        self._work_event = None  # file de la machine à états (posée par run())
+        self._out_queue = None  # file d'envoi (posée par run())
+        self.output = None  # sortie vers le client (posée par run())
+        from fixloop.voice import CommandDetector  # pur, sans réseau
+        self.detector = CommandDetector()  # commandes vocales (SRV-T6)
+        self.bridge: object = None  # pont Transcribe, créé au démarrage (SRV-T6)
+        self.audio_pending: list = []  # PCM16 24 kHz en attente d'envoi
+        self.voice_task: object = None  # tâche d'envoi vers Transcribe
 
     def note_worker_ok(self) -> None:
         self.consec_errors = 0
@@ -526,9 +534,9 @@ class LiveSession:
         """Rend True à la 3e exception de suite : il faut arrêter (SRV-T7)."""
         self.consec_errors += 1
         return self.consec_errors >= 3
-        self._work_event: object = None
-        self._out_queue: object = None
-        self.output: object = None
+
+
+
 
     # ---------------------------------------------------------- boucles asyncio
     async def run(self) -> None:
@@ -562,9 +570,11 @@ class LiveSession:
         except Exception:
             pass  # déconnexion client : on nettoie (SRV-R7.4)
         finally:
+            await self._stop_voice()  # endStream + coûts audio (VOX-R4.1), jamais bloquant
             self._write_journal(False, ended="disconnect")  # SRV-R9.1, une seule fois
             for task in (sender, worker, watchdog):
-                task.cancel()
+                if task is not None:
+                    task.cancel()
             self.registry.release(self.session_id)
 
     def _bike_of(self, body: dict) -> str:
@@ -640,6 +650,8 @@ class LiveSession:
         if kind == "start":
             self.started = True
             self.startup = []
+        elif kind == "speaking":
+            self.detector.speaking(bool(parsed["on"]), self.clock())  # VOX-R2.4 : ne pas s'entendre
         elif kind == "user_done":
             self.work.put_control("done")
             self._work_event.set()
@@ -661,10 +673,94 @@ class LiveSession:
             self.counters["too_big"] += 1  # SRV-R3.3 : image ignorée
             return
         if decoded["kind"] != "image":
-            return  # audio : voix (SRV-T6, hors périmètre de SRV-T5)
+            self._on_audio(decoded["payload"], decoded["t_ms"])
+            return
         if self.paused or self.closing or not self.started:
             return
         self._on_image(decoded["payload"], decoded["t_ms"])
+
+    def _on_audio(self, pcm: bytes, t_ms: int) -> None:
+        """Audio binaire 0x01 vers le pont Transcribe (SRV-T6, VOX-R1.1)."""
+        if self.paused or self.closing or not self.started:
+            self.counters["audio_dropped"] += 1
+            return
+        if self.bridge is None or not self.bridge.started:
+            self.counters["audio_dropped"] += 1  # voix coupée : bouton seul (VOX-R3.2)
+            return
+        self.audio_pending.append(bytes(pcm))  # drainées par _voice_run, jamais de file côté appli
+
+    def _on_voice_final(self, transcript: str, t: float) -> None:
+        """Transcription finale -> commande, même file que les mesures (SRV-R5.4)."""
+        cmd = self.detector.feed(transcript, t)
+        if cmd == "done":
+            self.work.put_control("done")
+        elif cmd in ("help", "repeat"):
+            self.work.put_control("command", cmd)
+        else:
+            return
+        event = getattr(self, "_work_event", None)
+        if event is not None:
+            event.set()
+
+    def _make_bridge(self) -> object | None:
+        """Pont Transcribe, ou None (voix coupée : bouton seul, VOX-R3.2)."""
+        import os
+        if os.environ.get("FIXLOOP_FAKE_MODELS") == "1":
+            return None  # rejoué sans réseau (SRV-T10)
+        key = os.environ.get("MODEL_API_KEY")
+        if not key:
+            return None
+        from fixloop.voice import VoiceBridge
+        return VoiceBridge(key, on_final=self._on_voice_final, costs=self.models.costs,
+                           session_id=self.session_id)
+
+    def _send_voice_status(self, status: str, reason: str | None = None) -> None:
+        """Message `voice_status` vers l'appli (design 05, section 3.3)."""
+        msg: dict = {"type": "voice_status", "status": status}
+        if reason is not None:
+            msg["reason"] = reason
+        self._send_now(msg)
+
+    async def _voice_run(self) -> None:
+        """Démarre le pont puis y verse l'audio en continu (SRV-T6)."""
+        import asyncio
+        assert self.bridge is not None
+        try:
+            ok = await self.bridge.start()
+        except Exception:
+            ok = False
+        self._send_voice_status("on" if ok else "error", None if ok else "refused")
+        if not ok:
+            self.bridge = None
+            return
+        try:
+            while not self.closing:
+                if self.audio_pending:
+                    chunk = b"".join(self.audio_pending)
+                    self.audio_pending = []
+                    await self.bridge.push_audio(chunk)
+                await asyncio.sleep(0.08)  # une trame de 80 ms à la fois
+        finally:
+            if self.bridge is not None:  # _stop_voice a pu passer avant
+                await self.bridge.stop()
+                self.bridge = None
+
+    async def _stop_voice(self) -> None:
+        """Coupe la voix : tâche annulée, `endStream` envoyé (VOX-R4.1)."""
+        import asyncio
+        task, self.voice_task = self.voice_task, None
+        if task is not None:
+            task.cancel()
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):
+                pass
+        if self.bridge is not None:
+            try:
+                await self.bridge.stop()
+            except Exception:
+                pass
+            self.bridge = None
 
     def _record(self, func: str, *args: object) -> None:
         """Enregistrement replay : n'interrompt jamais la session (SRV-R9.3)."""
@@ -781,6 +877,7 @@ class LiveSession:
             return
         self.closed_sent = True
         self.closing = True
+        await self._stop_voice()  # voix coupée avant la fermeture (VOX-R4.1)
         self._write_journal(success)
         self._send_now({"type": "closed", "success": success,
                         "summary": summary_for(self.counters)})
@@ -797,6 +894,7 @@ class LiveSession:
             return
         self.closed_sent = True
         self.closing = True
+        await self._stop_voice()  # voix coupée avant la fermeture (VOX-R4.1)
         self._write_journal(False, ended="error")
         if say is not None:
             self._send_now({"type": "say", "text": say})
@@ -843,6 +941,11 @@ class LiveSession:
                     self.perception = self.models.perception_factory(proc0)
                     self.sm = Session(self.procedures, self.models.agent, self.models.memory,
                                       self.output, self.bike_id, debounce_frames=3)
+                    self.bridge = self._make_bridge()
+                    if self.bridge is not None:
+                        self.voice_task = asyncio.get_running_loop().create_task(self._voice_run())
+                    else:
+                        self._send_voice_status("off", "unavailable")  # bouton seul (VOX-R3.2)
                     imgs = [self._decode(jpeg) for jpeg, _ in startup]
                     self._replay_held()
                     if not await self._apply(self.sm.start, imgs):

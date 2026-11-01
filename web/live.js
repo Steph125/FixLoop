@@ -5,6 +5,7 @@ import { isScreen, makeBikeId, isBikeId, codeRequired, cameraConstraints, startM
   packBinary, imageTargetSize, MSG_IMAGE, JPEG_QUALITY,
   partColor, formatMeasure, verdictLabel, stepLabel, staleOverlay, GREEN_MS,
   pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE,
+  voiceStatusText, MSG_AUDIO,
   backoffDelay, screenFor, errorMessage, HISTORY_MESSAGE, CAMERA_MESSAGE } from "./lib.js";
 
 export const app = {
@@ -27,6 +28,8 @@ export const app = {
   lastSay: "",
   speakingText: "",
   pendingSay: null,
+  audioCtx: null,
+  micNode: null,
 };
 
 export function showScreen(name) {
@@ -144,6 +147,7 @@ export function onFramedPressed() {
   sendJson(startMessage());
   app.started = true;
   startCapture();
+  startMic();
   showScreen("session");
 }
 
@@ -186,6 +190,7 @@ export function onServerMessage(msg) {
   if (msg.type === "highlight") onHighlight(msg);
   if (msg.type === "say") onSay(msg.text);
   if (msg.type === "state") onState(msg);
+  if (msg.type === "voice_status") onVoiceStatus(msg);
   const target = screenFor(msg, app.screen);
   if (msg.type === "error") showError(msg.code);
   if (msg.type === "closed") showEnd(msg);
@@ -209,6 +214,7 @@ export function showError(code) {
   if (el) el.textContent = errorMessage(code);
   stopCapture();
   stopStaleTimer();
+  stopMic();
   showScreen("erreur");
 }
 
@@ -219,6 +225,7 @@ export function showEnd(msg) {
   if (summary && msg.summary) summary.textContent = JSON.stringify(msg.summary);
   stopCapture();
   stopStaleTimer();
+  stopMic();
   showScreen("fin");
 }
 
@@ -249,6 +256,10 @@ export function onPausePressed(ev) {
   pressFeedback(ev.currentTarget);
   app.paused = !app.paused;
   sendJson(app.paused ? pauseMessage() : resumeMessage()); // APP-R4.2
+  if (app.audioCtx) { // micro coupé pendant pause (design 06, section 4)
+    if (app.paused) app.audioCtx.suspend();
+    else app.audioCtx.resume();
+  }
   ev.currentTarget.textContent = app.paused ? "Reprendre" : "Pause";
 }
 
@@ -394,6 +405,45 @@ export function speak(text) {
     }
   };
   synth.speak(u);
+}
+
+// Statut voix : indicateur micro, ou repli bouton seul (VOX-T5, APP-R7.4).
+export function onVoiceStatus(msg) {
+  const el = document.getElementById("mic-indicator");
+  if (!el) return;
+  const text = voiceStatusText(msg.status);
+  el.textContent = text === null ? "Micro actif" : text;
+  el.hidden = false;
+}
+
+// Voix en entrée : micro -> PCM16 24 kHz, trames de 80 ms (APP-R7.4).
+export async function startMic() {
+  if (!app.stream || app.micDenied) return false; // APP-R1.4 : boutons seuls
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return false;
+  try {
+    app.audioCtx = new AC();
+    await app.audioCtx.audioWorklet.addModule("audio-worklet.js");
+    const node = new AudioWorkletNode(app.audioCtx, "fixloop-capture");
+    node.port.onmessage = (ev) => {
+      if (!wsOpen() || app.paused || !app.started) return; // pas de file
+      app.ws.send(packBinary(MSG_AUDIO, Date.now(), ev.data));
+    };
+    app.audioCtx.createMediaStreamSource(app.stream).connect(node);
+    app.micNode = node;
+    return true;
+  } catch {
+    stopMic();
+    return false;
+  }
+}
+
+export function stopMic() {
+  if (app.audioCtx) {
+    app.audioCtx.close().catch(() => {});
+    app.audioCtx = null;
+    app.micNode = null;
+  }
 }
 
 function go(name) {
