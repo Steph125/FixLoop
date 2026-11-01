@@ -68,6 +68,19 @@ def test_camera_and_framing():
     assert "startMessage" in live  # APP-R3.2 : C'est cadré envoie start (pur dans lib.js)
 
 
+def test_websocket_and_buttons():
+    live = read("live.js")
+    lib = read("lib.js")
+    for token in ("helloMessage", "userDoneMessage", "commandMessage",
+                  "pauseMessage", "resumeMessage", "stopMessage"):
+        assert token in live, f"{token} manquant"  # APP-T4 : messages câblés
+    for literal in ('"hello"', '"user_done"', '"command"', '"pause"', '"resume"', '"stop"'):
+        assert literal in lib, f"{literal} manquant"  # littéraux purs dans lib.js
+    assert "vibrate" in live  # APP-R4.3 : retour haptique
+    assert "100" in live  # retour visuel en moins de 100 ms
+    assert "backoffDelay" in live  # APP-R9.3 : 3 reconnexions 1 s, 2 s, 4 s
+
+
 def test_no_external_dependency_and_small_size():
     total = 0
     for name in ("index.html", "live.js", "style.css", "lib.js"):

@@ -1,6 +1,6 @@
 // FixLoop : vérifications de lib.js, sans DOM (APP-T10).
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
-import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage,
+import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
 
 const checks = [];
@@ -54,6 +54,35 @@ check("contraintes caméra (APP-R1.2, R1.4)", () => {
   if (full.audio.channelCount !== 1) throw new Error("micro");
   const muted = cameraConstraints(false);
   if (muted.audio !== false) throw new Error("relance sans micro");
+});
+
+check("messages de contrôle (APP-T4)", () => {
+  const hello = helloMessage("b-1234abcd", null, null);
+  if (hello.type !== "hello" || hello.bike_id !== "b-1234abcd") throw new Error("hello");
+  if ("access_code" in hello) throw new Error("code vide");
+  const helloCode = helloMessage("b-1234abcd", "sésame", { ua: "t" });
+  if (helloCode.access_code !== "sésame") throw new Error("code");
+  if (userDoneMessage(11500).t_ms !== 11500) throw new Error("user_done");
+  const cmd = commandMessage("help", 12000);
+  if (cmd.cmd !== "help" || cmd.t_ms !== 12000) throw new Error("command");
+  if (speakingMessage(true, 1).on !== true) throw new Error("speaking");
+  if (pauseMessage().type !== "pause" || resumeMessage().type !== "resume") throw new Error("pause");
+  if (stopMessage().type !== "stop") throw new Error("stop");
+});
+
+check("reconnexions 1 s, 2 s, 4 s (APP-R9.3)", () => {
+  if (backoffDelay(0) !== 1000 || backoffDelay(1) !== 2000) throw new Error("délais");
+  if (backoffDelay(2) !== 4000 || backoffDelay(9) !== 4000) throw new Error("plafond");
+});
+
+check("choix d'écran par message (APP-R8)", () => {
+  if (screenFor({ type: "closed" }, "session") !== "fin") throw new Error("closed");
+  if (screenFor({ type: "error" }, "session") !== "erreur") throw new Error("error");
+  if (screenFor({ type: "highlight", color: "red" }, "session") !== "anomalie") throw new Error("rouge");
+  if (screenFor({ type: "highlight", color: "blue" }, "anomalie") !== "session") throw new Error("bleu");
+  if (screenFor({ type: "state" }, "session") !== null) throw new Error("state");
+  if (screenFor({ type: "say" }, "cadrage") !== "session") throw new Error("say");
+  if (screenFor(null, "session") !== null) throw new Error("invalide");
 });
 
 check("message start (APP-R3.2)", () => {

@@ -14,9 +14,10 @@ Toutes à faire. Jalon (dimanche 1er nov.) : appli sur le téléphone de l'auteu
   micro, écran de cadrage, envoi de `start`.
   Exigences : `APP-R1.2` à `R1.4`, `R2.4`, `R3.1`, `R3.2`.
   Preuve : `tests/test_phone_app.py::test_camera_and_framing`, `node web/selftest.mjs` 9/9.
-- [ ] **APP-T4 — WebSocket et boutons.** `hello`, `user_done`, `command`, `pause`, `stop` ; retour visuel et
+- [x] **APP-T4 — WebSocket et boutons.** `hello`, `user_done`, `command`, `pause`, `stop` ; retour visuel et
   vibration ; reconnexions.
   Exigences : `APP-R4.1` à `R4.3`, `R9.3`, `VOX-R3.1`. Dépend de : `SRV-T4`.
+  Preuve : `tests/test_phone_app.py::test_websocket_and_buttons`, `node web/selftest.mjs` 12/12.
 - [ ] **APP-T5 — Envoi des images.** Capture 1 image/s, réduction 848 px, JPEG 0,7, en-tête binaire, pas de file.
   Exigences : `APP-R2.1` à `R2.3`. Dépend de : `SRV-T3`.
 - [ ] **APP-T6 — Surimpression.** SVG aligné sur la vidéo, couleurs, estompage après 3 s, ligne de mesure.

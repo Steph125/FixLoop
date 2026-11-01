@@ -57,3 +57,50 @@ export function cameraConstraints(withMic) {
 export function startMessage() {
   return { type: "start" };
 }
+
+// Messages de contrôle vers le serveur (design 05, section 3.1).
+export function helloMessage(bikeId, accessCode, client) {
+  const msg = { type: "hello", bike_id: bikeId };
+  if (accessCode) msg.access_code = accessCode;
+  if (client) msg.client = client;
+  return msg;
+}
+
+export function userDoneMessage(tMs) {
+  return { type: "user_done", t_ms: tMs };
+}
+
+export function commandMessage(cmd, tMs) {
+  return { type: "command", cmd, t_ms: tMs };
+}
+
+export function speakingMessage(on, tMs) {
+  return { type: "speaking", on, t_ms: tMs };
+}
+
+export function pauseMessage() {
+  return { type: "pause" };
+}
+
+export function resumeMessage() {
+  return { type: "resume" };
+}
+
+export function stopMessage() {
+  return { type: "stop" };
+}
+
+// Reconnexions : 1 s, 2 s, 4 s puis écran d’erreur (APP-R9.3).
+export function backoffDelay(attempt) {
+  return [1000, 2000, 4000][Math.min(attempt, 2)];
+}
+
+// Choix d’écran par message serveur (APP-R8) : rend l’écran cible ou null (rester).
+export function screenFor(msg, current) {
+  if (!msg || typeof msg.type !== "string") return null;
+  if (msg.type === "closed") return "fin";
+  if (msg.type === "error") return "erreur";
+  if (msg.type === "highlight") return msg.color === "red" ? "anomalie" : "session";
+  if (msg.type === "say" && current === "cadrage") return "session";
+  return null;
+}

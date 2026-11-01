@@ -57,7 +57,7 @@ button {
   color: #fff;
 }
 
-button:active { filter: brightness(1.25); }
+button:active, button.pressed { filter: brightness(1.25); }
 
 #btn-done, #btn-done2 { background: var(--accent); min-width: 60%; }
 

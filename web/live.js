@@ -1,7 +1,8 @@
 // FixLoop : appli téléphone en direct (spec/06-phone-app).
 // Module ES, aucune dépendance (APP-R10.1). La logique pure vit dans lib.js.
 import { isScreen, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage,
-  HISTORY_MESSAGE, CAMERA_MESSAGE } from "./lib.js";
+  helloMessage, userDoneMessage, commandMessage, pauseMessage, resumeMessage, stopMessage,
+  backoffDelay, screenFor, errorMessage, HISTORY_MESSAGE, CAMERA_MESSAGE } from "./lib.js";
 
 export const app = {
   screen: "accueil",
@@ -10,6 +11,7 @@ export const app = {
   micDenied: false,
   bikeId: null,
   sessionId: null,
+  started: false,
   lastOverlayAt: 0,
   speaking: false,
   paused: false,
@@ -121,12 +123,116 @@ export async function onStartPressed() {
     return;
   }
   showScreen("cadrage");
+  connect();
 }
 
 // Écran de cadrage : « C'est cadré » envoie start (APP-R3).
 export function onFramedPressed() {
+  if (!wsOpen()) connect();
   sendJson(startMessage());
+  app.started = true;
   showScreen("session");
+}
+
+// WebSocket et reconnexions (APP-T4, APP-R9.3).
+export function wsUrl() {
+  const proto = location.protocol === "https:" ? "wss:" : "ws:";
+  return `${proto}//${location.host}/ws/session`;
+}
+
+export function connect() {
+  if (app.ws) {
+    try {
+      app.ws.close();
+    } catch {
+      // déjà fermée
+    }
+  }
+  const ws = new WebSocket(wsUrl());
+  app.ws = ws;
+  ws.onopen = () => {
+    const code = document.getElementById("code")?.value || null;
+    sendJson(helloMessage(app.bikeId, code,
+      { ua: navigator.userAgent, w: window.innerWidth, h: window.innerHeight }));
+  };
+  ws.onmessage = (ev) => onServerMessage(JSON.parse(ev.data));
+  ws.onclose = () => onClose();
+}
+
+export function onServerMessage(msg) {
+  if (msg.type === "hello_ack") {
+    app.sessionId = msg.session_id;
+    app.reconnects = 0; // nouvelle session acceptée : compteur remis à zéro
+    return;
+  }
+  const target = screenFor(msg, app.screen);
+  if (msg.type === "error") showError(msg.code);
+  if (msg.type === "closed") showEnd(msg);
+  if (target) showScreen(target);
+}
+
+export function onClose() {
+  app.ws = null;
+  if (app.screen === "fin" || app.screen === "erreur") return; // fermeture voulue
+  if (app.reconnects >= 3) {
+    showError("internal"); // APP-R9.3 : 3 reconnexions ratées, écran d'erreur
+    return;
+  }
+  const delay = backoffDelay(app.reconnects); // 1 s, 2 s, 4 s
+  app.reconnects += 1;
+  setTimeout(connect, delay); // une reconnexion ouvre une nouvelle session
+}
+
+export function showError(code) {
+  const el = document.getElementById("error-text");
+  if (el) el.textContent = errorMessage(code);
+  showScreen("erreur");
+}
+
+export function showEnd(msg) {
+  const title = document.getElementById("end-title");
+  if (title) title.textContent = msg.success ? "Réparation validée" : "Session arrêtée";
+  const summary = document.getElementById("end-summary");
+  if (summary && msg.summary) summary.textContent = JSON.stringify(msg.summary);
+  showScreen("fin");
+}
+
+// Boutons : vibration + retour visuel en moins de 100 ms (APP-R4.3).
+export function pressFeedback(btn) {
+  try {
+    navigator.vibrate?.(30);
+  } catch {
+    // pas de vibration disponible
+  }
+  btn.classList.add("pressed");
+  setTimeout(() => btn.classList.remove("pressed"), 100);
+}
+
+export function onDonePressed(ev) {
+  pressFeedback(ev.currentTarget);
+  sendJson(userDoneMessage(Date.now())); // APP-R4.1, VOX-R3.1 : bouton « C'est fait »
+}
+
+export function onCommandPressed(cmd) {
+  return (ev) => {
+    pressFeedback(ev.currentTarget);
+    sendJson(commandMessage(cmd, Date.now())); // APP-R4.2 : aide, répète
+  };
+}
+
+export function onPausePressed(ev) {
+  pressFeedback(ev.currentTarget);
+  app.paused = !app.paused;
+  sendJson(app.paused ? pauseMessage() : resumeMessage()); // APP-R4.2
+  ev.currentTarget.textContent = app.paused ? "Reprendre" : "Pause";
+}
+
+export function onAgainPressed() {
+  sendJson(stopMessage());
+  app.started = false;
+  app.reconnects = 0;
+  showScreen("accueil");
+  connect();
 }
 
 function go(name) {
@@ -136,7 +242,17 @@ function go(name) {
 if (typeof document !== "undefined") {
   document.getElementById("btn-start")?.addEventListener("click", onStartPressed);
   document.getElementById("btn-framed")?.addEventListener("click", onFramedPressed);
-  document.getElementById("btn-again")?.addEventListener("click", go("accueil"));
+  for (const id of ["btn-done", "btn-done2"]) {
+    document.getElementById(id)?.addEventListener("click", onDonePressed);
+  }
+  document.getElementById("btn-help")?.addEventListener("click", onCommandPressed("help"));
+  document.getElementById("btn-help2")?.addEventListener("click", onCommandPressed("help"));
+  document.getElementById("btn-repeat")?.addEventListener("click", onCommandPressed("repeat"));
+  document.getElementById("btn-repeat2")?.addEventListener("click", onCommandPressed("repeat"));
+  for (const id of ["btn-pause", "btn-pause2"]) {
+    document.getElementById(id)?.addEventListener("click", onPausePressed);
+  }
+  document.getElementById("btn-again")?.addEventListener("click", onAgainPressed);
   document.getElementById("btn-retry")?.addEventListener("click", go("accueil"));
   const kept = loadBikeId().kept;
   showHistoryNote(kept);
