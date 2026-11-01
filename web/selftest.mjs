@@ -1,6 +1,6 @@
 // FixLoop : vérifications de lib.js, sans DOM (APP-T10).
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
-import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY,
+import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
 
 const checks = [];
@@ -107,6 +107,24 @@ check("taille d'image 848 px (APP-R2.2)", () => {
 
 check("message start (APP-R3.2)", () => {
   if (startMessage().type !== "start") throw new Error("start");
+});
+
+check("surimpression : couleurs et mesure (APP-R5)", () => {
+  if (partColor("chain", ["chain"], 0, 1000) !== "red") throw new Error("rouge");
+  if (partColor("chain", [], 2000, 1000) !== "green") throw new Error("vert");
+  if (partColor("chain", [], 500, 1000) !== "blue") throw new Error("bleu");
+  if (formatMeasure(0.09, "en place") !== "contact 0,09 · en place") throw new Error("mesure");
+  if (formatMeasure(NaN, "non vu") !== "non vu") throw new Error("non vu");
+  if (formatMeasure(null, "non vu") !== "non vu") throw new Error("nul");
+  if (verdictLabel("1") !== "validée" || verdictLabel("eps") !== "anomalie") throw new Error("verdict");
+  if (verdictLabel("?") !== "incertain" || verdictLabel("0") !== "en cours") throw new Error("verdict");
+  if (stepLabel({ step: { index: 2, count: 4, instruction: "Pose la chaîne." } }) !== "Étape 2/4 · Pose la chaîne.") {
+    throw new Error("bandeau");
+  }
+  if (stepLabel({}) !== "") throw new Error("sans étape");
+  if (stateAt({ t: 31.5 }) !== 31.5 || stateAt({}) !== 0) throw new Error("instant");
+  if (!staleOverlay(4000, 500) || staleOverlay(2500, 500)) throw new Error("estompage");
+  if (STALE_MS !== 3000 || GREEN_MS !== 1000) throw new Error("constantes");
 });
 
 check("texte caméra exact (APP-R1.3)", () => {

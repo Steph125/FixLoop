@@ -3,6 +3,7 @@
 import { isScreen, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage,
   helloMessage, userDoneMessage, commandMessage, pauseMessage, resumeMessage, stopMessage,
   packBinary, imageTargetSize, MSG_IMAGE, JPEG_QUALITY,
+  partColor, formatMeasure, verdictLabel, stepLabel, staleOverlay, GREEN_MS,
   backoffDelay, screenFor, errorMessage, HISTORY_MESSAGE, CAMERA_MESSAGE } from "./lib.js";
 
 export const app = {
@@ -18,6 +19,11 @@ export const app = {
   paused: false,
   reconnects: 0,
   captureTimer: null,
+  staleTimer: null,
+  redParts: [],
+  greenUntil: 0,
+  stepIndex: 0,
+  lastSay: "",
 };
 
 export function showScreen(name) {
@@ -160,6 +166,7 @@ export function connect() {
   };
   ws.onmessage = (ev) => onServerMessage(JSON.parse(ev.data));
   ws.onclose = () => onClose();
+  startStaleTimer();
 }
 
 export function onServerMessage(msg) {
@@ -168,6 +175,12 @@ export function onServerMessage(msg) {
     app.reconnects = 0; // nouvelle session acceptée : compteur remis à zéro
     return;
   }
+  if (msg.type === "overlay") {
+    drawOverlay(msg);
+    return;
+  }
+  if (msg.type === "highlight") onHighlight(msg);
+  if (msg.type === "state") onState(msg);
   const target = screenFor(msg, app.screen);
   if (msg.type === "error") showError(msg.code);
   if (msg.type === "closed") showEnd(msg);
@@ -190,6 +203,7 @@ export function showError(code) {
   const el = document.getElementById("error-text");
   if (el) el.textContent = errorMessage(code);
   stopCapture();
+  stopStaleTimer();
   showScreen("erreur");
 }
 
@@ -199,6 +213,7 @@ export function showEnd(msg) {
   const summary = document.getElementById("end-summary");
   if (summary && msg.summary) summary.textContent = JSON.stringify(msg.summary);
   stopCapture();
+  stopStaleTimer();
   showScreen("fin");
 }
 
@@ -265,6 +280,57 @@ export function stopCapture() {
   if (app.captureTimer) {
     clearInterval(app.captureTimer);
     app.captureTimer = null;
+  }
+}
+
+// Surimpression : contours SVG mis à l'échelle de l'affichage (APP-R5.1).
+export function drawOverlay(msg) {
+  app.lastOverlayAt = Date.now();
+  const now = Date.now();
+  for (const id of ["overlay", "overlay-anomaly"]) {
+    const svg = document.getElementById(id);
+    if (!svg) continue;
+    svg.setAttribute("viewBox", `0 0 ${msg.w} ${msg.h}`);
+    svg.innerHTML = Object.entries(msg.parts || {})
+      .map(([part, info]) => `<path d="${info.path}" class="part color-${
+        info.color || partColor(part, app.redParts, app.greenUntil, now)}"/>`)
+      .join("");
+    svg.classList.remove("stale");
+  }
+  const measure = document.getElementById("measure"); // APP-R5.4 : preuve visible
+  if (measure) measure.textContent = `${formatMeasure(msg.contact, msg.label)} · ${verdictLabel(msg.verdict)}`;
+}
+
+export function onHighlight(msg) {
+  if (msg.color === "red") app.redParts = [...msg.parts];
+  else app.redParts = app.redParts.filter((part) => !msg.parts.includes(part));
+}
+
+export function onState(msg) {
+  const label = stepLabel(msg);
+  const banner = document.getElementById("step-banner");
+  if (banner && label) banner.textContent = label;
+  const idx = msg.step ? msg.step.index : 0;
+  if (app.stepIndex !== 0 && idx !== app.stepIndex) {
+    app.greenUntil = Date.now() + GREEN_MS; // APP-R5.2 : vert pendant 1 s
+  }
+  app.stepIndex = idx;
+}
+
+export function startStaleTimer() {
+  stopStaleTimer();
+  app.staleTimer = setInterval(() => { // APP-R5.3 : estompe après 3 s
+    const stale = staleOverlay(Date.now(), app.lastOverlayAt);
+    for (const id of ["overlay", "overlay-anomaly"]) {
+      document.getElementById(id)?.classList.toggle("stale", stale);
+    }
+  }, 500);
+}
+
+export function stopStaleTimer() {
+  if (app.staleTimer) {
+    clearInterval(app.staleTimer);
+    app.staleTimer = null;
   }
 }
 

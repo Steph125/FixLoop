@@ -94,6 +94,17 @@ def test_image_sending():
     assert "0x02" in lib or "2," in lib or "(2," in lib  # marqueur image
 
 
+def test_overlay_drawing():
+    live = read("live.js")
+    lib = read("lib.js")
+    assert "drawOverlay" in live  # APP-R5.1 : contours SVG par-dessus la vidéo
+    assert "viewBox" in live
+    assert "3000" in live or "staleOverlay" in live  # APP-R5.3 : estompe après 3 s
+    assert "formatMeasure" in live  # APP-R5.4 : mesure + verdict en petit
+    assert "partColor" in lib  # APP-R5.2 : bleu, rouge, vert
+    assert "stepLabel" in lib  # bandeau d'étape k/K
+
+
 def test_no_external_dependency_and_small_size():
     total = 0
     for name in ("index.html", "live.js", "style.css", "lib.js"):

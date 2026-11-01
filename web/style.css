@@ -81,3 +81,12 @@ input {
 }
 
 a { color: #99d0ff; }
+
+.part {
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+  fill-opacity: 0.15;
+}
+.color-blue { stroke: #1971c2; fill: #1971c2; }
+.color-red { stroke: #e03131; fill: #e03131; }
+.color-green { stroke: #2f9e44; fill: #2f9e44; }

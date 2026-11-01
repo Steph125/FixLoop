@@ -21,8 +21,9 @@ Toutes à faire. Jalon (dimanche 1er nov.) : appli sur le téléphone de l'auteu
 - [x] **APP-T5 — Envoi des images.** Capture 1 image/s, réduction 848 px, JPEG 0,7, en-tête binaire, pas de file.
   Exigences : `APP-R2.1` à `R2.3`. Dépend de : `SRV-T3`.
   Preuve : `tests/test_phone_app.py::test_image_sending`, `node web/selftest.mjs` 14/14.
-- [ ] **APP-T6 — Surimpression.** SVG aligné sur la vidéo, couleurs, estompage après 3 s, ligne de mesure.
+- [x] **APP-T6 — Surimpression.** SVG aligné sur la vidéo, couleurs, estompage après 3 s, ligne de mesure.
   Exigences : `APP-R5.1` à `R5.4`. Dépend de : `SRV-T5`, `PERC-T6`.
+  Preuve : `tests/test_phone_app.py::test_overlay_drawing`, `node web/selftest.mjs` 15/15.
 - [ ] **APP-T7 — Voix en sortie.** `speechSynthesis` fr-FR, sous-titres, interruption, message `speaking`,
   déblocage iOS.
   Exigences : `APP-R7.1` à `R7.3`.

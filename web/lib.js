@@ -124,3 +124,38 @@ export function packBinary(kind, tMs, payload) {
   buf.set(bytes, 9);
   return buf;
 }
+
+// Surimpression : couleurs et libellés (APP-R5). Le téléphone ne recalcule rien (APP-D3).
+export const STALE_MS = 3000; // sans overlay depuis 3 s : contours estompés
+export const GREEN_MS = 1000; // vert pendant 1 s après une validation
+
+export function partColor(part, redParts, greenUntil, now) {
+  if (redParts && redParts.includes(part)) return "red"; // anomalie
+  if (greenUntil && now < greenUntil) return "green"; // validation récente
+  return "blue"; // pièce de l’étape
+}
+
+export function formatMeasure(contact, label) {
+  if (typeof contact !== "number" || !Number.isFinite(contact)) return label;
+  return `contact ${contact.toFixed(2).replace(".", ",")} · ${label}`;
+}
+
+export function verdictLabel(verdict) {
+  return { 1: "validée", 0: "en cours", eps: "anomalie", "?": "incertain" }[verdict] || "en cours";
+}
+
+// Bandeau d’étape : "Étape k/K · consigne" (APP-R8, écran Session).
+export function stepLabel(snapshot) {
+  const step = snapshot && snapshot.step;
+  if (!step) return "";
+  return `Étape ${step.index}/${step.count} · ${step.instruction}`;
+}
+
+// Instant de l’instantané (temps session, en secondes).
+export function stateAt(snapshot) {
+  return (snapshot && snapshot.t) || 0;
+}
+
+export function staleOverlay(nowMs, lastOverlayAt) {
+  return nowMs - lastOverlayAt > STALE_MS;
+}
