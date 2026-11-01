@@ -122,6 +122,7 @@ export function render(t) {
     measure.textContent = `contact ${c} · ${label}`;
   }
   speakUntil(t);
+  moveCursor(t);
   return { frame, state: st };
 }
 
@@ -146,6 +147,154 @@ export function tick() {
   render(video.currentTime);
   if (window.requestVideoFrameCallback) video.requestVideoFrameCallback(tick);
   else window.requestAnimationFrame(tick);
+}
+
+const TIMELINE_LABELS = {
+  diagnose: "Diagnostic",
+  step: "Étape",
+  user_done: "« c'est fait »",
+  command: "Commande",
+  anomaly: "Anomalie",
+  arbitrate: "Arbitrage",
+  validated: "Validée",
+  dynamic_start: "Test de rotation",
+  closed: "Clôture",
+};
+
+// Frise des événements : diagnostic, étapes, « c'est fait », anomalies,
+// arbitrages, validations, clôture — chaque point saute à son instant (RPL-R4.2).
+export function timelineItems(events) {
+  return events
+    .filter((e) => Object.hasOwn(TIMELINE_LABELS, e.event))
+    .map((e) => {
+      let label = TIMELINE_LABELS[e.event];
+      if ((e.event === "step" || e.event === "validated" || e.event === "anomaly") && e.step) {
+        label = `${label} : ${e.step}`;
+      }
+      if (e.event === "command" && e.cmd) label = `${label} : ${e.cmd}`;
+      if (e.event === "closed") label = e.success ? "Clôture : réussie" : "Clôture : arrêtée";
+      return { t: e.t || 0, kind: e.event, label, ref: e };
+    });
+}
+
+const MODEL_NAMES = {
+  "sam-3.1": "SAM 3.1",
+  "muse-spark-1.3": "Muse Spark",
+  "muse-wonder-1.0": "Muse Wonder",
+  "muse-voice-transcribe-1.0": "Muse Voice Transcribe",
+};
+
+function contactLine(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  const label = contactLabel(value);
+  return `contact ${value.toFixed(3).replace(".", ",")} · ${label}`;
+}
+
+// Détail d'un événement : modèle Meta concerné et preuve (RPL-R4.3).
+export function eventDetail(e) {
+  const items = timelineItems([e]);
+  const title = items.length ? items[0].label : String(e.event || "événement");
+  const model = MODEL_NAMES[e.model] || "Mesure FixLoop";
+  const lines = [];
+  if (e.step) lines.push(`Étape : ${e.step}`);
+  if (e.message) lines.push(e.message);
+  const evidence = e.evidence || {};
+  for (const [pair, value] of Object.entries(evidence.contact || {})) {
+    const line = contactLine(value);
+    if (line) lines.push(`${pair} : ${line}`);
+  }
+  if (typeof evidence.confiance === "number") {
+    lines.push(`confiance ${String(evidence.confiance).replace(".", ",")}`);
+  }
+  if (evidence.verdict_brut) lines.push(`réponse brute : ${evidence.verdict_brut}`);
+  if (e.event === "diagnose" && e.procedure) lines.push(`Fiche : ${e.procedure}`);
+  if (e.event === "closed") lines.push(e.success ? "Réparation validée." : "Session arrêtée.");
+  return { title, model, lines };
+}
+
+// Courbe du contact dans le temps, seuils 0,18 / 0,26, curseur (RPL-R4.4).
+export function curveGeometry(frames, width, height, duration, onMax = 0.18, offMin = 0.26) {
+  const maxC = 0.5;
+  const y = (c) => height - Math.min(c, maxC) / maxC * height;
+  const x = (t) => (duration > 0 ? t / duration : 0) * width;
+  const points = frames
+    .filter((f) => typeof f.contact === "number" && Number.isFinite(f.contact))
+    .map((f) => ({ x: x(f.t), y: y(f.contact), t: f.t }));
+  return {
+    points,
+    d: points.map((p, i) => `${i ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
+    onY: y(onMax),
+    offY: y(offMin),
+  };
+}
+
+export function cursorX(t, width, duration) {
+  return (duration > 0 ? t / duration : 0) * width;
+}
+
+export function renderTimeline() {
+  const el = document.getElementById("timeline");
+  if (!el) return;
+  el.innerHTML = "";
+  for (const item of timelineItems(app.events)) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = item.label;
+    b.setAttribute("role", "listitem");
+    b.addEventListener("click", () => {
+      seekTo(item.t);
+      renderDetail(item.ref);
+    });
+    el.appendChild(b);
+  }
+}
+
+export function renderDetail(e) {
+  const el = document.getElementById("event-detail");
+  if (!el) return;
+  const detail = eventDetail(e);
+  el.innerHTML = "";
+  const h = document.createElement("h3");
+  h.textContent = detail.title;
+  el.appendChild(h);
+  const model = document.createElement("p");
+  model.textContent = detail.model;
+  el.appendChild(model);
+  for (const line of detail.lines) {
+    const p = document.createElement("p");
+    p.textContent = line;
+    el.appendChild(p);
+  }
+}
+
+export function renderCurve() {
+  const el = document.getElementById("curve");
+  if (!el || !app.frames.length) return;
+  const width = 300;
+  const height = 80;
+  const duration = Math.max(...app.frames.map((f) => f.t), 0.01);
+  const g = curveGeometry(app.frames, width, height, duration);
+  el.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  el.innerHTML =
+    `<line x1="0" y1="${g.onY}" x2="${width}" y2="${g.onY}" stroke="green"/>` +
+    `<line x1="0" y1="${g.offY}" x2="${width}" y2="${g.offY}" stroke="red"/>` +
+    `<path d="${g.d}" fill="none" stroke="black"/>` +
+    `<line id="cursor" x1="0" y1="0" x2="0" y2="${height}" stroke="black"/>`;
+  app.curve = { width, duration };
+}
+
+export function moveCursor(t) {
+  const cursor = document.getElementById("cursor");
+  if (cursor && app.curve) {
+    const x = cursorX(t, app.curve.width, app.curve.duration);
+    cursor.setAttribute("x1", x);
+    cursor.setAttribute("x2", x);
+  }
+}
+
+export function seekTo(t) {
+  if (app.video) app.video.currentTime = t;
+  render(t);
 }
 
 export function onPlayPressed(ev) {
@@ -192,6 +341,8 @@ export async function selectSession(name) {
     app.video.playbackRate = app.speed;
   }
   app.spokenUntil = -1;
+  renderTimeline();
+  renderCurve();
   render(0);
 }
 

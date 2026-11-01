@@ -149,6 +149,17 @@ def test_replay_player_core():
     assert 'src="http' not in html and "from 'http" not in js  # RPL-R1.4, APP-R10.1
 
 
+def test_replay_timeline_detail_curve():
+    html = read("replay.html")
+    js = read("replay.js")
+    for token in ("timeline", "event-detail", "curve"):
+        assert token in html, f"{token} manquant"  # RPL-R4.2 à R4.4
+    for token in ("timelineItems", "eventDetail", "curveGeometry", "cursorX",
+                  "seekTo", "renderTimeline"):
+        assert token in js, f"{token} manquant"  # RPL-T6 : frise cliquable + courbe
+    assert "0.18" in js and "0.26" in js  # seuils tracés (RPL-R4.4)
+
+
 def test_voice_fallback_status():
     live = read("live.js")
     lib = read("lib.js")

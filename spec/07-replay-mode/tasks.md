@@ -30,9 +30,11 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   Exigences : `RPL-R4.1`, `R4.5`, `R1.3`, `R1.4`.
   Preuve : `tests/test_phone_app.py` (fichiers + câblage synchro/son), `node web/selftest.mjs`
   21/21 (miroir Python de `state_at`, overlay le plus proche, seuils, vitesses).
-- [ ] **RPL-T6 — Frise, détail des événements, courbe.** Événements cliquables, modèle et preuve, réponse brute et
+- [x] **RPL-T6 — Frise, détail des événements, courbe.** Événements cliquables, modèle et preuve, réponse brute et
   confiance, courbe du contact avec seuils et curseur.
   Exigences : `RPL-R4.2` à `R4.4`.
+  Preuve : `tests/test_phone_app.py::test_replay_timeline_detail_curve`, `node web/selftest.mjs`
+  23/23 (`timelineItems`, `eventDetail` avec modèle et preuve, `curveGeometry` + seuils 0,18/0,26).
 - [ ] **RPL-T7 — Honnêteté et liens.** Bandeau permanent, mode de calcul, mention de l'historique de démo, liens.
   Exigences : `RPL-R5.1` à `R5.3`, `R7.2`.
 - [ ] **RPL-T8 — Session enregistrée en direct (Should).** Une session réelle avec `FIXLOOP_RECORD=1`, construite

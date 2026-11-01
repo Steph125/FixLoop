@@ -626,3 +626,12 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   Preuve : `tests/test_phone_app.py` 27 passed avec `test_replay.py`, `node web/selftest.mjs` 21/21.
   Fichiers : `web/replay.html`, `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
   `replay/build_replay.py` (étapes dans `meta.json`), `spec/07-replay-mode/tasks.md`.
+
+- RPL-T6 (frise, détail, courbe, [x]) : `timelineItems` (7 sortes, libellés français, clic → `seekTo`),
+  `eventDetail` (nom du modèle Meta, contact avec preuve, confiance, réponse brute), `curveGeometry`
+  (tracé + seuils 0,18/0,26 + `cursorX`), `renderTimeline` / `renderDetail` / `renderCurve` câblés.
+  Tests d'abord (échec authentique : exports absents), 1 essai raté sur du JS (`in` capte le
+  prototype) — `Object.hasOwn`, vert.
+  Preuve : `node web/selftest.mjs` 23/23, `tests/test_phone_app.py` ciblé vert.
+  Fichiers : `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
+  `spec/07-replay-mode/tasks.md`.

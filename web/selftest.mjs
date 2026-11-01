@@ -2,7 +2,7 @@
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
 import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
-import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner } from "./replay.js";
+import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX } from "./replay.js";
 
 const checks = [];
 
@@ -229,6 +229,35 @@ check("replay : validation et vitesses (RPL-T5)", () => {
   const meta = { steps: [{ id: "a", instruction: "Cadre." }, { id: "b", instruction: "Pose." }] };
   if (stepBanner(meta, "b") !== "Étape 2/2 · Pose.") throw new Error("bandeau");
   if (stepBanner(meta, "z") !== "") throw new Error("inconnu");
+});
+
+check("replay : frise et détail (RPL-T6)", () => {
+  const events = [
+    { t: 0, event: "diagnose", procedure: "chain_off_chainring", model: "muse-spark-1.3" },
+    { t: 1, event: "user_done" },
+    { t: 2, event: "anomaly", step: "engage_top_teeth", message: "Tu poses mal.",
+      source: "rule", evidence: { contact: { "chain/chainring": 0.344 } }, model: "sam-3.1" },
+    { t: 3, event: "validated", step: "engage_top_teeth", model: "sam-3.1" },
+    { t: 4, event: "say", text: "C'est bon." },
+  ];
+  const items = timelineItems(events);
+  if (items.length !== 4) throw new Error(`frise : ${items.length}`);
+  if (!items[0].label.includes("Diagnostic")) throw new Error("diagnostic");
+  if (!items[1].label.includes("c'est fait")) throw new Error("done");
+  const detail = eventDetail(events[2]);
+  if (detail.model !== "SAM 3.1") throw new Error("modèle");
+  if (!detail.lines.some((l) => l.includes("0,344"))) throw new Error("preuve");
+  const closed = eventDetail({ t: 5, event: "closed", success: true });
+  if (!closed.title.includes("Clôture")) throw new Error("clôture");
+});
+
+check("replay : courbe du contact (RPL-T6)", () => {
+  const frames = [{ t: 0, contact: 0.34 }, { t: 1, contact: 0.09 }, { t: 2, contact: null }];
+  const g = curveGeometry(frames, 300, 80, 2);
+  if (g.points.length !== 2) throw new Error("points");
+  if (!(g.onY > g.offY)) throw new Error("seuils"); // 0,18 en bas, 0,26 en haut
+  if (cursorX(1, 300, 2) !== 150) throw new Error("curseur");
+  if (g.d === "") throw new Error("tracé");
 });
 
 export async function runAll() {
