@@ -19,6 +19,11 @@ fichiers en CRLF comme le reste du dépôt ; VOX en PCM16 24 kHz / 80 ms
   Fichiers : web/*, tests/test_phone_app.py, spec/06-phone-app/tasks.md.
   Commits : feat(web) + case cochée (2 commits, ordre inversé par mégarde, noté ici).
 
+- APP-T2 (identité et code) : `makeBikeId`/`isBikeId`/`codeRequired` dans `lib.js`, `loadBikeId` (try/catch, repli session + mention) et `checkHealth` dans `live.js`.
+  Passé au 1er essai après échec authentique avant le code.
+  Preuve : `test_bike_id_and_access_code`, `node web/selftest.mjs` 7/7, `check_spec.py` OK.
+  Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
+
 ## 2026-10-31 (sans interaction, choix prudent noté sans question)
 
 - PERC-T8 (suivi) : le test d'équivalence passait seul mais échouait dans la suite
