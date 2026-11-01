@@ -37,11 +37,12 @@ traduit le règlement et la grille (`steering/product.md` sections 7 et 8) en cr
 
 ## SUB-R4 — Dépôt public et propre (Must)
 
-1. Le dépôt `Steph125/FixLoop` DOIT passer en public le 4 nov., avant l'envoi du formulaire.
-2. Avant le passage en public, l'historique git complet DOIT être vérifié : aucun `.env`, aucune clé (recherche de
-   la valeur de la clé et des motifs de clé), aucune vidéo brute, aucun `data/`, `probe_out*/`, `latency_out/`.
-3. SI une clé apparaît dans l'historique, ALORS elle DOIT être révoquée sur la console Meta avant le passage en
-   public, et l'historique nettoyé.
+1. Le dépôt `Steph125/FixLoop` DOIT être public à l'envoi du formulaire (il l'est depuis le 31 oct.).
+2. Comme le dépôt est déjà public, l'historique git complet DOIT être vérifié dès maintenant puis avant chaque
+   push : aucun `.env`, aucune clé (recherche de la valeur de la clé et des motifs de clé), aucune vidéo brute,
+   aucun `data/`, `probe_out*/`, `latency_out/`.
+3. SI une clé apparaît dans l'historique, ALORS elle DOIT être révoquée immédiatement sur la console Meta (elle est
+   déjà exposée), remplacée dans `.env`, et l'historique nettoyé.
 4. `python -m pytest -q tests` DOIT passer sur un clone neuf, en suivant le README (installation testée de zéro).
 
 ## SUB-R5 — Travail nouveau, identifiable (Must)

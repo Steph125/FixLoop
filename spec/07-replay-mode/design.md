@@ -10,7 +10,7 @@ replay/sessions/A.json  ──►  build_replay.py
   (vidéo, instants « c'est fait », images de diagnostic,
    bike_id de démo, source: video | recording)
         │
-        ├─ source video : perception.segment_video (cache raw_*.txt, 3 pièces, 10 fps)
+        ├─ source video : perception.segment_video (cache raw_*.txt, pièces de live_parts, 10 fps)
         ├─ source recording : data/recordings/<id>/ (images 1 fps + sorties SAM brutes)
         │
         ├─ pour chaque image : FrameMasks → geometry.measure → Session.on_measures (même code que le direct)
@@ -101,8 +101,8 @@ recalculée depuis les événements `highlight`.
 
 | Moment | Hébergement | Raison |
 |---|---|---|
-| Jusqu'au 4 nov. (dépôt privé) | Hébergement statique avec téléversement direct d'un dossier (Cloudflare Pages ou Netlify) | GitHub Pages n'est pas disponible sur un dépôt privé avec un compte gratuit |
-| Après passage en public | Même URL conservée (c'est celle de la soumission) ; GitHub Pages possible en miroir | Ne pas changer le lien donné au jury |
+| Dès le 2 nov. | GitHub Pages depuis le dépôt (public depuis le 31 oct.), dossier publié par une action ou une branche `gh-pages` contenant uniquement les fichiers de la liste ci-dessous | Gratuit, même compte, URL stable |
+| Repli | Cloudflare Pages ou Netlify (téléversement direct du même dossier) | Si GitHub Pages pose problème |
 
 Contenu déployé : `web/replay.html`, `web/replay.js`, `web/style.css`, `replay/build/**`. Script
 `replay/deploy_check.py` : liste les fichiers, vérifie l'absence de `.env`, `.jsonl`, `MODEL_API_KEY`, la taille
@@ -121,8 +121,8 @@ par session (`RPL-R7.1`).
 - **RPL-D1 (30 oct.)** — Replay = vraie exécution du code sur une vraie vidéo, réponses des modèles en cache.
   Raison : le règlement demande de ne montrer que ce qui a été construit ; un replay « scripté à la main » serait
   une démo truquée.
-- **RPL-D2 (30 oct.)** — Hébergement statique hors GitHub tant que le dépôt est privé ; l'URL ne change plus après
-  la soumission.
+- **RPL-D2 (30 oct., révisé le 1er nov.)** — Dépôt public depuis le 31 oct. : GitHub Pages, avec seulement les
+  fichiers du replay publiés ; l'URL ne change plus après la soumission.
 - **RPL-D3 (30 oct.)** — Mode vidéo (10 fps, anti-rebond 4) pour les sessions tournées exprès ; mode
   « enregistrement » (1 fps, anti-rebond 3) pour une session du direct. Le mode est affiché (`RPL-R5.2`).
 - **RPL-D4 (30 oct.)** — Contours à 5 images/s pour tenir le poids de 2 Mo.

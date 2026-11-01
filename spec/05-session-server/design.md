@@ -67,9 +67,9 @@ File de la machine à états : `sm_queue` d'éléments `("measure", m, kf)`, `("
 ### 3.2 Client → serveur (binaire)
 
 ```
-octet 0     : 0x01 audio PCM16 mono 16 kHz | 0x02 image JPEG
+octet 0     : 0x01 audio PCM16 LE mono 24 kHz | 0x02 image JPEG
 octets 1–8  : horodatage client, ms, uint64 gros-boutiste
-octets 9–   : données (JPEG ≤ 200 ko ; audio 100 ms = 3 200 octets)
+octets 9–   : données (JPEG ≤ 200 ko ; audio 80 ms = 3 840 octets)
 ```
 
 ### 3.3 Serveur → client (JSON)

@@ -15,7 +15,8 @@ Clé : variable `MODEL_API_KEY`, lue depuis `.env`.
 
 La synthèse vocale (sortie) utilise la Web Speech API du navigateur (`speechSynthesis`, voix `fr-FR`).
 
-Muse Glimmer et Muse Spark Open (poids ouverts) : hors périmètre « Must » (`product.md`, section 6).
+Muse Glimmer, Muse Spark Open (poids ouverts) et Muse Image 1.0 (génération d'images, 0,01 $ / image) : hors
+périmètre « Must » (`product.md`, section 6).
 
 ## 2. Mesures de référence (vélo de l'auteur)
 
@@ -32,15 +33,17 @@ Muse Glimmer et Muse Spark Open (poids ouverts) : hors périmètre « Must » (`
 
 ## 3. Tarifs et budget
 
-Tarifs relevés pendant la recherche du 25 oct. : **à vérifier sur la page Pricing avant toute décision**.
+Tarifs **confirmés le 1er nov.** sur la page Models de la console Meta (capture de l'auteur), par million de jetons
+sauf mention contraire.
 
-| Poste | Tarif relevé | Estimation pour FixLoop |
+| Poste | Tarif | Estimation pour FixLoop |
 |---|---|---|
 | SAM 3.1, image | 2,50 $ / 1 000 images | direct : 1 image/s × 2 pièces = 360 images pour 3 min ≈ 0,90 $ par session (à mesurer) ; 3 pièces : 1,35 $, d'où `PERC-R1.9` |
-| SAM 3.1, vidéo | 0,20 $ / 1 000 images, minimum 50 par requête | 20 extraits de 10 s × 3 pièces ≈ 6 000 images ≈ 1,2 $ |
-| Muse Spark 1.3 (Standard) | 1,25 $ / 4,25 $ par million de jetons (entrée / sortie) | quelques centimes par appel avec images |
-| Muse Wonder | 4 $ / 20 $ par million de jetons | 2 appels par session |
-| Muse Voice Transcribe | 0,18 $ / heure (relevé par l'auteur, à vérifier) | négligeable |
+| SAM 3.1, vidéo | 0,20 $ / 1 000 images, minimum 50 par requête | 20 extraits de 15 s × 2 pièces ≈ 6 000 images ≈ 1,2 $ |
+| Muse Spark 1.3 (Standard) | 1,25 $ entrée, 0,15 $ entrée en cache, 4,25 $ sortie | quelques centimes par appel avec images |
+| Muse Spark 1.3 Contributor | 0,10 $ entrée, 0,002 $ en cache, 0,20 $ sortie ; entrées et sorties utilisées pour entraîner les modèles de Meta, limité en débit, « disponible dans certains pays » | option pour le benchmark seulement (`EVAL-D5`), si disponible en France |
+| Muse Wonder | 4 $ entrée, 0,20 $ en cache, 20 $ sortie | 2 appels par session ; à mesurer (`MEM-T3`) |
+| Muse Voice Transcribe | 0,18 $ / heure d'audio traité, arrondi à la seconde inférieure ; non facturé si échec avant transcription | 10 min de session ≈ 0,03 $ |
 
 Répartition des 150 $ : développement et essais 50 $, benchmark 30 $, démos et répétitions 40 $, réserve 30 $.
 Avec les crédits gratuits, les contenus envoyés peuvent servir à l'amélioration des produits Meta (page Billing) :

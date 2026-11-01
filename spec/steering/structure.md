@@ -29,7 +29,7 @@ fixloop/
 │   └── protocol.py            # messages WebSocket (validation)
 ├── web/                       # 06-phone-app et 07-replay-mode (statique)
 │   ├── index.html, live.js    # appli en direct
-│   ├── audio-worklet.js       # micro → PCM16 16 kHz
+│   ├── audio-worklet.js       # micro → PCM16 24 kHz
 │   ├── replay.html, replay.js # lecteur de replay
 │   ├── selftest.html          # auto-tests dans le navigateur
 │   └── style.css

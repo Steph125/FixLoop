@@ -59,7 +59,7 @@ Langue : anglais pour le README (jury international), français pour la spec et 
 | 5 | Tableau Meta models conforme au code (`grep -r "muse-\|sam-3.1" fixloop server`) | SUB-R3.1, R3.4 |
 | 6 | Recherche de secrets sur tout l'historique : 0 résultat | SUB-R4.2 |
 | 7 | Clone neuf : installation selon le README et tests verts | SUB-R4.4 |
-| 8 | Dépôt public, accessible sans connexion | SUB-R4.1 |
+| 8 | Dépôt public, accessible sans connexion (déjà vrai depuis le 31 oct.) | SUB-R4.1 |
 | 9 | « Built during the hackathon » complet, un commit par jour | SUB-R5 |
 | 10 | `LICENSE`, `NOTICE.md` complets | SUB-R6.1 |
 | 11 | Tous les chiffres du README sourcés | SUB-R8.3 |

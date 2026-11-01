@@ -157,8 +157,10 @@ en médiane, au-dessus de la limite de 4 ko (`PERC-R6.2`).
 - **PERC-D4 (29 oct.)** — `select: largest` pour le plateau : le prompt `chainring` renvoie aussi les pignons
   arrière (`eval/day1`).
 - **PERC-D5 (29 oct., précisé le 30)** — Le dérailleur n'est pas utilisé par la fiche : son prompt attrape la
-  manivelle et le plateau. Il reste dans `parts` (segmenté en replay pour la surimpression) mais n'est pas
-  demandé en direct (`PERC-R1.9`) : `live_parts(procedure)` = pièces citées par une règle.
+  manivelle et le plateau. Il reste dans `parts` mais n'est segmenté **ni en direct ni en vidéo** (révisé le
+  1er nov., `PERC-R3.3`) : `live_parts(procedure)` = pièces citées par une règle. Raison : chaque requête vidéo
+  est facturée au moins 50 images ; on économise un tiers du coût SAM du replay et du benchmark. Le paramètre
+  `parts=` de `segment_video` permet de l'ajouter pour une démonstration.
 - **PERC-D6 (30 oct.)** — Contours SVG par `mask_to_svg_path` (OpenCV simplifié), pas par
   `decode_mask_to_svg_path`. Mesuré sur 20 masques enregistrés (`probe_out2/raw_chain_00.txt`,
   `raw_chainring_00.txt`) : 303 octets en médiane (max 410) contre 9 344 (max 12 316) pour le décodeur

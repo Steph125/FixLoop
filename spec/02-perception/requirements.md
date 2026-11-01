@@ -46,7 +46,8 @@ fiable malgré les coupures réseau, sans payer deux fois la même chose.
 2. Le système DOIT découper la vidéo en morceaux de 10 s (`plan_chunks`), fusionner un dernier morceau de moins
    de 50 images au précédent, et extraire chaque morceau à l'image près.
 3. Le système DOIT téléverser chaque morceau par la Files API (`purpose="user_data"`) et lancer une requête
-   `input_video` par pièce et par morceau.
+   `input_video` par morceau et par pièce citée par une règle de la fiche (`live_parts`, comme `PERC-R1.9`) ;
+   OÙ l'appelant passe `parts=[…]`, le système DOIT segmenter ces pièces à la place.
 4. Le système DOIT recoller les sorties des morceaux en décalant les numéros d'image (`<Nf>`) de l'indice de début
    du morceau, et produire un `FrameMasks` par image de la vidéo entière.
 5. Le système DOIT enregistrer la sortie brute de chaque morceau (`raw_<pièce>_NN.txt`) avec une clé d'empreinte

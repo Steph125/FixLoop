@@ -51,9 +51,12 @@ l'écran.
 1. PENDANT QU'une session est active et que le micro est autorisé, le système DOIT transmettre l'audio du
    téléphone à `muse-voice-transcribe-1.0` par WebSocket (`wss://api.meta.ai/v1/asr/realtime`), **via le serveur**
    (la clé ne va jamais au navigateur).
-2. Le format audio DOIT être celui exigé par la doc de Transcribe, vérifié par une sonde (`VOX-T1`) ; défaut
-   prévu : PCM 16 bits, mono, 16 kHz, morceaux de 100 ms.
-3. Le système DOIT utiliser les transcriptions finales (pas les partielles) pour détecter les commandes.
+2. Le format audio DOIT être PCM 16 bits signé petit-boutiste, mono, 24 kHz (`PCM_24KHZ`, fréquence native de
+   Transcribe), en trames de 80 ms (1 920 échantillons, 3 840 octets), envoyées à peu près en temps réel et jamais
+   plus de 5 s en avance (doc Meta « Speech to text », lue le 1er nov.).
+3. La session Transcribe DOIT être ouverte en mode `ENDPOINTING` (conseillé par la doc pour les commandes vocales),
+   avec `languageBias: ["French"]` et les formes de commande en `keywords` ; le système DOIT détecter les
+   commandes sur les événements `speechComplete` (un par tour de parole), pas sur les transcriptions partielles.
 4. Le délai entre la fin de la phrase et la commande reçue par la session DOIT être ≤ 2 s (cible).
 
 ## VOX-R2 — Détection des commandes (Must pour l'interface, Should pour la voix)
@@ -83,6 +86,7 @@ l'écran.
 
 ## VOX-R4 — Coût et durée (Must)
 
-1. Le système DOIT couper le flux audio à la clôture de la session, après 10 min de session ou sur
-   « Pause » de l'appli.
+1. Le système DOIT couper le flux audio (`endStream`) à la clôture de la session, après 10 min de session ou sur
+   « Pause » de l'appli, et rouvrir une session Transcribe à la reprise (le serveur Transcribe ferme un flux qui
+   n'envoie plus d'audio).
 2. La durée audio transmise DOIT être journalisée dans les coûts (`SRV-R8`).

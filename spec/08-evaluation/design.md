@@ -118,3 +118,6 @@ en plus des couleurs, étiquettes de valeur sur les barres, SVG généré en Pyt
 - **EVAL-D3 (30 oct.)** — Réglage « direct simulé » en plus du replay : le direct est ce que le jury verra dans la
   vidéo, il doit être mesuré.
 - **EVAL-D4 (30 oct.)** — Pas d'objectif chiffré publié avant la mesure, sauf la cible de 0 fausse validation.
+- **EVAL-D5 (1er nov.)** — Les appels de Spark seul peuvent passer par `muse-spark-1.3-contributor` (même modèle,
+  environ 12 fois moins cher en entrée) si l'offre est disponible en France ; le rapport dit lequel a été utilisé.
+  Les images envoyées ne montrent que la transmission (déjà la règle, `steering/tech.md` section 3).

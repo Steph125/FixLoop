@@ -63,7 +63,7 @@ Navigateurs visés : Chrome Android récent (principal, téléphone de l'auteur)
    1,0) et l'afficher en sous-titre jusqu'au message suivant.
 2. Un nouveau `say` DOIT interrompre la lecture en cours (`cancel()`), sauf le message de validation « C'est bon. ».
 3. L'appli DOIT envoyer `speaking` au début et à la fin de chaque lecture (`VOX-R2.4`).
-4. OÙ le micro est autorisé, l'appli DOIT envoyer l'audio en PCM16 mono 16 kHz par morceaux de 100 ms
+4. OÙ le micro est autorisé, l'appli DOIT envoyer l'audio en PCM16 mono 24 kHz par trames de 80 ms
    (`VOX-R1.2`) ; un indicateur DOIT montrer que le micro est actif.
 
 ## APP-R8 — Écrans (Must)

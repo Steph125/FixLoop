@@ -58,16 +58,36 @@ README et la vidéo le signalent.
 ### 2.1 Chaîne audio
 
 ```
-téléphone : getUserMedia(audio) → AudioWorklet (rééchantillonnage 16 kHz, PCM16 mono, 100 ms)
+téléphone : getUserMedia(audio) → AudioWorklet (rééchantillonnage 24 kHz, PCM16 LE mono, trames de 80 ms)
          → WebSocket FixLoop, message binaire préfixé 0x01 (05-session-server)
 serveur  : VoiceBridge ── WebSocket ──► wss://api.meta.ai/v1/asr/realtime (clé côté serveur)
-         ◄── événements de transcription (partielle / finale)
-         → CommandDetector → Session.on_user_done() / on_command("help" | "repeat")
+         ◄── speechStart / transcript / speechEnd / speechComplete / error
+         → CommandDetector (sur speechComplete) → Session.on_user_done() / on_command("help" | "repeat")
 ```
 
-Le format exact des messages Transcribe (événement de configuration, encodage de l'audio, noms des événements de
-transcription finale) **n'est pas encore vérifié** : `VOX-T1` lit la doc et écrit une sonde ; `design.md` est mis
-à jour avec les noms réels avant `VOX-T3`.
+Protocole (doc Meta « Speech to text », lue le 1er nov. ; sonde `probe/transcribe_probe.py`, `VOX-T1`) :
+
+1. Ouverture de `wss://api.meta.ai/v1/asr/realtime` ; l'en-tête HTTP `Authorization` est **ignoré** sur la
+   WebSocket : la clé va dans la première trame texte, envoyée dans les 10 s :
+
+   ```json
+   {"authorization": {"accessToken": "Bearer <clé>"}, "model": "muse-voice-transcribe-1.0",
+    "audioEncoding": "PCM_24KHZ", "mode": "ENDPOINTING", "partialMode": "CUMULATIVE",
+    "emitAudioProgress": false, "languageBias": ["French"],
+    "keywords": ["c'est fait", "aide-moi", "répète", "plateau", "chaîne"]}
+   ```
+
+2. Accusé de réception sans champ `type` : `{"sessionId": "…"}`. Aucun audio avant.
+3. Audio : trames binaires PCM16 LE mono 24 kHz, 80 ms (3 840 octets), au rythme réel, jamais plus de 5 s en avance.
+4. Événements serveur (JSON, champ `type`) : `speechStart` (`turnId`), `transcript` (`transcript`, `final`),
+   `speechEnd` (`turnId`), `speechComplete` (`turnId`, `transcript`) — **c'est celui qu'on utilise**, `audioProgress`,
+   `error` (`message`). Types inconnus ignorés.
+5. Fin : `{"type": "endStream"}`, puis lecture jusqu'à la fermeture (code 1000). Refus de charge : code 1013.
+6. Limites : session de 60 min au plus ; flux fermé par le serveur s'il ne reçoit plus d'audio sans `endStream`.
+
+La sonde mesure aussi le délai `speechComplete` − fin de la phrase, et passe chaque transcription au
+`CommandDetector`. Repli de test sans WebSocket : `POST https://api.meta.ai/v1/asr/transcribe` (fichier WAV,
+en-tête `Authorization` classique, même tarif).
 
 ### 2.2 `fixloop/voice.py`
 
@@ -87,7 +107,7 @@ class CommandDetector:
 
 class VoiceBridge:                    # une instance par session
     async def start(self) -> None
-    async def push_audio(self, pcm16: bytes) -> None
+    async def push_audio(self, pcm16_24k: bytes) -> None   # trames de 80 ms
     async def stop(self) -> None
     on_final: Callable[[str, float], None]
     seconds_sent: float; failures: int
@@ -133,5 +153,7 @@ ne correspond pas à « c est fait ». Le silence pendant la synthèse protège 
 - **VOX-D1 (30 oct.)** — Audio relayé par le serveur : la clé API ne quitte jamais le serveur (`steering/tech.md`
   section 6).
 - **VOX-D2 (30 oct.)** — Bouton « C'est fait » toujours visible : la voix est un confort, pas une dépendance.
+- **VOX-D4 (1er nov.)** — Mode `ENDPOINTING` et 24 kHz, d'après la doc : `PUSH_TO_TALK` exigerait un bouton,
+  `DIARIZATION` n'est pas réglé pour la faible latence ; 24 kHz évite un rééchantillonnage côté Meta.
 - **VOX-D3 (30 oct.)** — Synthèse vocale par le navigateur (`speechSynthesis`) : Transcribe ne fait que la
   reconnaissance (`steering/tech.md`).

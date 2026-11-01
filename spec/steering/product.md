@@ -78,7 +78,7 @@ Source : guide participant officiel (Cerebral Valley), règlement relayé par Ma
 | Règle | Conséquence pour FixLoop | Exigences |
 |---|---|---|
 | Le projet doit intégrer les modèles Meta (étape 1 du jugement, éliminatoire) | SAM 3.1, Muse Spark 1.3, Muse Wonder, Muse Voice Transcribe via la Meta Model API ; Muse Code pour coder | `SUB-R3` |
-| Dépôt **public** au rendu | Privé jusqu'au 4 nov., public avant la soumission | `SUB-R4` |
+| Dépôt **public** au rendu | Public depuis le 31 oct. (choix de l'auteur) : contrôle des secrets à chaque push | `SUB-R4` |
 | **Travail nouveau** uniquement, identifiable | Historique git depuis le 27 oct., tableau « Built during the hackathon » | `SUB-R5` |
 | La démo ne montre **que** ce qui a été construit pendant l'événement | Vidéo sans contenu préexistant ; sources citées | `SUB-R2` |
 | Droits sur tout code, donnée, asset | Vidéos filmées par l'auteur, fiches écrites à la main, licences dans `NOTICE.md`, musique libre | `SUB-R6` |
@@ -119,7 +119,7 @@ profondeur technique et exécution 20 %. Piste Indie : « créativité, ambition
 | Dim 1 | `06-phone-app` ; tournage des 20 extraits (`08-evaluation`) | appli sur téléphone en direct |
 | Lun 2 | `07-replay-mode` déployé ; benchmark exécuté | **démo complète** (replay public + direct) |
 | Mar 3 | README, chiffres, vidéo 3 min | gel des fonctionnalités à midi |
-| Mer 4 | Dépôt public, vérification, soumission l'après-midi | soumis avant 21 h ET |
+| Mer 4 | Vérification finale, soumission l'après-midi | soumis avant 21 h ET |
 
 Ordre de coupe en cas de retard : (1) Glimmer (déjà Could), (2) direct accessible au jury, (3) Wonder réduit à un
 historique JSON relu par Spark, (4) commande vocale réduite au bouton « C'est fait ». Jamais coupés : vérification

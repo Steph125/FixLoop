@@ -7,7 +7,7 @@ Couvre `APP-R1` à `APP-R10`. Fichiers : `web/index.html`, `web/live.js`, `web/a
 ```
 index.html        un seul document, 6 <section data-screen="…">, une seule visible à la fois
 live.js           module ES : état de l'appli, caméra, WebSocket, surimpression, voix, boutons
-audio-worklet.js  AudioWorkletProcessor : rééchantillonnage vers 16 kHz, PCM16, blocs de 1 600 échantillons
+audio-worklet.js  AudioWorkletProcessor : rééchantillonnage vers 24 kHz, PCM16, blocs de 1 920 échantillons
 style.css         variables de couleur, mise en page portrait, boutons
 ```
 
@@ -61,7 +61,7 @@ Si le micro est refusé, `getUserMedia` est relancé avec `audio: false` (`APP-R
   `u.onstart` / `u.onend` → `send({type: "speaking", on, t_ms})`. Le premier `speak("")` est fait dans le geste
   « Commencer » (déblocage iOS).
 - Entrée : `AudioContext` (fréquence native), `audioWorklet.addModule("audio-worklet.js")`, nœud qui poste des
-  `Int16Array` de 1 600 échantillons (100 ms à 16 kHz) ; envoi `packBinary(0x01, Date.now(), pcm)`.
+  `Int16Array` de 1 920 échantillons (80 ms à 24 kHz) ; envoi `packBinary(0x01, Date.now(), pcm)`.
   Rééchantillonnage linéaire dans le worklet. Micro coupé pendant `pause`.
 
 ## 5. Écrans et transitions
