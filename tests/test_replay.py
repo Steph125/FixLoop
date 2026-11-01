@@ -138,6 +138,24 @@ def test_nearest_overlay_picks_closest_frame():
     assert nearest_overlay(overlays, 9.0) == {"t": 0.4}
 
 
+def test_deploy_check_accepts_staged_synthetic_site(tmp_path):
+    import shutil
+    import deploy_check
+    from build_replay import build
+    site = tmp_path / "public"
+    (site / "build").mkdir(parents=True)
+    root = Path(__file__).resolve().parent.parent
+    for name in ("replay.html", "replay.js", "style.css", "lib.js"):
+        shutil.copy(root / "web" / name, site / name)
+    build(synthetic_session(), site / "build", bikes_root=tmp_path / "bikes-site")
+    assert deploy_check.check_build(site) == []  # RPL-T9 : prêt à publier
+
+
+def test_deploy_check_refuses_empty_site(tmp_path):
+    import deploy_check
+    assert deploy_check.check_build(tmp_path / "vide") != []
+
+
 def test_video_source_needs_real_models():
     from build_replay import build
     import pytest

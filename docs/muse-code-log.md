@@ -651,3 +651,11 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   Preuve : `node web/selftest.mjs` 25/25, `tests/test_phone_app.py` ciblé vert.
   Fichiers : `web/replay.html`, `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
   `spec/07-replay-mode/tasks.md`.
+
+- Déploiement préparé, non exécuté (RPL-T9 reste [ ]) : `replay/deploy_check.py` (`check_build` :
+  4 fichiers autorisés, aucun appel externe, sessions complètes, vidéo lisible, overlays < 2 Mo)
+  + `.github/workflows/pages.yml` (`workflow_dispatch` seul, assemble les 5 chemins autorisés,
+  vérifie, publie). Tests d'abord (échec authentique : module absent), vert du 1er coup.
+  RPL-T9 non coché : déploiement + vérification téléphone/4G/navigateurs pour l'auteur.
+  Preuve : `tests/test_replay.py` (site synthétique accepté, site vide refusé).
+  Fichiers : `replay/deploy_check.py`, `.github/workflows/pages.yml`, `tests/test_replay.py`.

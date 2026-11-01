@@ -1,0 +1,42 @@
+name: replay
+
+# Déploiement du lecteur sur GitHub Pages (RPL-T9). Déclenché à la main
+# uniquement (workflow_dispatch) ; jamais par cette série (consigne : ne pas
+# déclencher de workflow). Publie uniquement web/replay.html, web/replay.js,
+# web/style.css, web/lib.js et replay/build/** (RPL-R1.1).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assembler le site (5 chemins autorisés seulement)
+        run: |
+          mkdir -p public/build
+          cp web/replay.html web/replay.js web/style.css web/lib.js public/
+          cp -r replay/build/. public/build/
+      - name: Vérifier avant publication
+        run: python replay/deploy_check.py --site public
+      - name: Téléverser le site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: assemble
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
