@@ -131,6 +131,15 @@ def test_client_time_to_session_time():
     assert session_time(12_000, 10_000) == 2.0  # SRV-R4.5 : secondes depuis start
 
 
+def test_live_session_defaults_to_monotonic_clock():
+    import time
+    _, sess = make_live({0: "off"})
+    assert sess.clock == time.monotonic  # SRV-T5 : horloge par défaut dès la création
+    assert sess.clock() > 0.0
+    _, sess2 = make_live({0: "off"}, clock=lambda: 7.0)
+    assert sess2.clock() == 7.0  # un test peut la remplacer par le constructeur
+
+
 def test_result_filters_stale_and_out_of_order():
     from server.session import check_result
     assert check_result(1.2, 7, 5) == "ok"

@@ -467,7 +467,7 @@ class LiveSession:
         self.recorder = recorder  # journal + enregistrements (SRV-R9, None = sans journal)
         self.latencies: list = []  # latences SAM acceptées, en ms (SRV-R9.1)
         self.journal_written = False
-        self.clock = clock  # horloge injectable (tests) ; sinon celle de la boucle
+        self.clock = clock if clock is not None else time.monotonic  # horloge par défaut ; un test peut la remplacer
         self.work = WorkQueue()
         self.counters = {"dropped": 0, "stale": 0, "out_of_order": 0, "bad_message": 0,
                          "too_big": 0}

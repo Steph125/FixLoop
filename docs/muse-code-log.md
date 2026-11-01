@@ -412,3 +412,22 @@ aucune dépendance ajoutée, aucune suppression hors scripts jetables créés pu
   `check_spec.py` OK (82 exigences, 299 critères, 48 décisions, 104 tâches).
   Fichiers : `fixloop/perception.py`, `tests/test_perception_live.py`.
   Commit : `fix(perception): video defaults to live parts with override [PERC-T5] (Muse Code)`.
+- SRV-T5 (horloge None → TypeError) : `LiveSession` prend `time.monotonic` par
+  défaut dès `__init__` (remplaçable par le paramètre du constructeur,
+  assertion de `test_out_of_order_result_is_dropped` intacte). Échec authentique
+  reproduit ici avant correction (`sess.clock()` → `TypeError: 'NoneType'
+  object is not callable`) ; nouveau test sync
+  `test_live_session_defaults_to_monotonic_clock` (défaut + remplacement,
+  passe ici). Les 3 tests de boucle async restent ignorés ici : tâche
+  toujours [~], à vérifier hors sandbox.
+  Fichiers : `server/session.py`, `tests/test_session.py`.
+  Commit : `fix(server): default session clock to monotonic [SRV-T5] (Muse Code)`.
+- Revue des 7 [~] (PERC-T5, PERC-T7, SRV-T1, SRV-T5, SRV-T7, SRV-T8, SRV-T10) :
+  aucune ne passe [x] — chaque « Fait quand » exige un test ignoré ici
+  (async/socket) ou en échec environnemental (`test_server.py`, dont
+  `test_costs_needs_access_code` : fastapi présent mais TestClient bute sur
+  `socketpair` interdit). SRV-T10 : session `velo2` complète non lançable ici
+  (`listen` interdit) ; commande exacte hors sandbox, serveur puis client :
+  `$env:FIXLOOP_FAKE_MODELS = "1"`, `python -m uvicorn server.app:app --port 8000`,
+  puis `python scripts/ws_client.py --video probe_out2/input_small.mp4 --bike velo2 --done 18,30`
+  (attendre `closed`, sans réseau).
