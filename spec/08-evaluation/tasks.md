@@ -31,9 +31,14 @@
   Exigences : `EVAL-R3.1`, `R3.4`. Dépend de : `AGT-T12` ([x]).
   Preuve : `run_spark_only` (requêtes 3 s + `done`, arrêt au 1er terminal) + `CachedAgent.spark_only` ;
   `tests/test_benchmark.py` (fausse validation construite sur `off`, anomalie après `done`, cache rejoué).
-- [ ] **EVAL-T6 — Script `benchmark.py`.** Estimation et confirmation du coût, exécution en ligne puis hors
+- [x] **EVAL-T6 — Script `benchmark.py`.** Estimation et confirmation du coût, exécution en ligne puis hors
   ligne, `results.csv`, journal des coûts.
   Exigences : `EVAL-R5.1`, `R5.2`, `R6.1`, `R6.2`, `R7.3`.
+  Preuve : `scripts/benchmark.py` tourne en `--offline --fake` sur 2 extraits synthétiques
+  (12 lignes `results.csv`, journal des coûts) ; `eval/benchmark/labels_template.csv` (en-tête seul) ;
+  `scripts/label_clip.py` (fonctions pures testées, servira EVAL-T2).
+  Fait quand (série 4) : le script tourne en `--offline` sur les extraits synthétiques — fait ;
+  l'exécution réelle (EVAL-T7) n'est pas pour cette série.
 - [ ] **EVAL-T7 — Exécution.** Passage en ligne, puis deux passages hors ligne identiques ; coût réel noté.
   Exigences : `EVAL-R2.2`, `R5.1`, `R6.2`, `R8.1`.
 - [ ] **EVAL-T8 — Rapport et graphique.** `report.md` (structure section 6), `chart.svg`, limites, extraits

@@ -226,6 +226,52 @@ def synthetic_kinds(segments: list[tuple[str, float]], fps: float) -> list[str]:
     return kinds
 
 
+class CannedAgent:
+    """Agent aux réponses fixées, pour `--fake` (aucun réseau, aucun modèle)."""
+
+    def __init__(self, procedure_id: str, arbitrate_to: str = "0",
+                 spark_verdict: str = "reussie") -> None:
+        self.procedure_id, self.model = procedure_id, "canned"
+        self.arbitrate_to, self.spark_verdict = arbitrate_to, spark_verdict
+
+    def diagnose(self, images, procedures, history):
+        return self.procedure_id, None
+
+    def arbitrate(self, step, keyframes, window):
+        from .models import Verdict
+        return Verdict(self.arbitrate_to)
+
+    def explain(self, step, verdict, keyframes):
+        return verdict.message or "Étape non conforme.", None
+
+    def help(self, step, keyframes):
+        return step.get("instruction", "")
+
+    def spark_only_verdict(self, images, step):
+        return {"verdict": self.spark_verdict, "confiance": 0.9,
+                "raison": "réponse fixée (--fake)"}
+
+
+def drive_measures(procedure_id: str, measures: list, done_at: list[float],
+                   setting: str = "replay", agent=None, memory=None, out=None):
+    """Session complète sur des mesures déjà calculées (EVAL-R3.4, RPL-T2)."""
+    from .procedures import load_all
+    from .state_machine import Session
+    procedures = load_all()
+    session = Session(procedures, agent or NoSparkAgent(procedure_id),
+                      memory or NullMemory(), out or RecOutput(),
+                      bike_id="synthetique",
+                      debounce_frames=SETTINGS[setting]["debounce"])
+    session.start(images=[])
+    pending = sorted(done_at)
+    for m in measures:
+        while pending and pending[0] <= m.t + 1e-9:
+            session.on_user_done()
+            pending.pop(0)
+        session.on_measures(m)
+    return session
+
+
 def drive_session(procedure_id: str, segments: list[tuple[str, float]],
                   done_at: list[float], setting: str = "replay",
                   agent=None, memory=None, out=None):
@@ -237,26 +283,12 @@ def drive_session(procedure_id: str, segments: list[tuple[str, float]],
     from .geometry import measure
     from .procedures import load_all
     from .sim import frame
-    from .state_machine import Session
-    procedures = load_all()
-    procedure = procedures[procedure_id]
     fps = SETTINGS[setting]["fps"]
-    session = Session(procedures, agent or NoSparkAgent(procedure_id),
-                      memory or NullMemory(), out or RecOutput(),
-                      bike_id="synthetique",
-                      debounce_frames=SETTINGS[setting]["debounce"])
-    session.start(images=[])
-    kinds = synthetic_kinds(segments, fps)
-    measures = []
-    pending = sorted(done_at)
-    for i, kind in enumerate(kinds):
-        t = i / fps
-        while pending and pending[0] <= t + 1e-9:
-            session.on_user_done()
-            pending.pop(0)
-        m = measure(frame(kind, i, t), procedure)
-        measures.append(m)
-        session.on_measures(m)
+    procedure = load_all()[procedure_id]
+    measures = [measure(frame(kind, i, i / fps), procedure)
+                for i, kind in enumerate(synthetic_kinds(segments, fps))]
+    session = drive_measures(procedure_id, measures, done_at, setting,
+                             agent=agent, memory=memory, out=out)
     return session, measures
 
 

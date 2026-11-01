@@ -592,3 +592,15 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   Preuve : `tests/test_benchmark.py`, `check_spec.py` OK.
   Fichiers : `fixloop/benchmark.py`, `fixloop/cached_models.py`, `tests/test_benchmark.py`,
   `spec/08-evaluation/tasks.md`.
+
+- EVAL-T6 (script `benchmark.py`, [x]) : estimation du coût + confirmation (`--yes`), garde-budget
+  30 $, `--offline` (cache) / `--fake` (synthétique, réponses Spark « réussie » pour montrer l'écart),
+  `results.csv` (extrait × approche × réglage), journal `CostLog` ; en ligne refusé proprement
+  (EVAL-T7, pas pour cette série). `labels_template.csv` (en-tête seul) + `label_clip.py` (touches
+  o/f/t/h, espace = `done`, reprise CSV ; fonctions pures testées, interactive non vérifiable ici).
+  Tests d'abord (échec authentique : script absent), 1 essai raté sur mon appel (`spark_only_verdict`
+  lié sans `step`) — enveloppé, vert (25 passed).
+  Preuve : `test_benchmark_script_runs_offline_fake_on_synthetic_clips`, `tests/test_label_clip.py`
+  3 passed, `check_spec.py` OK.
+  Fichiers : `scripts/benchmark.py`, `scripts/label_clip.py`, `eval/benchmark/labels_template.csv`,
+  `tests/test_benchmark.py`, `tests/test_label_clip.py`, `spec/08-evaluation/tasks.md`.

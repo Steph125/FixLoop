@@ -251,6 +251,46 @@ def test_spark_only_answers_are_cached(tmp_path):
         CachedAgent(None, tmp_path / "vide.json").spark_only(["autre"], {"id": "s"})
 
 
+def test_benchmark_script_runs_offline_fake_on_synthetic_clips(tmp_path):
+    import csv
+    import subprocess
+    import sys
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    work = tmp_path / "bench"
+    work.mkdir()
+    clips, labels = work / "clips.csv", work / "labels.csv"
+    with clips.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["clip", "file", "duration_s", "lighting", "angle",
+                    "distance", "scenario", "split"])
+        w.writerow(["s1", "sim", "10", "jour", "face", "30cm", "S1", "test"])
+        w.writerow(["s2", "sim", "10", "jour", "face", "30cm", "S1", "test"])
+    rows = ([("s1", t, "off" if t < 4 else "on", 1 if t in (3, 5) else 0)
+             for t in range(10)]
+            + [("s2", t, "off", 1 if t == 3 else 0) for t in range(10)])
+    with labels.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["clip", "t", "state", "done"])
+        w.writerows(rows)
+    out, costs = work / "out", work / "costs"
+    r = subprocess.run(
+        [sys.executable, "scripts/benchmark.py", "--clips", str(clips),
+         "--labels", str(labels), "--procedure", "chain_off_chainring",
+         "--approaches", "rules,fixloop,spark", "--settings", "replay,live",
+         "--offline", "--fake", "--yes", "--out", str(out),
+         "--costs-root", str(costs)],
+        capture_output=True, text=True, cwd=root)
+    assert r.returncode == 0, r.stderr  # EVAL-T6 : tourne en --offline sur synthétique
+    got = {(x["clip"], x["approach"], x["setting"]): x for x in
+           csv.DictReader((out / "results.csv").open(encoding="utf-8"))}
+    assert len(got) == 2 * 3 * 2  # 2 extraits x 3 approches x 2 réglages
+    assert got[("s1", "rules", "replay")]["false_validations"] == "0"
+    assert got[("s1", "spark", "replay")]["false_validations"] == "1"
+    assert float(got[("s1", "rules", "replay")]["cost_usd_est"]) >= 0
+    assert list((costs).glob("*.jsonl")) != []  # EVAL-R7.3 : journal des coûts
+
+
 def test_read_labels_rejects_bad_state(tmp_path):
     import pytest
     lp = tmp_path / "labels.csv"
