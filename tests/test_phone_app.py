@@ -57,6 +57,17 @@ def test_bike_id_and_access_code():
     assert "/api/health" in live  # affiché si le serveur exige un code
 
 
+def test_camera_and_framing():
+    live = read("live.js")
+    assert "getUserMedia" in live  # APP-R1.2 : demandée dans le geste Commencer
+    assert "cameraConstraints" in live  # logique pure dans lib.js
+    assert "environment" in read("lib.js")  # caméra arrière
+    assert "CAMERA_MESSAGE" in live  # APP-R1.3 : message si caméra refusée
+    assert "micDenied" in live  # APP-R1.4 : relance sans micro, boutons seuls
+    assert "audio" in read("lib.js") and "false" in read("lib.js")
+    assert "startMessage" in live  # APP-R3.2 : C'est cadré envoie start (pur dans lib.js)
+
+
 def test_no_external_dependency_and_small_size():
     total = 0
     for name in ("index.html", "live.js", "style.css", "lib.js"):

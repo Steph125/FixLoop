@@ -42,3 +42,18 @@ export function wordCount(text) {
 export function codeRequired(health) {
   return !!(health && health.access_code_required);
 }
+
+// Caméra : arrière idéale + micro, relance sans micro si refusé (APP-R1.2, R1.4).
+export function cameraConstraints(withMic) {
+  return {
+    video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    audio: withMic
+      ? { channelCount: 1, echoCancellation: true, noiseSuppression: true }
+      : false,
+  };
+}
+
+// Message de démarrage : les 3 images suivantes servent au diagnostic (APP-R3.2).
+export function startMessage() {
+  return { type: "start" };
+}

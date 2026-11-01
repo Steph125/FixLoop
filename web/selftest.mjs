@@ -1,6 +1,6 @@
 // FixLoop : vérifications de lib.js, sans DOM (APP-T10).
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
-import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired,
+import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
 
 const checks = [];
@@ -46,6 +46,18 @@ check("champ de code selon la santé (APP-R1.5)", () => {
   if (!codeRequired({ access_code_required: true })) throw new Error("exigé");
   if (codeRequired({ access_code_required: false })) throw new Error("non exigé");
   if (codeRequired(null)) throw new Error("santé inconnue");
+});
+
+check("contraintes caméra (APP-R1.2, R1.4)", () => {
+  const full = cameraConstraints(true);
+  if (full.video.facingMode.ideal !== "environment") throw new Error("arrière");
+  if (full.audio.channelCount !== 1) throw new Error("micro");
+  const muted = cameraConstraints(false);
+  if (muted.audio !== false) throw new Error("relance sans micro");
+});
+
+check("message start (APP-R3.2)", () => {
+  if (startMessage().type !== "start") throw new Error("start");
 });
 
 check("texte caméra exact (APP-R1.3)", () => {

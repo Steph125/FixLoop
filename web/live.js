@@ -1,11 +1,13 @@
 // FixLoop : appli téléphone en direct (spec/06-phone-app).
 // Module ES, aucune dépendance (APP-R10.1). La logique pure vit dans lib.js.
-import { isScreen, makeBikeId, isBikeId, codeRequired, HISTORY_MESSAGE } from "./lib.js";
+import { isScreen, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage,
+  HISTORY_MESSAGE, CAMERA_MESSAGE } from "./lib.js";
 
 export const app = {
   screen: "accueil",
   ws: null,
   stream: null,
+  micDenied: false,
   bikeId: null,
   sessionId: null,
   lastOverlayAt: 0,
@@ -21,6 +23,14 @@ export function showScreen(name) {
     section.hidden = section.dataset.screen !== name;
   }
   return true;
+}
+
+export function wsOpen() {
+  return !!app.ws && app.ws.readyState === 1;
+}
+
+export function sendJson(msg) {
+  if (wsOpen()) app.ws.send(JSON.stringify(msg));
 }
 
 // Identité du vélo (APP-R6) : "b-" + 8 hex, localStorage protégé par try/catch.
@@ -78,13 +88,54 @@ export async function checkHealth() {
   return needed;
 }
 
+// Caméra + micro demandés dans le geste « Commencer » (APP-R1.2).
+export async function requestCamera() {
+  try {
+    app.stream = await navigator.mediaDevices.getUserMedia(cameraConstraints(true));
+    app.micDenied = false;
+  } catch {
+    try {
+      app.stream = await navigator.mediaDevices.getUserMedia(cameraConstraints(false));
+      app.micDenied = true; // APP-R1.4 : on continue avec les boutons seuls
+    } catch {
+      return false; // APP-R1.3 : caméra refusée
+    }
+  }
+  for (const id of ["video", "video-live", "video-anomaly"]) {
+    const el = document.getElementById(id);
+    if (el) el.srcObject = app.stream; // APP-R2.4 : vidéo locale, sans délai
+  }
+  return true;
+}
+
+export async function onStartPressed() {
+  const ok = await requestCamera();
+  if (!ok) {
+    const err = document.getElementById("home-error");
+    if (err) {
+      err.textContent = `${CAMERA_MESSAGE} Touchez « Réessayer ».`;
+      err.hidden = false;
+    }
+    const btn = document.getElementById("btn-start");
+    if (btn) btn.textContent = "Réessayer";
+    return;
+  }
+  showScreen("cadrage");
+}
+
+// Écran de cadrage : « C'est cadré » envoie start (APP-R3).
+export function onFramedPressed() {
+  sendJson(startMessage());
+  showScreen("session");
+}
+
 function go(name) {
   return () => showScreen(name);
 }
 
 if (typeof document !== "undefined") {
-  document.getElementById("btn-start")?.addEventListener("click", go("cadrage"));
-  document.getElementById("btn-framed")?.addEventListener("click", go("session"));
+  document.getElementById("btn-start")?.addEventListener("click", onStartPressed);
+  document.getElementById("btn-framed")?.addEventListener("click", onFramedPressed);
   document.getElementById("btn-again")?.addEventListener("click", go("accueil"));
   document.getElementById("btn-retry")?.addEventListener("click", go("accueil"));
   const kept = loadBikeId().kept;

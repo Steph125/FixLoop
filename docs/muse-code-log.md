@@ -24,6 +24,11 @@ fichiers en CRLF comme le reste du dépôt ; VOX en PCM16 24 kHz / 80 ms
   Preuve : `test_bike_id_and_access_code`, `node web/selftest.mjs` 7/7, `check_spec.py` OK.
   Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
 
+- APP-T3 (caméra et cadrage) : `cameraConstraints`/`startMessage` dans `lib.js`, `requestCamera` (relance sans micro, message + bouton Réessayer si caméra refusée), `onFramedPressed` envoie `start`.
+  Difficile : 2 essais ratés sur mes propres assertions (littéraux `environment`/`start` dans `live.js`, alors que le pur vit dans `lib.js`) — code bon dès le 1er essai, tests alignés sur le découpage.
+  Preuve : `test_camera_and_framing`, `node web/selftest.mjs` 9/9, `check_spec.py` OK.
+  Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
+
 ## 2026-10-31 (sans interaction, choix prudent noté sans question)
 
 - PERC-T8 (suivi) : le test d'équivalence passait seul mais échouait dans la suite

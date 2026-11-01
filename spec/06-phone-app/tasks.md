@@ -10,9 +10,10 @@ Toutes à faire. Jalon (dimanche 1er nov.) : appli sur le téléphone de l'auteu
   champ de code affiché si `/api/health` indique un code requis.
   Exigences : `APP-R6.1`, `R6.2`, `R1.5`.
   Preuve : `tests/test_phone_app.py::test_bike_id_and_access_code`, `node web/selftest.mjs` 7/7.
-- [ ] **APP-T3 — Caméra et cadrage.** Autorisations dans le geste « Commencer », caméra arrière, refus caméra et
+- [x] **APP-T3 — Caméra et cadrage.** Autorisations dans le geste « Commencer », caméra arrière, refus caméra et
   micro, écran de cadrage, envoi de `start`.
   Exigences : `APP-R1.2` à `R1.4`, `R2.4`, `R3.1`, `R3.2`.
+  Preuve : `tests/test_phone_app.py::test_camera_and_framing`, `node web/selftest.mjs` 9/9.
 - [ ] **APP-T4 — WebSocket et boutons.** `hello`, `user_done`, `command`, `pause`, `stop` ; retour visuel et
   vibration ; reconnexions.
   Exigences : `APP-R4.1` à `R4.3`, `R9.3`, `VOX-R3.1`. Dépend de : `SRV-T4`.
