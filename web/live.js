@@ -12,6 +12,7 @@ export const app = {
   screen: "accueil",
   ws: null,
   stream: null,
+  wakeLock: null,
   micDenied: false,
   bikeId: null,
   sessionId: null,
@@ -141,11 +142,37 @@ export async function onStartPressed() {
   connect();
 }
 
+// Écran allumé pendant la session (APP-R9.1) : demandé quand la session
+// devient active, relâché à la fin ; sans échec si l'API manque.
+export async function requestWakeLock() {
+  try {
+    if (!("wakeLock" in navigator) || !navigator.wakeLock?.request) return null;
+    if (app.wakeLock) return app.wakeLock;
+    app.wakeLock = await navigator.wakeLock.request("screen");
+  } catch {
+    app.wakeLock = null; // verrou indisponible : la session continue
+  }
+  return app.wakeLock;
+}
+
+export function releaseWakeLock() {
+  const lock = app.wakeLock;
+  app.wakeLock = null;
+  if (!lock) return;
+  try {
+    const done = lock.release();
+    if (done && typeof done.catch === "function") done.catch(() => {});
+  } catch {
+    // déjà relâché
+  }
+}
+
 // Écran de cadrage : « C'est cadré » envoie start (APP-R3).
 export function onFramedPressed() {
   if (!wsOpen()) connect();
   sendJson(startMessage());
   app.started = true;
+  requestWakeLock();
   startCapture();
   startMic();
   showScreen("session");
@@ -215,6 +242,7 @@ export function showError(code) {
   stopCapture();
   stopStaleTimer();
   stopMic();
+  releaseWakeLock();
   showScreen("erreur");
 }
 
@@ -226,6 +254,7 @@ export function showEnd(msg) {
   stopCapture();
   stopStaleTimer();
   stopMic();
+  releaseWakeLock();
   showScreen("fin");
 }
 
@@ -465,6 +494,9 @@ if (typeof document !== "undefined") {
   }
   document.getElementById("btn-again")?.addEventListener("click", onAgainPressed);
   document.getElementById("btn-retry")?.addEventListener("click", go("accueil"));
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && app.started) requestWakeLock(); // APP-R9.1 : réaffiché
+  });
   const kept = loadBikeId().kept;
   showHistoryNote(kept);
   checkHealth();

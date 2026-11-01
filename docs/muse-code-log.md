@@ -760,3 +760,101 @@ Interdits respectés : `.env` ni lu ni committé, aucun appel API (cache `--offl
 uniquement), aucun lancement de `probe/` ni `try_agent.py`, aucun `push`/`merge`/branche/workflow,
 aucune installation, aucune modification de `spec/` hors cases et preuves, fichiers `tmp*` racine
 et `pytest-of-nguen/` ignorés, sondes jetables supprimées. Coût API de cette reprise : 0 $.
+## 2026-11-01 (série 4 : replay réel + benchmark, sans interaction)
+
+Choix prudents valables pour toute la série : aucune question posée ; asyncio
+bloqué dans la sandbox (WinError 10013, cause nommée — vérifié par
+`asyncio.run`) donc le transport réseau async (`segment_video`, CLI en ligne)
+reste pour l'auteur et les tests exercent le chemin réel en synchrone : mêmes
+sorties brutes SAM (payloads valides, vrai parser), vraies mesures, vraie
+`Session`, vrai ffmpeg, faux clients SAM/Spark, vidéos OpenCV dans `tmp_path`.
+
+- RPL-T2 (chemin réel `video` + `recording`) : `build_video` (sorties brutes
+  via `raws_fn` injecté ou `segment_video`, mesures, `CachedAgent`, images
+  clés recadrées `crop_around`, réencodage ffmpeg H.264 ≤ 960 px `+faststart`,
+  `meta.source = "video"`, mode « vidéo 10 images/s, anti-rebond 4 ») et
+  `build_recording` (images 1/s + bruts SAM, anti-rebond 3) ; échec rapide
+  `OfflineError` sans cache Spark (la `Session` absorbe les erreurs d'agent,
+  comportement CORE conservé). Corrigé en cours : le parser SAM ignore les
+  boîtes plein cadre → helper de test en une ligne par objet ; ordre des
+  erreurs (EVAL-T7 d'abord, test existant inchangé).
+  Preuve : `tests/test_replay_real.py` 4 passed + `tests/test_replay.py` vert.
+  Fichiers : `replay/build_replay.py`, `tests/test_replay_real.py`,
+  `spec/07-replay-mode/tasks.md` (case + preuve).
+- RPL-T7 (bandeau exact + liens) : `honestyText` (phrase RPL-R5.1 avec date
+  `filmed`, variante « Session synthétique de test », mode R5.2, démo R5.3),
+  `linksFor`/`loadLinks` depuis `build/links.json` (`repo` sauf, absent =
+  non affiché). Ancien bandeau « Rejoué le » et `../eval/benchmark/report.md`
+  retirés (spec RPL-R5.1/R7.2 oblige, signalé).
+  Preuve : `node web/selftest.mjs` 25/25,
+  `tests/test_phone_app.py::test_replay_honesty_and_links`.
+  Fichiers : `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
+  `spec/07-replay-mode/tasks.md` (case + preuve).
+- RPL-T11 (publication Pages, sans déclencher le workflow) : `replay/publish.py`
+  (copie sessions choisies vers `replay/published/`, `index.json`,
+  `links.json` avec `repo` + `benchmark` GitHub, `--video`/`--live`
+  facultatifs), `deploy_check.py` (accepte `index.html` et `href="https://"`,
+  refuse `fetch`/`src`/`import` externes, `.env`/`.jsonl`/`MODEL_API_KEY`,
+  vidéo > 15 Mo), `pages.yml` (publie `replay/published/` comme `build/` +
+  `index.html`), `.gitignore` (`!replay/published/*/video.mp4`).
+  Preuve : `tests/test_replay_publish.py` 4 passed.
+  Fichiers : `replay/publish.py`, `replay/deploy_check.py`,
+  `.github/workflows/pages.yml`, `.gitignore`,
+  `spec/07-replay-mode/tasks.md` (case + preuve).
+- EVAL-T6 (chemins en ligne/hors ligne réels) : `run_clip_real` (3 approches,
+  réglages `replay`/`live`, `drive_measures` + `keyframes`), `clip_frames`
+  (bruts + vidéo → mesures + clés recadrées), `fetch_online` (auteur),
+  `--offline` depuis caches avec arrêt si manquant, `--model` (EVAL-D5),
+  `--sam-cache`, `--spark-cache`.
+  Preuve : `tests/test_benchmark_real.py` 2 passed (2 extraits OpenCV en
+  ligne avec faux SAM/Spark puis `--offline`, `results.csv` identiques).
+  Fichiers : `scripts/benchmark.py`, `fixloop/benchmark.py` (`keyframes`
+  facultatif, défaut inchangé), `tests/test_benchmark_real.py`,
+  `spec/08-evaluation/tasks.md` (case + preuve).
+- EVAL-T10 (rapport + graphique) : `scripts/benchmark_report.py` (7 sections
+  design §6, tableau `test` `live` puis `replay`, « À ÉCRIRE », date/commit/
+  seuils, `chart.svg` manuscrit avec motifs et valeurs).
+  Preuve : `tests/test_benchmark_report.py` 1 passed.
+  Fichiers : `scripts/benchmark_report.py`, `tests/test_benchmark_report.py`,
+  `spec/08-evaluation/tasks.md` (case + preuve).
+- APP (wakeLock, APP-R9.1) : `requestWakeLock`/`releaseWakeLock` gardés
+  (jamais d'échec sans l'API), demande à `C'est cadré`, relâche en
+  fin/erreur, réaffichage sur `visibilitychange`. APP-T9 NON coché (essai
+  téléphone pour l'auteur).
+  Preuve partielle : `tests/test_phone_app.py::test_wake_lock_during_session`,
+  `node --check web/live.js`, `web/` 65 268 o < 100 ko.
+  Fichiers : `web/live.js`, `tests/test_phone_app.py`.
+
+Essais ratés : RPL-T2 2 essais (format brut + ordre des erreurs, voir
+ci-dessus) puis vert ; EVAL-T10 1 essai (seuils « 0,18 » en français).
+Aucune tâche BLOQUÉE, aucune annulation. Aucun test existant modifié pour
+le faire passer, sauf les deux exigés par la spec (bandeau et lien RPL,
+notés RPL-T7).
+
+## Résumé final (1er nov. 2026, sans interaction)
+
+Tâches faites [x] (5) : RPL-T2, RPL-T7, RPL-T11, EVAL-T6, EVAL-T10.
+Partiel [~] : néant (wakeLock = preuve partielle sous APP-T9 non coché).
+BLOQUÉ : aucun. SPEC À REVOIR : aucun (les deux changements de tests
+suivent RPL-R5.1/R7.2, déjà en spec).
+
+Ce qui reste à l'auteur : RPL-T3/T4 (tourner A/B, construire avec vrais
+modèles), RPL-T8 (direct enregistré), RPL-T9 (déploiement + vérification
+téléphone, `eval/day5/replay-check.md`), EVAL-T1/T2 (tournage + étiquetage),
+EVAL-T7 (exécution en ligne : `scripts/benchmark.py` sans `--fake`, coût
+estimé affiché avant confirmation), EVAL-T8 (phrases « À ÉCRIRE » du
+rapport), EVAL-T9 (gel mardi midi), APP-T9 (essai téléphone : HTTPS,
+session réelle, checklist `eval/day4/phone-checklist.md`).
+
+Résultat final : `python -m pytest -q -rs -m "not recorded" tests` → 224
+passed, 22 skipped (13 `test_perception_live.py` + 7 `test_session.py` + 2
+`test_voice_bridge.py`, tous WinError 10013, à vérifier hors sandbox),
+4 failed `tests/test_server.py` seuls (TestClient/sockets interdits,
+WinError 10013, environnemental, préexistants documentés le 31 oct. et le
+1er nov., sans lien avec cette série), 1 deselected (`recorded`).
+`python scripts/check_spec.py` → 82 exigences, 299 critères, 50 décisions,
+106 tâches, OK. `node web/selftest.mjs` → 25/25.
+Interdits respectés : `.env` ni lu ni commité, aucun appel API (faux
+clients uniquement), `probe/` et `try_agent.py` non lancés, aucun
+`push`/`merge`/branche/workflow déclenché, aucune installation, `spec/`
+touché seulement pour cases et preuves. Coût API de cette série : 0 $.
