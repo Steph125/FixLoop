@@ -1,6 +1,6 @@
 // FixLoop : vérifications de lib.js, sans DOM (APP-T10).
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
-import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor,
+import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
 
 const checks = [];
@@ -83,6 +83,26 @@ check("choix d'écran par message (APP-R8)", () => {
   if (screenFor({ type: "state" }, "session") !== null) throw new Error("state");
   if (screenFor({ type: "say" }, "cadrage") !== "session") throw new Error("say");
   if (screenFor(null, "session") !== null) throw new Error("invalide");
+});
+
+check("packBinary : en-tête SRV-R3.2 (APP-R2.2)", () => {
+  const payload = new Uint8Array([10, 20, 30]);
+  const buf = packBinary(MSG_IMAGE, 11500, payload);
+  if (buf.length !== 12) throw new Error("longueur");
+  if (buf[0] !== 0x02) throw new Error("marqueur");
+  const t = new DataView(buf.buffer).getBigUint64(1, false);
+  if (t !== 11500n) throw new Error("horodatage");
+  if (buf[9] !== 10 || buf[11] !== 30) throw new Error("données");
+});
+
+check("taille d'image 848 px (APP-R2.2)", () => {
+  const big = imageTargetSize(1920, 1080);
+  if (big.w !== 848 || big.h !== 477) throw new Error(`paysage : ${big.w}x${big.h}`);
+  const small = imageTargetSize(400, 300);
+  if (small.w !== 400 || small.h !== 300) throw new Error("petite gardée");
+  const tall = imageTargetSize(1080, 1920);
+  if (tall.w !== 848 || tall.h !== Math.round(1920 * 848 / 1080)) throw new Error("portrait");
+  if (JPEG_QUALITY !== 0.7 || MAX_SEND_WIDTH !== 848) throw new Error("constantes");
 });
 
 check("message start (APP-R3.2)", () => {

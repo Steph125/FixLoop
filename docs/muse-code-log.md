@@ -31,6 +31,10 @@ fichiers en CRLF comme le reste du dépôt ; VOX en PCM16 24 kHz / 80 ms
 - APP-T4 (WebSocket et boutons) : messages purs dans `lib.js`, `connect`/`onClose` (1 s, 2 s, 4 s puis erreur), `screenFor`, boutons avec vibration + visuel < 100 ms, `stop` sur Nouvelle session. SRV-T4 [x] : dépendance faite.
   Difficile : 1 essai raté sur mes propres littéraux (messages purs dans `lib.js`, pas `live.js`) — test aligné, code bon dès le 1er essai. Case cochée dans le commit code (ancre dupliquée, noté ici).
   Preuve : `test_websocket_and_buttons`, `node web/selftest.mjs` 12/12, `check_spec.py` OK.
+
+- APP-T5 (envoi des images) : `packBinary`/`imageTargetSize` dans `lib.js`, `captureFrame` (garde pas de file, JPEG 0,7, binaire 0x02), `startCapture`/`stopCapture`. SRV-T3 [x] : dépendance faite. Passé au 1er essai.
+  Preuve : `test_image_sending`, `node web/selftest.mjs` 14/14, `check_spec.py` OK.
+  Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/style.css`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
 

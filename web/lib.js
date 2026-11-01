@@ -104,3 +104,23 @@ export function screenFor(msg, current) {
   if (msg.type === "say" && current === "cadrage") return "session";
   return null;
 }
+
+// Images : réduction à 848 px au plus, JPEG 0,7, en-tête binaire SRV-R3.2.
+export const MAX_SEND_WIDTH = 848;
+export const JPEG_QUALITY = 0.7;
+export const MSG_IMAGE = 0x02;
+
+export function imageTargetSize(videoW, videoH, maxW = MAX_SEND_WIDTH) {
+  const w = Math.min(maxW, videoW);
+  return { w, h: Math.round((videoH * w) / videoW) };
+}
+
+// 1 octet de type, 8 octets d’horodatage gros-boutiste, puis les données.
+export function packBinary(kind, tMs, payload) {
+  const bytes = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
+  const buf = new Uint8Array(9 + bytes.byteLength);
+  buf[0] = kind;
+  new DataView(buf.buffer).setBigUint64(1, BigInt(tMs), false);
+  buf.set(bytes, 9);
+  return buf;
+}

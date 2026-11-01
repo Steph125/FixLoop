@@ -81,6 +81,19 @@ def test_websocket_and_buttons():
     assert "backoffDelay" in live  # APP-R9.3 : 3 reconnexions 1 s, 2 s, 4 s
 
 
+def test_image_sending():
+    live = read("live.js")
+    lib = read("lib.js")
+    assert "captureFrame" in live  # APP-R2.1 : 1 image/s
+    assert "1000" in live
+    assert "imageTargetSize" in live  # APP-R2.2 : 848 px max, proportions gardées
+    assert "848" in lib
+    assert "0.7" in live or "JPEG_QUALITY" in live  # JPEG qualité 0,7
+    assert "packBinary" in live  # en-tête binaire SRV-R3.2
+    assert "wsOpen" in live and "paused" in live  # APP-R2.3 : pas de file
+    assert "0x02" in lib or "2," in lib or "(2," in lib  # marqueur image
+
+
 def test_no_external_dependency_and_small_size():
     total = 0
     for name in ("index.html", "live.js", "style.css", "lib.js"):

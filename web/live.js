@@ -2,6 +2,7 @@
 // Module ES, aucune dépendance (APP-R10.1). La logique pure vit dans lib.js.
 import { isScreen, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage,
   helloMessage, userDoneMessage, commandMessage, pauseMessage, resumeMessage, stopMessage,
+  packBinary, imageTargetSize, MSG_IMAGE, JPEG_QUALITY,
   backoffDelay, screenFor, errorMessage, HISTORY_MESSAGE, CAMERA_MESSAGE } from "./lib.js";
 
 export const app = {
@@ -16,6 +17,7 @@ export const app = {
   speaking: false,
   paused: false,
   reconnects: 0,
+  captureTimer: null,
 };
 
 export function showScreen(name) {
@@ -131,6 +133,7 @@ export function onFramedPressed() {
   if (!wsOpen()) connect();
   sendJson(startMessage());
   app.started = true;
+  startCapture();
   showScreen("session");
 }
 
@@ -186,6 +189,7 @@ export function onClose() {
 export function showError(code) {
   const el = document.getElementById("error-text");
   if (el) el.textContent = errorMessage(code);
+  stopCapture();
   showScreen("erreur");
 }
 
@@ -194,6 +198,7 @@ export function showEnd(msg) {
   if (title) title.textContent = msg.success ? "Réparation validée" : "Session arrêtée";
   const summary = document.getElementById("end-summary");
   if (summary && msg.summary) summary.textContent = JSON.stringify(msg.summary);
+  stopCapture();
   showScreen("fin");
 }
 
@@ -233,6 +238,34 @@ export function onAgainPressed() {
   app.reconnects = 0;
   showScreen("accueil");
   connect();
+}
+
+
+// Envoi des images : 1 image/s, 848 px, JPEG 0,7, binaire (APP-R2).
+export async function captureFrame() {
+  if (!wsOpen() || app.paused || !app.started) return; // APP-R2.3 : pas de file
+  const video = document.getElementById("video-live");
+  if (!video || !video.videoWidth) return;
+  const { w, h } = imageTargetSize(video.videoWidth, video.videoHeight);
+  const canvas = captureFrame.canvas || (captureFrame.canvas = document.createElement("canvas"));
+  canvas.width = w; canvas.height = h;
+  canvas.getContext("2d").drawImage(video, 0, 0, w, h);
+  const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", JPEG_QUALITY));
+  if (!blob || !wsOpen()) return;
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  app.ws.send(packBinary(MSG_IMAGE, Date.now(), bytes));
+}
+
+export function startCapture() {
+  stopCapture();
+  app.captureTimer = setInterval(captureFrame, 1000); // APP-R2.1 : 1 image/s
+}
+
+export function stopCapture() {
+  if (app.captureTimer) {
+    clearInterval(app.captureTimer);
+    app.captureTimer = null;
+  }
 }
 
 function go(name) {
