@@ -71,9 +71,10 @@ Ordre d'exécution de haut en bas. Chaque tâche : statut, fichiers touchés, ex
   repli « aucun » et clôture sans rapport ; événement `memory_error` ; test avec une `RaisingMemory`.
   Fichiers : `state_machine.py`, `tests/fakes.py`. Exigences : `CORE-R4.7`. Trouvé à la relecture du 30 oct.
   Preuve : `tests/test_state_machine.py::test_raising_memory_falls_back_and_closes`.
-- [ ] **CORE-T17 — Performance de la géométrie.** Mesurer `measure()` sur 100 images 848×464 enregistrées ;
+- [x] **CORE-T17 — Performance de la géométrie.** Mesurer `measure()` sur 100 images 848×464 enregistrées ;
   noter la médiane dans `eval/day1/findings.md` (section ajoutée).
   Exigences : `CORE-R2.4`. Fait quand : médiane notée, cible < 50 ms atteinte ou écart expliqué.
+  Preuve : `eval/day1/findings.md` (médiane 2,95 ms sur `probe_out2/`, cible tenue).
 
 ## Couverture
 

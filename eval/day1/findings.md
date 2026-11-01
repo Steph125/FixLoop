@@ -68,3 +68,11 @@ proche du seuil de 0,18.
 Décision : le guidage en direct passe par le mode image. L'appli envoie une image par seconde sans attendre la
 réponse précédente (requêtes qui se chevauchent), avec un anti-rebond de 3 images : verdict environ 4 à 5 s après
 le geste. Le mode vidéo reste utilisé pour le replay des juges, calculé une fois et mis en cache.
+
+## Coût de la géométrie (1er nov., CORE-T17)
+
+`measure()` (détection + contact chaîne/plateau) chronométré sur 100 images 848×464 de `probe_out2/`
+(masques décodés une fois, puis `time.perf_counter` autour de chaque appel, 5 images d'échauffement) :
+min 2,83 ms, médiane 2,95 ms, p90 3,17 ms, max 4,20 ms. Cible CORE-R2.4 (< 50 ms sur le poste de
+l'auteur) atteinte avec une marge de 10 : la géométrie ne pèse rien face aux 1,9 s du verdict image
+(dominées par les requêtes SAM réseau).
