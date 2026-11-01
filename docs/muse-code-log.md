@@ -45,6 +45,12 @@ fichiers en CRLF comme le reste du dépôt ; VOX en PCM16 24 kHz / 80 ms
   Suite complète (jalon appli) : 143 passed, 18 skipped (13 PERC async + 5 session, WinError 10013), 4 failed = `tests/test_server.py` seul (TestClient exige des sockets : PermissionError [WinError 10013], cause nommée, préexistant hors de mes fichiers — passe hors sandbox d’après la relecture du 1er nov.).
   Preuve : `test_selftest_covers_lib`, `test_web_bundle_under_100k`, `node web/selftest.mjs` 16/16, `check_spec.py` OK.
   Fichiers : `tests/test_phone_app.py` (+ preuve T1–T9 existantes).
+
+- VOX-T3 [~] (pont Transcribe) : `VoiceBridge` (poignée auth en 1re trame, accusé sans `type`, trames 3 840 o, rythme max 5 s d’avance, `speechComplete` -> `on_final`, 3 relances puis abandon, `endStream` + coûts en secondes). Protocole relu dans `probe/transcribe_probe.py` (VOX-T1).
+  Difficile : 1er essai, `asyncio.run` crée une demi-boucle (socketpair interdit) dont le `__del__` faisait échouer la session — sonde `socket.socketpair()` synchrone avant `asyncio.run`, skip propre sur la cause nommée `PermissionError` (WinError 10013), jamais `except OSError`.
+  Choix prudent : tâche [~] (tests e2e principaux ignorés ici), le reste passe.
+  Preuve partielle : `tests/test_voice_bridge.py` 4 sync passed + 2 skipped, `tests/test_voice.py` 12 passed, `check_spec.py` OK.
+  Fichiers : `fixloop/voice.py`, `tests/test_voice_bridge.py`, `spec/04-memory-voice/tasks.md`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/style.css`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.

@@ -50,9 +50,11 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   « je n'ai pas fini », « c'est pas fait », « ce n'est pas bon », « c'est quoi ce bruit » → aucune commande ;
   « c'est fini », « tu peux répéter » → `done`, `repeat`. Exigences : `VOX-R2.1`, `R2.6`. Trouvé à la relecture.
   Preuve : `tests/test_voice.py` (`test_negated_forms_trigger_nothing`, `test_corrected_forms_detected`), `pytest` 79 passed + 9 skipped, `check_spec.py` OK.
-- [ ] **VOX-T3 — Pont Transcribe.** `VoiceBridge` (connexion, envoi PCM16, réception, 3 reconnexions, arrêt) ;
+- [~] **VOX-T3 — Pont Transcribe.** `VoiceBridge` (connexion, envoi PCM16, réception, 3 reconnexions, arrêt) ;
   test avec faux serveur WebSocket.
   Exigences : `VOX-R1.1`, `R1.3`, `R3.2`, `R4.1`. Dépend de : T1.
+  À vérifier hors sandbox : les 2 tests e2e (faux serveur local, sockets interdits ici, WinError 10013).
+  Preuve partielle : `tests/test_voice_bridge.py` 4 sync passed + 2 skipped, `check_spec.py` OK.
 - [ ] **VOX-T4 — Branchement à la session.** Commande → `on_user_done` / `on_command` ; journal `command` avec texte
   normalisé ; durée audio dans les coûts.
   Exigences : `VOX-R2.5`, `R4.2`. Dépend de : T2, T3, `SRV-T6`, `CORE-T15`.
