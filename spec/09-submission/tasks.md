@@ -7,14 +7,18 @@
 
 ## À faire
 
-- [ ] **SUB-T1 — `LICENSE` et `NOTICE.md`.** Licences recopiées avec `pip show`.
+- [x] **SUB-T1 — `LICENSE` et `NOTICE.md`.** Licences recopiées avec `pip show`.
   Exigences : `SUB-R6.1`. Quand : dès maintenant, mis à jour à chaque dépendance ajoutée.
+  Preuve : `LICENSE` (MIT, inchangé), `NOTICE.md` (12 paquets, versions et licences relevées
+  le 1er nov. par `pip show`, jamais de mémoire ; sans musique, médias de l'auteur).
 - [ ] **SUB-T2 — Journal Muse Code.** `docs/muse-code-log.md` : date, prompt, fichiers produits, corrections faites
   à la main. Exigences : `SUB-R3.3`. Quand : à chaque usage de Muse Code.
-- [ ] **SUB-T3 — README.** Structure de `design.md` section 3, tableau Meta models (vérifié contre le code), chiffres
+- [~] **SUB-T3 — README.** Structure de `design.md` section 3, tableau Meta models (vérifié contre le code), chiffres
   sourcés, mention de l'historique de démo, instructions Windows et Linux.
   Exigences : `SUB-R2.2` à `R2.5`, `R3.1`, `R3.2`, `R3.4`, `R5.1`, `R8.1` à `R8.3`, `MEM-R4.2`.
   Dépend de : `EVAL-T9`. Quand : mardi 3 nov.
+  Brouillon du 1er nov. (sans vidéos ni benchmark) : structure complète, chiffres TBD (`eval/benchmark`),
+  liens Replay et vidéo en TBD ; à finir après le benchmark (EVAL-T9) et la vidéo.
 - [ ] **SUB-T4 — Installation depuis zéro.** Clone neuf dans un autre dossier, `.venv` neuf, README suivi à la
   lettre, tests verts ; corriger le README si une étape manque.
   Exigences : `SUB-R4.4`, `R8.2`. Quand : mardi 3 nov. après-midi.
