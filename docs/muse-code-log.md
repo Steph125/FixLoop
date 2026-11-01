@@ -40,6 +40,11 @@ fichiers en CRLF comme le reste du dépôt ; VOX en PCM16 24 kHz / 80 ms
 
 - APP-T7 (voix en sortie) : `VALIDATION_PHRASE`/`pickFrenchVoice`/`shouldInterruptSay` dans `lib.js`, `onSay`/`speak`/`unlockSpeech`/sous-titres/`speaking`, validation non interrompue, bandeau d’anomalie avec la dernière explication. Passé au 1er essai.
   Preuve : `test_spoken_voice_output`, `node web/selftest.mjs` 16/16, `check_spec.py` OK.
+
+- APP-T10 (auto-test) : `selftest.html` délègue à `selftest.mjs` (même contenu, `runAll`), taille totale de `web/` sous 100 ko. Passé du 1er coup (vérifie l’existant T1–T7).
+  Suite complète (jalon appli) : 143 passed, 18 skipped (13 PERC async + 5 session, WinError 10013), 4 failed = `tests/test_server.py` seul (TestClient exige des sockets : PermissionError [WinError 10013], cause nommée, préexistant hors de mes fichiers — passe hors sandbox d’après la relecture du 1er nov.).
+  Preuve : `test_selftest_covers_lib`, `test_web_bundle_under_100k`, `node web/selftest.mjs` 16/16, `check_spec.py` OK.
+  Fichiers : `tests/test_phone_app.py` (+ preuve T1–T9 existantes).
   Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/style.css`, `web/selftest.mjs`, `tests/test_phone_app.py`.
   Fichiers : `web/lib.js`, `web/live.js`, `web/selftest.mjs`, `tests/test_phone_app.py`.

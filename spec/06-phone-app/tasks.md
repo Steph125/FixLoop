@@ -34,8 +34,9 @@ Toutes à faire. Jalon (dimanche 1er nov.) : appli sur le téléphone de l'auteu
 - [ ] **APP-T9 — Écran allumé, HTTPS et essai sur téléphone.** `wakeLock` ; tunnel HTTPS ; session réelle
   complète sur le vélo ; liste de contrôle `eval/day4/phone-checklist.md`.
   Exigences : `APP-R1.1`, `R9.1`, `R10.3`, et vérification manuelle de tous les `APP-R*`.
-- [ ] **APP-T10 — Auto-test navigateur.** `web/selftest.html`.
+- [x] **APP-T10 — Auto-test navigateur.** `web/selftest.html`.
   Exigences : tests de `design.md` section 7.
+  Preuve : `tests/test_phone_app.py::test_selftest_covers_lib`, `node web/selftest.mjs` 16/16.
 
 ## Couverture
 

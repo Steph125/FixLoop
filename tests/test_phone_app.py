@@ -117,6 +117,21 @@ def test_spoken_voice_output():
     assert "pickFrenchVoice" in lib
 
 
+def test_selftest_covers_lib():
+    html = read("selftest.html")
+    mjs = read("selftest.mjs")
+    assert "selftest.mjs" in html  # même contenu que selftest.html, sans DOM
+    assert "runAll" in html and "result" in html  # résultat affiché
+    assert "export async function runAll" in mjs
+    assert mjs.count('check("') >= 10  # packBinary, écrans, taille, voix…
+    assert "process.argv" in mjs  # lançable par node
+
+
+def test_web_bundle_under_100k():
+    total = sum(p.stat().st_size for p in WEB.iterdir() if p.is_file())
+    assert total < 100 * 1024  # APP-R10.2 : tout web/ sous 100 ko
+
+
 def test_no_external_dependency_and_small_size():
     total = 0
     for name in ("index.html", "live.js", "style.css", "lib.js"):
