@@ -12,6 +12,7 @@ au-delà de 30 $ (EVAL-R6.2), le script s'arrête.
 """
 
 import argparse
+import asyncio
 import csv
 import statistics
 import sys
@@ -31,6 +32,7 @@ SPARK_CALL_EST = 0.01  # $ par appel Spark avec images (design 08, section 5)
 BUDGET_USD = 30.0  # EVAL-R6.2
 SAM_PARTS = 2  # chaîne + plateau (live_parts)
 SAM_FPS = 10.0
+SPARK_MODEL_DEFAULT = "muse-spark-1.3"  # EVAL-D5 : `--model` pour Spark seul
 
 RESULT_COLUMNS = ["clip", "approach", "setting", "false_validations",
                   "transition_validations", "missed_validations",
@@ -131,6 +133,145 @@ def result_row(clip, approach, setting, events, measures, labels, spark_extra=0,
             "cost_usd_est": round(cost, 4)}
 
 
+def resolve_video(clip, clips_path):
+    """Chemin vidéo d'un extrait : tel quel, sinon relatif à `clips.csv`."""
+    video = Path(clip["file"])
+    if not video.is_file():
+        video = Path(clips_path).parent / clip["file"]
+    if not video.is_file():
+        sys.exit(f"vidéo introuvable : {clip['file']} (EVAL-T1, tourner avant d'exécuter)")
+    return video
+
+
+def read_sam_cache(sam_dir, procedure) -> dict:
+    """Sorties brutes SAM depuis le cache, sans aucun appel (EVAL-R5.1)."""
+    from fixloop.perception import live_parts
+    merged = {}
+    for part in live_parts(procedure):
+        path = Path(sam_dir) / f"raw_{part}.txt"
+        if not path.is_file():
+            raise RuntimeError(f"cache SAM brut manquant : {path} "
+                               "(passer d'abord en ligne, EVAL-T7)")
+        merged[part] = path.read_text(encoding="utf-8")
+    return merged
+
+
+def fetch_online(video, procedure, sam_dir) -> dict:
+    """Segmente une vidéo avec SAM 3.1 (auteur, EVAL-T7) ; cache par morceau."""
+    from fixloop.perception import segment_video
+    asyncio.run(segment_video(str(video), procedure, str(sam_dir)))
+    return read_sam_cache(sam_dir, procedure)
+
+
+def clip_frames(video, merged: dict, procedure):
+    """Sorties brutes + vidéo -> mesures SAM et images clés recadrées (sync)."""
+    import cv2
+    import numpy as np
+    from fixloop.agent import crop_around
+    from fixloop.perception import assemble_frames
+    cap = cv2.VideoCapture(str(video))
+    if not cap.isOpened():
+        raise RuntimeError(f"vidéo illisible : {video}")
+    src_fps = cap.get(cv2.CAP_PROP_FPS) or SAM_FPS
+    bgr_frames = []
+    while True:
+        ok, img = cap.read()
+        if not ok:
+            break
+        bgr_frames.append(img)
+    cap.release()
+    if not bgr_frames:
+        raise RuntimeError(f"vidéo vide : {video}")
+    h, w = bgr_frames[0].shape[:2]
+    frames = assemble_frames(merged, h, w, SAM_FPS, procedure.get("select", {}))
+    if not frames:
+        raise RuntimeError(f"aucune image segmentée : {video} (SAM muet)")
+    keyframes = []
+    for fm in frames:
+        bgr = bgr_frames[min(int(round(fm.t * src_fps)), len(bgr_frames) - 1)]
+        ring = fm.masks.get("chainring")
+        if ring is not None and ring.any() and ring.shape == bgr.shape[:2]:
+            ys, xs = np.nonzero(ring)
+            box = (int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1)
+            try:
+                keyframes.append(crop_around(bgr, box))
+                continue
+            except Exception:
+                pass
+        keyframes.append(bgr)
+    return frames, keyframes
+
+
+def setting_view(measures: list, keyframes: list, setting: str):
+    """Réglage `replay` (toutes les images) ou `live` (1 image/s, EVAL-R3.5)."""
+    if setting != "live":
+        return list(measures), list(keyframes)
+    picked = []
+    for second in range(int(max(m.t for m in measures)) + 1):
+        picked.append(min(range(len(measures)), key=lambda i: abs(measures[i].t - second)))
+    return [measures[i] for i in picked], [keyframes[i] for i in picked]
+
+
+def run_clip_real(clip: str, rows: list, procedure_id: str, procedure: dict,
+                  approaches: list, settings: list, frames: list, keyframes: list,
+                  fixloop_agent, spark_ask):
+    """Un extrait segmenté, 3 approches sur les mêmes mesures (EVAL-R3.4).
+
+    `fixloop_agent` : `CachedAgent(SparkAgent)` en ligne, `CachedAgent(None)`
+    hors ligne. `spark_ask(image)` : verdict Spark brut en cache (EVAL-T5).
+    Rend `[(setting, approach, session|None, measures, res|None)]`.
+    """
+    from fixloop.geometry import measure
+    from fixloop.procedures import load_all
+    step = load_all()[procedure_id]["steps"][1]  # étape de remise évaluée
+    done_at = [float(r["t"]) for r in rows if r["done"] == 1]
+    measures_all = [measure(fm, procedure) for fm in frames]
+    out = []
+    for setting in settings:
+        ms, kf = setting_view(measures_all, keyframes, setting)
+        if "rules" in approaches:
+            session = drive_measures(procedure_id, ms, done_at, setting,
+                                     agent=NoSparkAgent(procedure_id),
+                                     keyframes=kf)
+            out.append((setting, "rules", session, ms, None))
+        if "fixloop" in approaches:
+            session = drive_measures(procedure_id, ms, done_at, setting,
+                                     agent=fixloop_agent, keyframes=kf)
+            out.append((setting, "fixloop", session, ms, None))
+        if "spark" in approaches:
+            images = [(m.t, kf[i]) for i, m in enumerate(ms)]
+            res = run_spark_only(images, done_at, spark_ask)
+            out.append((setting, "spark", None, [], res))
+    return out
+
+
+def append_results(rows, costs, clip_id, rows_clip, ran, procedure):
+    """`ran` (faux ou réel) -> lignes de `results.csv` + journal des coûts."""
+    for setting, approach, session, measures, res in ran:
+        if approach == "spark":
+            events, spark_extra = res["events"], res["calls"]
+        else:
+            events, spark_extra = session.log, 0
+        row = result_row(clip_id, approach, setting, events,
+                         measures, rows_clip, spark_extra,
+                         procedure=procedure)
+        log_costs(costs, clip_id, row["sam_images"], row["spark_calls"])
+        rows.append(row)
+
+
+def spark_cache_or_exit(path, what: str):
+    """Cache Spark requis hors ligne : absent ou vide -> arrêt (EVAL-R5.1)."""
+    import json
+    try:
+        entries = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        entries = {}
+    if not entries:
+        sys.exit(f"hors ligne sans cache Spark ({what}) : {path} "
+                 "(passer d'abord en ligne, EVAL-T7)")
+    return path
+
+
 def log_costs(costs, clip, sam_images, spark_calls):
     """Journalise l'estimation dans le journal des coûts (EVAL-R7.3)."""
     costs.add(model="sam-3.1", kind="video", units=sam_images, seconds=0.0,
@@ -139,6 +280,51 @@ def log_costs(costs, clip, sam_images, spark_calls):
         costs.add(model="muse-spark-1.3", kind="in", units=spark_calls * 1500,
                   seconds=0.0, ok=True, estimated=True, session_id=clip,
                   call="benchmark")
+
+
+def run_clip_online(clip, args, procedure, approaches, settings):
+    """Un extrait en ligne : SAM 3.1 + Spark, caches enregistrés (EVAL-T7)."""
+    from fixloop.agent import SparkAgent
+    from fixloop.procedures import load_all
+    video = resolve_video(clip, args.clips)
+    sam_dir = Path(args.sam_cache) / clip["clip"]
+    sam_dir.mkdir(parents=True, exist_ok=True)
+    merged = fetch_online(video, procedure, sam_dir)  # SAM 3.1, cache par morceau
+    frames, keyframes = clip_frames(video, merged, procedure)
+    spark_cache = Path(args.spark_cache)
+    spark_cache.mkdir(parents=True, exist_ok=True)
+    procedures = load_all()
+    fixloop_agent = CachedAgent(SparkAgent(procedures), spark_cache / "fixloop.json")
+    spark_inner = SparkAgent(procedures, model=args.model)  # EVAL-D5
+    spark_cached = CachedAgent(spark_inner, spark_cache / "spark_only.json")
+    step = procedure["steps"][1]
+    ask = lambda img: spark_cached.spark_only([img], step)
+    labels = read_labels(args.labels)[clip["clip"]]
+    return run_clip_real(clip["clip"], labels, args.procedure, procedure,
+                         approaches, settings, frames, keyframes,
+                         fixloop_agent, ask)
+
+
+def run_clip_offline(clip, args, procedure, approaches, settings):
+    """Un extrait hors ligne : caches seuls, aucun appel (EVAL-R5.1)."""
+    video = resolve_video(clip, args.clips)
+    sam_dir = Path(args.sam_cache) / clip["clip"]
+    try:
+        merged = read_sam_cache(sam_dir, procedure)
+    except RuntimeError as exc:
+        sys.exit(f"hors ligne sans cache SAM : {clip['clip']} ({exc})")
+    frames, keyframes = clip_frames(video, merged, procedure)
+    spark_cache = Path(args.spark_cache)
+    fixloop_agent = CachedAgent(None, spark_cache_or_exit(spark_cache / "fixloop.json",
+                                                          "FixLoop"))
+    spark_cached = CachedAgent(None, spark_cache_or_exit(spark_cache / "spark_only.json",
+                                                         "Spark seul"))
+    step = procedure["steps"][1]
+    ask = lambda img: spark_cached.spark_only([img], step)
+    labels = read_labels(args.labels)[clip["clip"]]
+    return run_clip_real(clip["clip"], labels, args.procedure, procedure,
+                         approaches, settings, frames, keyframes,
+                         fixloop_agent, ask)
 
 
 def main() -> None:
@@ -153,6 +339,12 @@ def main() -> None:
     ap.add_argument("--yes", action="store_true")
     ap.add_argument("--out", default="eval/benchmark")
     ap.add_argument("--costs-root", default="data/costs")
+    ap.add_argument("--sam-cache", default="data/eval/sam",
+                    help="sorties brutes SAM par extrait (EVAL-R5.1)")
+    ap.add_argument("--spark-cache", default="eval/benchmark/cache",
+                    help="réponses Spark en cache (EVAL-R5.2)")
+    ap.add_argument("--model", default=SPARK_MODEL_DEFAULT,
+                    help="modèle Spark pour l'approche Spark seul (EVAL-D5)")
     args = ap.parse_args()
 
     clips = read_clips(args.clips)
@@ -174,31 +366,26 @@ def main() -> None:
         if answer.strip().lower() not in ("o", "oui", "y", "yes"):
             sys.exit("abandon (sans confirmation, aucun appel).")
 
+    from fixloop.procedures import load_all
+    procedure = load_all()[args.procedure]
     costs = CostLog(root=args.costs_root)
     rows = []
+    spark_cache = Path(args.spark_cache)
     for clip in clips:
         rows_clip = labels_by_clip[clip["clip"]]
-        if args.fake or args.offline:
-            if not args.fake:
-                sys.exit(f"hors ligne sans cache : {clip['clip']} "
-                         "(exécution réelle EVAL-T7, pas pour cette série)")
+        if args.fake:
             ran, _ = run_clip_fake(clip["clip"], rows_clip, args.procedure,
                                    approaches, settings, costs)
-            for setting, approach, session, measures, res in ran:
-                if approach == "spark":
-                    events = res["events"]
-                    spark_extra = res["calls"]
-                else:
-                    events = session.log
-                    spark_extra = 0
-                row = result_row(clip["clip"], approach, setting, events,
-                                 measures, rows_clip, spark_extra,
-                                 procedure=args.procedure)
-                log_costs(costs, clip["clip"], row["sam_images"], row["spark_calls"])
-                rows.append(row)
+            append_results(rows, costs, clip["clip"], rows_clip, ran,
+                           procedure=args.procedure)
+        elif args.offline:
+            ran = run_clip_offline(clip, args, procedure, approaches, settings)
+            append_results(rows, costs, clip["clip"], rows_clip, ran,
+                           procedure=args.procedure)
         else:
-            sys.exit("exécution en ligne : EVAL-T7, pas pour cette série "
-                     "(vidéos et clé API requises)")
+            ran = run_clip_online(clip, args, procedure, approaches, settings)
+            append_results(rows, costs, clip["clip"], rows_clip, ran,
+                           procedure=args.procedure)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     with (out / "results.csv").open("w", encoding="utf-8", newline="") as fh:

@@ -254,11 +254,13 @@ class CannedAgent:
 
 def drive_measures(procedure_id: str, measures: list, done_at: list[float],
                    setting: str = "replay", agent=None, memory=None, out=None,
-                   visit=None):
+                   visit=None, keyframes=None):
     """Session complète sur des mesures déjà calculées (EVAL-R3.4, RPL-T2).
 
     `visit(i, t, frame_or_None, m)` est appelé après chaque mesure (replay :
     contours et vidéo à partir de l'image ; None en mode mesures seules).
+    `keyframes` (images alignées sur `measures`, benchmark réel et replay
+    vidéo) : diagnostic sur les 3 premières, une par mesure ensuite.
     """
     from .procedures import load_all
     from .state_machine import Session
@@ -269,13 +271,13 @@ def drive_measures(procedure_id: str, measures: list, done_at: list[float],
                       debounce_frames=SETTINGS[setting]["debounce"])
     if hasattr(out, "session"):
         out.session = session  # TSOut : horodatage dès `start()` (replay)
-    session.start(images=[])
+    session.start(list(keyframes[:3]) if keyframes else [])
     pending = sorted(done_at)
     for i, m in enumerate(measures):
         while pending and pending[0] <= m.t + 1e-9:
             session.on_user_done()
             pending.pop(0)
-        session.on_measures(m)
+        session.on_measures(m, keyframes[i] if keyframes and i < len(keyframes) else None)
         if visit is not None:
             visit(i, m.t, None, m)
     return session
