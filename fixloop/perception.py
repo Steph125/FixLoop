@@ -402,11 +402,13 @@ async def segment_video(video: str | Path, procedure: dict, out_dir: str | Path,
                         client: Any | None = None, costs: Any | None = None,
                         chunk_seconds: float = CHUNK_SECONDS, fps: float = VIDEO_FPS,
                         width: int = 960, confirm=None, prepare=None,
-                        uploader=None) -> list[FrameMasks]:
+                        uploader=None, parts: list[str] | None = None) -> list[FrameMasks]:
     """Segmente une vidéo entière, morceau par morceau (PERC-R3, replay et évaluation).
 
     `prepare` (ffmpeg) et `uploader` (Files API) sont injectables pour les tests ;
     `confirm(billed_images) -> bool` valide la facturation estimée (PERC-R3.6).
+    Par défaut, seules les pièces de `live_parts(procedure)` sont segmentées
+    (PERC-R3.3) ; `parts=[...]` remplace cette liste (démonstration, benchmark).
     Rend un `FrameMasks` par image (temps = indice / fps).
     """
     if client is None:  # jamais dans les tests : la clé ne quitte pas le serveur
@@ -417,7 +419,7 @@ async def segment_video(video: str | Path, procedure: dict, out_dir: str | Path,
     prepare = prepare or _prepare_video
     _, h, w, _, chunks = await asyncio.to_thread(prepare, Path(video), out, fps, width,
                                                  chunk_seconds)
-    parts = list(procedure.get("parts", {}))
+    parts = list(parts) if parts is not None else live_parts(procedure)
     prompts = {p: procedure["parts"][p] for p in parts}
     raws: dict[str, dict[int, str]] = {p: {} for p in parts}
     jobs: list[tuple[str, int, int, int, str]] = []

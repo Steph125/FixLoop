@@ -307,3 +307,22 @@ def test_video_cache_skips_second_pass(tmp_path):
     assert [f.frame_index for f in first] == [0, 1, 2, 3]  # PERC-R3.4 : morceaux recolles
     assert first[0].masks["chain"].shape == (H, W)
     assert [f.frame_index for f in second] == [0, 1, 2, 3]
+
+
+def test_video_explicit_parts_override_default(tmp_path):
+    from fixloop.perception import segment_video
+
+    async def main():
+        uploads = []
+        client = video_client(tmp_path, uploads)
+        client.texts["rear derailleur"] = (
+            video_line(3, 0, 10, 10, 8, 8, 0.9) + video_line(3, 1, 10, 10, 8, 8, 0.9))
+        kw = {"client": client, "prepare": fake_prepare,
+              "uploader": client.upload, "out_dir": tmp_path / "out3",
+              "parts": ["chain", "chainring", "derailleur"]}
+        return await segment_video("video.mp4", PROC, **kw), client
+
+    frames, client = arun(main())
+    assert len(client.created) == 6  # PERC-R3.3 : 2 morceaux x 3 pieces demandees
+    assert [f.frame_index for f in frames] == [0, 1, 2, 3]
+    assert set(frames[0].masks) == {"chain", "chainring", "derailleur"}

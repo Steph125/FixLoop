@@ -394,3 +394,21 @@ ignorés dans cette sandbox) ; `python scripts/check_spec.py` → 82 exigences, 
 46 décisions, 101 tâches, OK. Interdits respectés : `.env` ni lu ni committé, aucun appel API,
 aucun lancement de `probe/` ou `try_agent.py`, aucun `push`/`merge`/changement de branche,
 aucune dépendance ajoutée, aucune suppression hors scripts jetables créés puis supprimés.
+
+## 2026-11-01 (reprise série 2, décisions appliquées sans question)
+
+- PERC-T5 (vidéo : 6 appels au lieu de 4) : `segment_video` segmente par défaut
+  `live_parts(procedure)` (chaîne et plateau, PERC-R3.3 et PERC-D5 déjà en spec)
+  au lieu de toutes les pièces de la fiche, et accepte `parts=[...]` qui remplace
+  cette liste. Test gardé tel quel (`test_video_cache_skips_second_pass` :
+  2 morceaux x 2 pièces = 4, 2e passage sans requête) ; ajout de
+  `test_video_explicit_parts_override_default` (`parts=["chain", "chainring",
+  "derailleur"]` → 6 appels, 3 masques par image). Cause confirmée ici :
+  fiche à 3 pièces contre `live_parts` à 2. Les 2 tests sont async, ignorés ici
+  (sockets interdits) : tâche toujours [~], à vérifier hors sandbox.
+  Preuve partielle : `pytest` 127 passed, 18 skipped, 3 failed (que
+  `tests/test_server.py` : TestClient exige une boucle asyncio, `socketpair`
+  interdit ici — environnemental, aucune frame du dépôt dans la trace) ;
+  `check_spec.py` OK (82 exigences, 299 critères, 48 décisions, 104 tâches).
+  Fichiers : `fixloop/perception.py`, `tests/test_perception_live.py`.
+  Commit : `fix(perception): video defaults to live parts with override [PERC-T5] (Muse Code)`.
