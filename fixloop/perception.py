@@ -50,7 +50,7 @@ def _env_int(name: str, default: int) -> int:
 
 CONF_THR = _env_float("FIXLOOP_SAM_CONF", 0.4)
 LIVE_WIDTH = _env_int("FIXLOOP_SAM_WIDTH", 848)
-MAX_IN_FLIGHT = _env_int("FIXLOOP_SAM_INFLIGHT", 3)
+MAX_IN_FLIGHT = _env_int("FIXLOOP_SAM_INFLIGHT", 5)  # PERC-D7 : 3 perdait 10 images sur 37 (SRV-T11)
 CHUNK_SECONDS = _env_float("FIXLOOP_SAM_CHUNK_S", 10.0)
 VIDEO_FPS = 10.0
 SAM_MODEL = "sam-3.1"
@@ -133,7 +133,7 @@ class LivePerception:
         self.dropped = 0
 
     def try_submit(self, jpeg: bytes, frame_index: int, t: float) -> Any | None:
-        """Soumet une image sans attendre ; None si déjà 3 en cours (abandonnée, PERC-R2.2)."""
+        """Soumet une image sans attendre ; None si déjà MAX_IN_FLIGHT en cours (abandonnée, PERC-R2.2)."""
         if self.in_flight >= self.max_in_flight:
             self.dropped += 1
             return None

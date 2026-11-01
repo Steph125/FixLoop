@@ -622,3 +622,16 @@ def test_fatal_result_error_closes_with_code():
         assert err["code"] == "api_key"  # SRV-R7.2 : clé refusée -> error puis fermeture
         await asyncio.wait_for(run, 10)
     arun(main())
+
+
+def test_costs_are_attributed_to_the_session(tmp_path):
+    from fixloop.costs import CostLog
+    from fixloop.procedures import load_all
+    from server.session import SessionCosts, build_models
+    log = CostLog(root=tmp_path)
+    models = build_models(load_all(), costs=log, fake=True)
+    assert isinstance(models.costs, SessionCosts)
+    models.costs.session_id = "s-1"  # posé par LiveSession après hello
+    models.costs.add(model="sam-3.1", kind="image", units=360, seconds=1.0, ok=True)
+    assert abs(models.costs.session_total("s-1") - 0.90) < 1e-9  # SRV-R8.2 : la limite peut jouer
+    assert models.costs.session_total("autre") == 0

@@ -427,8 +427,30 @@ class SimPerception:
         return self.done_sync(fi, t)
 
 
+class SessionCosts:
+    """Journal des coûts d'une session : ajoute `session_id` à chaque appel (SRV-R8.1, R8.2).
+
+    Les modèles sont créés avant que la session ait un identifiant ; il est posé après `hello`.
+    Sans lui, `session_total` restait à 0 et la limite de 1,50 $ par session ne jouait jamais
+    (constaté le 1er nov., SRV-T11).
+    """
+
+    def __init__(self, inner: object) -> None:
+        self.inner = inner
+        self.session_id: str | None = None
+
+    def add(self, *args: object, **kw: object) -> float:
+        kw.setdefault("session_id", self.session_id)
+        return self.inner.add(*args, **kw)
+
+    def __getattr__(self, name: str) -> object:  # session_total, day_total, by_model…
+        return getattr(self.inner, name)
+
+
 def build_models(procedures: dict, costs: object, fake: bool = False) -> Models:
     """Assemble les modèles ; `fake` rejoue sans aucun réseau (SRV-T10)."""
+    if costs is not None and not isinstance(costs, SessionCosts):
+        costs = SessionCosts(costs)
     if fake:
         from tests.fakes import FakeAgent, FakeMemory
         return Models(lambda proc: SimPerception(costs=costs),
@@ -527,6 +549,8 @@ class LiveSession:
             await self.ws.close()
             return
         self.session_id, self.bike_id = body["session_id"], self._bike_of(body)
+        if isinstance(self.models.costs, SessionCosts):
+            self.models.costs.session_id = self.session_id  # coûts attribués à cette session
         self.started_at = self.clock()
         await self.ws.send_text(json.dumps({"type": "hello_ack", **body}))
         receiver = asyncio.create_task(self._receive())
@@ -669,7 +693,7 @@ class LiveSession:
             return
         task = self._submit(jpeg, fi, t_ms)
         if task is None:
-            self.counters["dropped"] += 1  # SRV-R4.2 : 3 en cours, abandonnée
+            self.counters["dropped"] += 1  # SRV-R4.2 : MAX_IN_FLIGHT en cours, abandonnée
 
     def _submit(self, jpeg: bytes, fi: int, t_ms: int):  # tâche asyncio ou None
         if self.perception is None:

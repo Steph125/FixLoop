@@ -82,3 +82,11 @@ def test_bare_fini_and_quoi_trigger_nothing():
 def test_corrected_forms_detected():
     assert CommandDetector().feed("c'est fini", 0.0) == "done"  # VOX-T6
     assert CommandDetector().feed("tu peux répéter", 0.0) == "repeat"  # contient « repeter »
+
+
+def test_real_transcriptions_from_probe():
+    """Transcriptions réelles de Muse Voice Transcribe (eval/day3/transcribe_probe.json, 1er nov.)."""
+    expected = {"c'est fait.": "done", "aidemoi.": "help", "je n'ai pas fini.": None,
+                "répète.": "repeat", "c'est quoi ce bruit?": None, "c'est bon.": "done"}
+    for text, cmd in expected.items():
+        assert CommandDetector().feed(text, 10.0) == cmd, text

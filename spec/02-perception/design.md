@@ -32,7 +32,7 @@ créé une fois par processus, fermé à l'arrêt (`await client.close()`).
 ```python
 CONF_THR = 0.4            # FIXLOOP_SAM_CONF
 LIVE_WIDTH = 848          # FIXLOOP_SAM_WIDTH, largeur envoyée en direct (pas d'agrandissement)
-MAX_IN_FLIGHT = 3         # FIXLOOP_SAM_INFLIGHT
+MAX_IN_FLIGHT = 5         # FIXLOOP_SAM_INFLIGHT (PERC-D7)
 CHUNK_SECONDS = 10.0      # FIXLOOP_SAM_CHUNK_S
 VIDEO_FPS = 10.0
 RETRYABLE = (APIConnectionError, ResponsesStreamError, ConnectionError, TimeoutError)
@@ -154,6 +154,11 @@ en médiane, au-dessus de la limite de 4 ko (`PERC-R6.2`).
   calculé une fois. Raison : 1,9 s par image en mode image contre 529 s pour 57 s en mode vidéo.
 - **PERC-D3 (30 oct.)** — Au plus 3 images en cours ; au-delà, abandon. Raison : à 1 image/s et 4,4 s au
   90e centile, une file grossirait sans fin et les verdicts arriveraient trop tard.
+- **PERC-D7 (1er nov.)** — Au plus 5 images en cours au lieu de 3. Mesuré en direct sur `velo2` (`SRV-T11`,
+  ws_client à 1 image/s, vrais modèles) : délai médian 2,7 s, maximum 4,0 s ; avec 3 en cours, 10 images abandonnées
+  et 6 périmées sur 37 envoyées, d'où une première validation à 14 s au lieu de quelques secondes. À 1 image/s et
+  2,7 s de délai, il y a en moyenne 2,7 images en cours : 3 ne laisse aucune marge. Les résultats de plus de 5 s
+  restent écartés (`SRV-R4.3`).
 - **PERC-D4 (29 oct.)** — `select: largest` pour le plateau : le prompt `chainring` renvoie aussi les pignons
   arrière (`eval/day1`).
 - **PERC-D5 (29 oct., précisé le 30)** — Le dérailleur n'est pas utilisé par la fiche : son prompt attrape la

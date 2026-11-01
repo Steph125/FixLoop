@@ -125,8 +125,9 @@ async def run_realtime(key: str, pcm: bytes) -> dict:
 def run_file(key: str, wav_path: Path) -> dict:
     import httpx
 
-    settings = {k: v for k, v in handshake(key).items() if k != "authorization"}
-    settings["mode"] = "ENDPOINTING"
+    # 1er essai (1er nov.) : la requête complète a reçu « 400 Malformed request ». On n'envoie plus que les
+    # réglages utiles à un fichier WAV (son en-tête donne déjà l'encodage). Voie de comparaison seulement.
+    settings = {"model": MODEL, "mode": "ENDPOINTING", "languageBias": ["French"], "keywords": KEYWORDS}
     t0 = time.monotonic()
     with wav_path.open("rb") as fh:
         r = httpx.post(FILE_URL, headers={"Authorization": f"Bearer {key}", "Accept": "application/json"},

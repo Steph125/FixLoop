@@ -94,7 +94,7 @@ en-tête `Authorization` classique, même tarif).
 ```python
 COMMANDS = {
     "done":   ["c est fait", "j ai fini", "c est fini", "j ai termine", "c est termine", "c est bon"],
-    "help":   ["aide moi", "aide", "je n y arrive pas", "au secours"],
+    "help":   ["aide moi", "aidemoi", "aidez moi", "aide", "je n y arrive pas", "au secours"],
     "repeat": ["repete", "repeter", "redis", "pardon"],
 }
 

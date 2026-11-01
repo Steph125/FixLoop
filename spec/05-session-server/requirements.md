@@ -36,7 +36,7 @@ machine à états, renvoie surimpressions, phrases et état. C'est lui qui tient
 
 1. QUAND la session est en `DEMARRAGE`, le système DOIT garder les 3 premières images reçues après `start`, puis
    appeler `Session.start(images)`.
-2. Ensuite, le système DOIT soumettre chaque image à la perception (`PERC-R2`) ; une image refusée (3 en cours)
+2. Ensuite, le système DOIT soumettre chaque image à la perception (`PERC-R2`) ; une image refusée (5 en cours)
    DOIT être comptée dans `dropped`.
 3. QUAND un résultat SAM arrive, le système DOIT l'écarter s'il est plus vieux que 5 s (horloge du serveur depuis
    la réception) ou si son `frame_index` est inférieur au dernier résultat appliqué.

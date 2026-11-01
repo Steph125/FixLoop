@@ -1,0 +1,255 @@
+{
+  "date": "2026-11-01T14:05:47",
+  "model": "muse-voice-transcribe-1.0",
+  "audio_s": 21.25,
+  "settings": {
+    "model": "muse-voice-transcribe-1.0",
+    "audioEncoding": "PCM_24KHZ",
+    "mode": "ENDPOINTING",
+    "partialMode": "CUMULATIVE",
+    "emitAudioProgress": false,
+    "languageBias": [
+      "French"
+    ],
+    "keywords": [
+      "c'est fait",
+      "aide-moi",
+      "répète",
+      "plateau",
+      "chaîne"
+    ]
+  },
+  "realtime": {
+    "events": [
+      {
+        "wall_s": 2.047,
+        "type": "speechStart",
+        "audioProcessedMs": 1420,
+        "turnId": 0
+      },
+      {
+        "wall_s": 2.719,
+        "type": "transcript",
+        "transcript": "c'est",
+        "final": false,
+        "audioProcessedMs": 2560
+      },
+      {
+        "wall_s": 2.844,
+        "type": "transcript",
+        "transcript": "c'est fait.",
+        "final": false,
+        "audioProcessedMs": 2720
+      },
+      {
+        "wall_s": 2.906,
+        "type": "speechEnd",
+        "audioProcessedMs": 2300,
+        "turnId": 0
+      },
+      {
+        "wall_s": 2.906,
+        "type": "speechComplete",
+        "audioProcessedMs": 2300,
+        "turnId": 0,
+        "transcript": "c'est fait.",
+        "latency_s": 0.606,
+        "command": "done"
+      },
+      {
+        "wall_s": 4.922,
+        "type": "speechStart",
+        "audioProcessedMs": 4300,
+        "turnId": 1
+      },
+      {
+        "wall_s": 5.953,
+        "type": "transcript",
+        "transcript": "aidemoi.",
+        "final": false,
+        "audioProcessedMs": 5760
+      },
+      {
+        "wall_s": 5.953,
+        "type": "speechEnd",
+        "audioProcessedMs": 5260,
+        "turnId": 1
+      },
+      {
+        "wall_s": 5.953,
+        "type": "speechComplete",
+        "audioProcessedMs": 5260,
+        "turnId": 1,
+        "transcript": "aidemoi.",
+        "latency_s": 0.693,
+        "command": null
+      },
+      {
+        "wall_s": 8.187,
+        "type": "speechStart",
+        "audioProcessedMs": 7580,
+        "turnId": 2
+      },
+      {
+        "wall_s": 8.75,
+        "type": "transcript",
+        "transcript": "je",
+        "final": false,
+        "audioProcessedMs": 8640
+      },
+      {
+        "wall_s": 9.172,
+        "type": "transcript",
+        "transcript": "je n'ai pas",
+        "final": false,
+        "audioProcessedMs": 9040
+      },
+      {
+        "wall_s": 9.656,
+        "type": "transcript",
+        "transcript": "je n'ai pas fini.",
+        "final": false,
+        "audioProcessedMs": 9520
+      },
+      {
+        "wall_s": 9.656,
+        "type": "speechEnd",
+        "audioProcessedMs": 9020,
+        "turnId": 2
+      },
+      {
+        "wall_s": 9.656,
+        "type": "speechComplete",
+        "audioProcessedMs": 9020,
+        "turnId": 2,
+        "transcript": "je n'ai pas fini.",
+        "latency_s": 0.636,
+        "command": null
+      },
+      {
+        "wall_s": 11.797,
+        "type": "speechStart",
+        "audioProcessedMs": 11180,
+        "turnId": 3
+      },
+      {
+        "wall_s": 12.781,
+        "type": "transcript",
+        "transcript": "répète.",
+        "final": false,
+        "audioProcessedMs": 12640
+      },
+      {
+        "wall_s": 12.781,
+        "type": "speechEnd",
+        "audioProcessedMs": 12140,
+        "turnId": 3
+      },
+      {
+        "wall_s": 12.781,
+        "type": "speechComplete",
+        "audioProcessedMs": 12140,
+        "turnId": 3,
+        "transcript": "répète.",
+        "latency_s": 0.641,
+        "command": "repeat"
+      },
+      {
+        "wall_s": 14.844,
+        "type": "speechStart",
+        "audioProcessedMs": 14220,
+        "turnId": 4
+      },
+      {
+        "wall_s": 15.328,
+        "type": "transcript",
+        "transcript": "c'est",
+        "final": false,
+        "audioProcessedMs": 15200
+      },
+      {
+        "wall_s": 15.562,
+        "type": "transcript",
+        "transcript": "c'est quoi",
+        "final": false,
+        "audioProcessedMs": 15440
+      },
+      {
+        "wall_s": 15.875,
+        "type": "transcript",
+        "transcript": "c'est quoi ce",
+        "final": false,
+        "audioProcessedMs": 15760
+      },
+      {
+        "wall_s": 16.375,
+        "type": "transcript",
+        "transcript": "c'est quoi ce bruit?",
+        "final": false,
+        "audioProcessedMs": 16240
+      },
+      {
+        "wall_s": 16.375,
+        "type": "speechEnd",
+        "audioProcessedMs": 15740,
+        "turnId": 4
+      },
+      {
+        "wall_s": 16.375,
+        "type": "speechComplete",
+        "audioProcessedMs": 15740,
+        "turnId": 4,
+        "transcript": "c'est quoi ce bruit?",
+        "latency_s": 0.635,
+        "command": null
+      },
+      {
+        "wall_s": 18.609,
+        "type": "speechStart",
+        "audioProcessedMs": 17980,
+        "turnId": 5
+      },
+      {
+        "wall_s": 19.078,
+        "type": "transcript",
+        "transcript": "c'est",
+        "final": false,
+        "audioProcessedMs": 18960
+      },
+      {
+        "wall_s": 19.672,
+        "type": "transcript",
+        "transcript": "c'est bon.",
+        "final": false,
+        "audioProcessedMs": 19520
+      },
+      {
+        "wall_s": 19.672,
+        "type": "speechEnd",
+        "audioProcessedMs": 19020,
+        "turnId": 5
+      },
+      {
+        "wall_s": 19.672,
+        "type": "speechComplete",
+        "audioProcessedMs": 19020,
+        "turnId": 5,
+        "transcript": "c'est bon.",
+        "latency_s": 0.652,
+        "command": "done"
+      },
+      {
+        "wall_s": 23.5,
+        "type": "transcript",
+        "transcript": "",
+        "final": true,
+        "audioProcessedMs": 23280
+      }
+    ]
+  },
+  "file": {
+    "status": 400,
+    "seconds": 1.34
+  },
+  "latency_median_s": 0.641
+}

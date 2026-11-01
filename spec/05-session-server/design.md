@@ -8,7 +8,7 @@ Couvre `SRV-R1` à `SRV-R10`. Fichiers : `server/app.py`, `server/session.py`, `
 ```
 WebSocket ─► receive_loop ──JSON──► control (hello, start, user_done, command, speaking, pause, stop)
                 │
-                ├─binaire 0x02─► LivePerception.try_submit ──(≤3 en cours)──► SAM 3.1 (x2 pièces, parallèle)
+                ├─binaire 0x02─► LivePerception.try_submit ──(≤5 en cours)──► SAM 3.1 (x2 pièces, parallèle)
                 │                                                        │
                 │                                   résultat ◄───────────┘
                 │                       filtre (> 5 s ou désordre) ──► measure() ──► send overlay
@@ -130,7 +130,7 @@ marquée `estimated: true`.
 | Cas | Traitement |
 |---|---|
 | Exception dans `Session.on_measures` | journalisée avec trace, `error: internal` envoyé, session continue avec la mesure suivante ; 3 exceptions de suite → arrêt |
-| `try_submit` refuse (3 en cours) | `dropped += 1` |
+| `try_submit` refuse (5 en cours) | `dropped += 1` |
 | Aucun résultat SAM depuis 15 s | `say` lent (au plus 1 / min) |
 | 401 | `error: api_key`, arrêt |
 | 402 / 429 / budget | `error: budget`, `say`, arrêt |
@@ -151,7 +151,7 @@ marquée `estimated: true`.
 
 - **SRV-D1 (30 oct.)** — Binaire pour images et audio (pas de base64) : un tiers de données en moins sur le Wi-Fi
   du téléphone.
-- **SRV-D2 (30 oct.)** — 1 image/s, au plus 3 en cours, résultats de plus de 5 s écartés (`PERC-D3`).
+- **SRV-D2 (30 oct., révisé le 1er nov.)** — 1 image/s, au plus 5 en cours (`PERC-D7`), résultats de plus de 5 s écartés (`PERC-D3`).
 - **SRV-D3 (30 oct.)** — Machine à états synchrone exécutée dans un fil, un appel à la fois : on garde la logique
   pure et testée de `01-core-loop`, sans réécriture asynchrone.
 - **SRV-D4 (30 oct.)** — Pendant un appel Spark, seule la mesure la plus récente attend : l'utilisateur a pu

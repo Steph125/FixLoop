@@ -66,7 +66,7 @@ l'écran.
    | Commande | Formes reconnues |
    |---|---|
    | `done` | « c'est fait », « c est fait », « j'ai fini », « c'est fini », « j'ai terminé », « c'est bon » |
-   | `help` | « aide-moi », « aide moi », « aide », « je n'y arrive pas », « au secours » |
+   | `help` | « aide-moi », « aide moi », « aidemoi » (transcrit ainsi par Transcribe, `eval/day3`), « aidez-moi », « aide », « je n'y arrive pas », « au secours » |
    | `repeat` | « répète », « repete », « redis », « tu peux répéter », « pardon » |
 
 2. Une transcription qui ne contient aucune de ces formes NE DOIT déclencher aucune commande.

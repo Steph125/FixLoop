@@ -188,11 +188,13 @@ def test_try_submit_limits_in_flight():
     async def main():
         gate = asyncio.Event()
         client = client_two_parts(gate=gate)
+        from fixloop.perception import MAX_IN_FLIGHT
+        assert MAX_IN_FLIGHT == 5  # PERC-R2.2, révisé le 1er nov. (PERC-D7)
         perc = LivePerception(PROC, client=client, retry_s=0)
-        tasks = [perc.try_submit(jpeg_bytes(), i, float(i)) for i in range(3)]
+        tasks = [perc.try_submit(jpeg_bytes(), i, float(i)) for i in range(MAX_IN_FLIGHT)]
         assert all(t is not None for t in tasks)
-        assert perc.in_flight == 3
-        assert perc.try_submit(jpeg_bytes(), 99, 99.0) is None  # PERC-R2.2 : 4e refusée
+        assert perc.in_flight == MAX_IN_FLIGHT
+        assert perc.try_submit(jpeg_bytes(), 99, 99.0) is None  # PERC-R2.2 : la 6e est refusée
         assert perc.dropped == 1
         gate.set()
         results = await asyncio.gather(*tasks)

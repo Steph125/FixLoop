@@ -11,7 +11,7 @@ import unicodedata
 
 COMMANDS = {  # design 04, section 2.2 : formes deja normalisees (VOX-T6)
     "done": ["c est fait", "j ai fini", "c est fini", "j ai termine", "c est termine", "c est bon"],
-    "help": ["aide moi", "aide", "je n y arrive pas", "au secours"],
+    "help": ["aide moi", "aidemoi", "aidez moi", "aide", "je n y arrive pas", "au secours"],  # « aidemoi » : transcription réelle (eval/day3)
     "repeat": ["repete", "repeter", "redis", "pardon"],
 }
 _PRIORITY = ("done", "help", "repeat")  # si plusieurs commandes : done d'abord

@@ -32,8 +32,8 @@ donner un verdict pendant que l'utilisateur répare.
 **Récit** : en tant que session en direct, je veux analyser une image par seconde même si une requête met 4 s.
 
 1. Le système DOIT accepter une nouvelle image sans attendre la fin des précédentes (requêtes qui se chevauchent).
-2. Le système DOIT limiter à 3 le nombre d'images en cours d'analyse ; au-delà, la nouvelle image DOIT être
-   abandonnée (et comptée), jamais mise en file.
+2. Le système DOIT limiter à 5 le nombre d'images en cours d'analyse (valeur révisée le 1er nov., `PERC-D7`) ;
+   au-delà, la nouvelle image DOIT être abandonnée (et comptée), jamais mise en file.
 3. Le système DOIT rendre chaque résultat avec son `frame_index` et son instant `t` d'origine, pour que l'appelant
    écarte les résultats arrivés dans le désordre ou trop vieux (`SRV-R4`).
 
