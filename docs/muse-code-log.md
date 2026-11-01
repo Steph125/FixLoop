@@ -3,6 +3,22 @@
 Tenu par Muse Code à chaque tâche terminée (date, prompt, fichiers, corrections à la main).
 Les entrées « BLOQUÉ » notent les tâches abandonnées après 3 essais et la raison.
 
+## 2026-11-01 (série appli + voix + mémoire, sans interaction)
+
+Choix prudents valables pour toute la série : aucune question posée ; suite
+pytest complète aux jalons (ciblée par tâche, ~15 min sinon) ; nouveaux
+fichiers en CRLF comme le reste du dépôt ; VOX en PCM16 24 kHz / 80 ms
+(exigences VOX-R1.2, sonde VOX-T1) malgré la ligne APP-T8 qui dit
+« 16 kHz, 100 ms » (voir SPEC À REVOIR en fin de série).
+
+- APP-T1 (écrans statiques) : web/ créé (index.html 6 sections, style.css,
+  live.js navigation, lib.js écrans + libellés d erreur, selftest.html +
+  selftest.mjs miroir). Passé au 1er essai après échec authentique avant le code.
+  Preuve : tests/test_phone_app.py 6 passed, node web/selftest.mjs 5/5,
+  node --check OK, check_spec.py OK (82 exigences, 299 critères, 50 décisions, 104 tâches).
+  Fichiers : web/*, tests/test_phone_app.py, spec/06-phone-app/tasks.md.
+  Commits : feat(web) + case cochée (2 commits, ordre inversé par mégarde, noté ici).
+
 ## 2026-10-31 (sans interaction, choix prudent noté sans question)
 
 - PERC-T8 (suivi) : le test d'équivalence passait seul mais échouait dans la suite

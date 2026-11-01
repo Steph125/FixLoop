@@ -2,9 +2,10 @@
 
 Toutes à faire. Jalon (dimanche 1er nov.) : appli sur le téléphone de l'auteur, session en direct complète.
 
-- [ ] **APP-T1 — Écrans statiques.** `index.html` (6 sections), `style.css` (portrait, contrastes, boutons),
+- [x] **APP-T1 — Écrans statiques.** `index.html` (6 sections), `style.css` (portrait, contrastes, boutons),
   navigation entre écrans sans serveur.
   Exigences : `APP-R8`, `APP-R9.2`, `APP-R10.1`, `R10.2`.
+  Preuve : `tests/test_phone_app.py` (6 tests), `node web/selftest.mjs` 5/5, `pytest` ciblé OK, `check_spec.py` OK.
 - [ ] **APP-T2 — Identité du vélo et code d'accès.** `bike_id` dans `localStorage` (try/catch, repli de session),
   champ de code affiché si `/api/health` indique un code requis.
   Exigences : `APP-R6.1`, `R6.2`, `R1.5`.
