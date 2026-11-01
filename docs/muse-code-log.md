@@ -659,3 +659,104 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   RPL-T9 non coché : déploiement + vérification téléphone/4G/navigateurs pour l'auteur.
   Preuve : `tests/test_replay.py` (site synthétique accepté, site vide refusé).
   Fichiers : `replay/deploy_check.py`, `.github/workflows/pages.yml`, `tests/test_replay.py`.
+  Commit d'après-crash (1er nov., reprise sans interaction) : `pytest` 209 passed + 22 skipped,
+  4 failed `tests/test_server.py` (TestClient/`socketpair` interdits, WinError 10013, environnemental,
+  vérifiés hors sandbox le 1er nov.) ; `check_spec.py` OK (82 exigences, 299 critères, 50 décisions,
+  104 tâches). Commit `feat(replay): deploy check and manual Pages workflow, not run [RPL-T9]`.
+
+## 2026-11-01 (reprise série 4, sans interaction, choix prudents notés)
+
+- CORE-T17 (géométrie sur enregistrements, [x]) : `probe_out2/` présent (avec `raw_chain.txt`,
+  `raw_chainring.txt`), donc mesure sur enregistrements comme la spec le demande, pas de synthétique.
+  Sonde jetable hors dépôt (supprimée après) : 100 premières images avec les 2 masques décodées à
+  848×464, 5 images d'échauffement, `time.perf_counter` autour de `measure()` :
+  min 2,83 / médiane 2,95 / p90 3,17 / max 4,20 ms, corroboré par stdout et fichier résultat.
+  Cible < 50 ms tenue avec une marge de 10. Section ajoutée à `eval/day1/findings.md`.
+  Preuve : nouvelle section de `eval/day1/findings.md`.
+  Fichiers : `eval/day1/findings.md`, `spec/01-core-loop/tasks.md`.
+  Commit : `docs(eval): geometry cost 2.95 ms median on recorded frames [CORE-T17] (Muse Code)`.
+- PERC-T10 (configuration, [x]) : code déjà conforme (`CONF_THR`, `LIVE_WIDTH`, `MAX_IN_FLIGHT`,
+  `CHUNK_SECONDS` sur `FIXLOOP_SAM_*` avec repli défaut ; clé lue dans `MODEL_API_KEY`, jamais en
+  argument) — les tests manquaient, écrits d'abord : rechargement du module sous env modifié puis
+  restauré (valeurs puis invalides), sentinelle dans les journaux/coûts/erreurs/`__dict__`.
+  Verts du 1er coup, aucun code à changer. Incident d'outillage : ma sentinelle ressemblait à une
+  clé et le filtre anti-secrets l'a remplacée par `[REDACTED]` dans le fichier — réécrite en
+  `CLE-FACTICE-INTROUVABLE-0123456789` sans motif de clé, vérifiée (`CLE-FACTICE` présent,
+  `REDACTED` absent, `ast.parse` OK).
+  Preuve : `test_sam_settings_overridable_via_env`, `test_api_key_never_in_outputs`
+  (2 passed, `tests/test_perception.py` ciblé vert). Fichiers : `tests/test_perception.py`,
+  `spec/02-perception/tasks.md`.
+  Commit : `test(perception): env overrides and key-leak tests [PERC-T10] (Muse Code)`.
+- SUB-T1 (licences, [x]) : `LICENSE` (MIT) déjà présent et inchangé ; `NOTICE.md` existant mais
+  incomplet → complété avec les 12 paquets : versions et licences recopiées de
+  `pip show <paquet>` le 1er nov. (openai Apache-2.0, meta-sam-parser SAM License, opencv Apache 2.0,
+  numpy BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0, matplotlib « License agreement for
+  matplotlib versions 1.3.0 and later », python-dotenv BSD-3-Clause, fastapi MIT, uvicorn BSD-3-Clause,
+  websockets BSD-3-Clause, httpx BSD-3-Clause, jsonschema MIT, pytest MIT), termes Meta Model API,
+  médias de l'auteur, sans musique. Jamais de mémoire.
+  Fichiers : `NOTICE.md`, `spec/09-submission/tasks.md`.
+  Commit : `docs(submission): third-party licenses from pip show [SUB-T1] (Muse Code)`.
+- SUB-T3 (README, [~]) : brouillon complet selon `design.md` section 3 (anglais) : boucle, tableau
+  « image analyzer » de `product.md`, Mermaid repris de `01-core-loop/design.md`, tableau Meta models
+  vérifié contre le code (`fixloop/perception.py`, `agent.py`, `memory.py`, `voice.py`,
+  `web/audio-worklet.js`, sondes `probe/wonder_probe.py` et `probe/transcribe_probe.py`) et les
+  preuves de `eval/` ; chiffres day1/day2 sourcés, benchmark et liens Replay/vidéo en TBD
+  (`eval/benchmark`) comme exigé ; géométrie 2,95 ms ajoutée après CORE-T17.
+  Choix prudent : version du backend Muse Code non citée (non vérifiée), pas de GIF (viendra avec
+  la vidéo), `check_setup.py` signale l'appel API (clé requise). Reste [~] : chiffres du benchmark
+  (EVAL-T9) et vidéo à venir.
+  Fichiers : `README.md`, `spec/09-submission/tasks.md` (case `[~]` + note).
+  Commit : `docs(submission): draft README, benchmark figures TBD [SUB-T3] (Muse Code)`.
+
+## Résumé final des séries 3 et 4 (1er nov., sans interaction)
+
+La série 3 s'est interrompue avant son résumé ; celui-ci couvre les deux séries.
+
+Tâches faites, série 3 (lot 3, commit `768e48a`, vérifiées avant cochage) : APP-T1, APP-T2, APP-T3,
+APP-T4, APP-T5, APP-T6, APP-T7, APP-T8, APP-T10, SRV-T11, VOX-T1, VOX-T3 (partiel), VOX-T5, MEM-T3,
+MEM-T5, MEM-T6, MEM-T7, SRV-T1 (partiel), SRV-T4, SRV-T7, SRV-T8, SRV-T9, SRV-T10 (partiel), AGT-T5,
+AGT-T6, AGT-T7, AGT-T8, AGT-T9, AGT-T10, PERC-T8.
+Tâches faites, série 4 : APP-T8 [x], VOX-T5 [x], MEM-T4 [x], RPL-T1 [x], AGT-T12 [x], EVAL-T3 [x],
+EVAL-T4 [x], EVAL-T5 [x], EVAL-T6 [x], RPL-T2 [x], RPL-T5 [x], RPL-T6 [x], RPL-T7 [x], RPL-T10 [x],
+RPL-T9 préparé (code + tests, non exécuté), CORE-T17 [x], PERC-T10 [x], SUB-T1 [x], SUB-T3 [~].
+
+[~] et pourquoi : VOX-T3 (2 tests e2e, faux serveur local, sockets interdits, WinError 10013),
+VOX-T4 (routage vérifié en sync, test principal async ignoré, WinError 10013), SRV-T6 (7 tests sync
+verts, pont réel `test_voice_run_reports_on_and_drains` ignoré, WinError 10013), SRV-T10 (session
+`velo2` complète non lançable ici, `listen` interdit ; vérifiée hors sandbox le 1er nov. par
+l'auteur : `uvicorn` + `ws_client.py` en faux modèles jusqu'à `closed`, `success: true`),
+SUB-T3 (brouillon : chiffres du benchmark et liens Replay/vidéo en TBD, fin après EVAL-T9 et vidéo).
+
+BLOQUÉ : rien. La règle des 3 essais n'a jamais déclenché d'annulation.
+
+SPEC À REVOIR (signalés, spec inchangée hors cases et preuves) : titre APP-T8 (16 kHz/100 ms)
+contre APP-R7.4 et VOX-R1.2 (24 kHz/80 ms), le code suit les exigences ; EVAL-T4 : `false_validations`
+exclut le cadrage (validé légitimement sur chaîne tombée) ; renvoi CORE-R8.2 « design.md section 6 »
+visant le schéma de la section 7. Cette reprise n'ajoute aucun écart : README et NOTICE.md suivent
+la spec et les sorties mesurées.
+
+Reste à faire par l'auteur quand les vidéos seront prêtes, dans l'ordre :
+1. Tourner les 20 extraits (EVAL-T1) et les étiqueter (EVAL-T2, `labels.csv`, outil `label_clip.py`).
+2. Tourner les vidéos replay A et B (RPL-T3), les construire avec les vrais modèles (RPL-T4,
+   environ 1 200 images) et la session directe enregistrée (RPL-T8, `FIXLOOP_RECORD=1`).
+3. Vérifier en direct le filtre de confiance (PERC-T9, `probe/sam_image_latency.py --times 5,10,25,35`,
+   environ 0,02 $) et compter les appels Spark sur 3 sessions (AGT-T11).
+4. Exécuter le benchmark en ligne puis hors ligne (EVAL-T7), écrire le rapport et le graphique
+   (EVAL-T8), geler les chiffres dans le README et le script vidéo (EVAL-T9, SUB-T3 → [x]).
+5. Vérifier hors sandbox les [~] (VOX-T3, VOX-T4, SRV-T6, SRV-T10) puis les cocher.
+6. Essai sur téléphone (APP-T9 : `wakeLock`, HTTPS, session réelle), déployer et vérifier le replay
+   sur téléphone en 4G, Chrome/Firefox/Safari, noter la 1re image dans `eval/day5/replay-check.md`
+   (RPL-T9 → [x]).
+7. Tournage/montage vidéo 3 min (SUB-T5), installation depuis zéro (SUB-T4), brouillon du formulaire
+   (SUB-T6), gel mardi midi + étiquette `v1.0-submission` (SUB-T7), contrôle final et public (SUB-T8),
+   envoi avant le 4 nov. 21 h ET (SUB-T9). SUB-T2 (ce journal) se termine à l'envoi.
+
+Résultat final : `python -m pytest -q -rs -m "not recorded" tests` → 211 passed, 22 skipped
+(13 `test_perception_live.py` + 7 `test_session.py` + 2 `test_voice_bridge.py`, tous WinError 10013,
+« à vérifier hors sandbox »), 4 failed `tests/test_server.py` (TestClient/`socketpair` interdits,
+WinError 10013, environnemental, déjà vérifiés hors sandbox le 1er nov.), 1 deselected (`recorded`).
+`python scripts/check_spec.py` → 82 exigences, 299 critères, 50 décisions, 104 tâches, OK.
+Interdits respectés : `.env` ni lu ni committé, aucun appel API (cache `--offline`/`--fake`
+uniquement), aucun lancement de `probe/` ni `try_agent.py`, aucun `push`/`merge`/branche/workflow,
+aucune installation, aucune modification de `spec/` hors cases et preuves, fichiers `tmp*` racine
+et `pytest-of-nguen/` ignorés, sondes jetables supprimées. Coût API de cette reprise : 0 $.
