@@ -28,9 +28,10 @@ Toutes à faire. Jalon (dimanche 1er nov.) : appli sur le téléphone de l'auteu
   déblocage iOS.
   Exigences : `APP-R7.1` à `R7.3`.
   Preuve : `tests/test_phone_app.py::test_spoken_voice_output`, `node web/selftest.mjs` 16/16.
-- [ ] **APP-T8 — Voix en entrée.** `audio-worklet.js`, PCM16 16 kHz, morceaux de 100 ms, indicateur micro,
+- [x] **APP-T8 — Voix en entrée.** `audio-worklet.js`, PCM16 16 kHz, morceaux de 100 ms, indicateur micro,
   `voice_status`.
-  Exigences : `APP-R7.4`. Dépend de : `VOX-T3`, `SRV-T6`.
+  Exigences : `APP-R7.4` (24 kHz, 80 ms — le titre disait 16 kHz / 100 ms : voir SPEC À REVOIR). Dépend de : `VOX-T3` ([~]), `SRV-T6` ([~], voix coupée sans pont).
+  Preuve : `tests/test_phone_app.py::test_voice_input_worklet`, `test_voice_fallback_status`, `node web/selftest.mjs` 17/17.
 - [ ] **APP-T9 — Écran allumé, HTTPS et essai sur téléphone.** `wakeLock` ; tunnel HTTPS ; session réelle
   complète sur le vélo ; liste de contrôle `eval/day4/phone-checklist.md`.
   Exigences : `APP-R1.1`, `R9.1`, `R10.3`, et vérification manuelle de tous les `APP-R*`.

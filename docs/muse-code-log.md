@@ -510,3 +510,18 @@ faux modèles jusqu'à `closed` avec `success: true`.
 
 Leçon pour les prochaines séries : un test « ignoré » doit nommer une cause précise (code d'erreur), jamais une
 famille d'exceptions large ; et une tâche n'est cochée qu'après un passage hors sandbox.
+
+## 2026-11-01 (série 4 : code sans vidéos ni API, sans interaction)
+
+Choix prudents valables pour toute la série : aucune question posée ; code et tests du lot 3
+(commit `768e48a`) vérifiés avant cochage, jamais réécrits sans raison ; un test ajouté seulement
+si un comportement exigé n'est couvert par aucun test (MEM-T4) ; spec non modifiée hors cases et
+preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correctif (voir APP-T8).
+
+- APP-T8 (voix en entrée, [x]) : code du lot 3 vérifié (`audio-worklet.js` 24 kHz / 80 ms, `startMic` /
+  `stopMic`, indicateur micro, `voice_status`, coupure en pause). Choix prudent : `APP-R7.4` et `VOX-R1.2`
+  (24 kHz, 80 ms) priment sur le titre de la tâche (16 kHz, 100 ms) → SPEC À REVOIR (tâche).
+  Correctif de mes propres mains : mon script de normalisation CRLF a vidé 3 `tasks.md` (écriture avant
+  lecture) — restaurés par `git checkout --`, coches refaites, contrôle `check_spec.py` OK.
+  Preuve : `test_voice_input_worklet`, `test_voice_fallback_status`, `node web/selftest.mjs` 17/17.
+  Fichiers : `spec/06-phone-app/tasks.md` (case + preuve).
