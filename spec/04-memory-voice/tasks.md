@@ -34,10 +34,12 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
 
 ## Voix
 
-- [ ] **VOX-T1 — Lire la doc et sonder Transcribe.** `probe/transcribe_probe.py` : ouvrir la WebSocket, envoyer un
+- [x] **VOX-T1 — Lire la doc et sonder Transcribe.** `probe/transcribe_probe.py` : ouvrir la WebSocket, envoyer un
   fichier WAV de test (« c'est fait », enregistré par l'auteur), afficher les événements reçus. Noter dans
   `design.md` section 2.1 : configuration, encodage audio, noms des événements, délai mesuré.
   Exigences : `VOX-R1.2`, `R1.4`. Fait quand : transcription finale reçue et délai noté dans `eval/day3/`.
+  Preuve : `eval/day3/findings.md` (section « Sonde Muse Voice Transcribe »), `eval/day3/transcribe_probe.json` ;
+  délai médian 0,64 s.
 - [x] **VOX-T2 — Détecteur de commandes.** `normalize`, `CommandDetector` et `tests/test_voice.py`.
   Exigences : `VOX-R2.1` à `R2.4`. Aucun réseau.
   Preuve : `tests/test_voice.py` (8 tests : formes, mot entier, priorité, anti-répétition, silence, écho).

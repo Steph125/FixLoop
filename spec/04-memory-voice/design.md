@@ -89,6 +89,10 @@ La sonde mesure aussi le délai `speechComplete` − fin de la phrase, et passe 
 `CommandDetector`. Repli de test sans WebSocket : `POST https://api.meta.ai/v1/asr/transcribe` (fichier WAV,
 en-tête `Authorization` classique, même tarif).
 
+Mesuré le 1er nov. (`eval/day3/findings.md`, `eval/day3/transcribe_probe.json`) : délai médian 0,64 s, maximum
+0,69 s après la fin de la phrase, sur 6 phrases ; « aide-moi » est transcrit « aidemoi » (forme ajoutée à
+`COMMANDS`). La voie fichier a répondu « 400 Malformed request » ; FixLoop ne l'utilise pas.
+
 ### 2.2 `fixloop/voice.py`
 
 ```python
