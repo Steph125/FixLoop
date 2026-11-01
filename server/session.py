@@ -124,20 +124,26 @@ def check_result(age_s: float, frame_index: int, last_applied: int) -> str:
 
 
 class WorkQueue:
-    """File de la machine à états : une seule mesure en attente (SRV-R5.3).
+    """File de la machine à états (SRV-R5.3, R5.4).
 
-    `done` et `command` ne sont jamais écartés et gardent l'ordre d'arrivée
-    avec les mesures (SRV-R5.4).
+    PENDANT QU'un appel à la machine à états est en cours (`busy`), une seule mesure
+    attend : la plus récente remplace les précédentes. Sinon les mesures gardent leur
+    ordre : une rafale de résultats SAM (requêtes qui se chevauchent) ne doit pas
+    faire perdre les images de l'anti-rebond. `done` et `command` ne sont jamais écartés.
     """
 
     def __init__(self) -> None:
         self.q: deque = deque()
         self.dropped_measures = 0
+        self.busy = False
 
     def __len__(self) -> int:
         return len(self.q)
 
     def put_measure(self, m: object, keyframe: object) -> None:
+        if not self.busy:
+            self.q.append(("measure", m, keyframe))
+            return
         kept = [it for it in self.q if it[0] != "measure"]
         self.dropped_measures += len(self.q) - len(kept)
         self.q = deque(kept)
@@ -487,6 +493,7 @@ class LiveSession:
         self.fatal: tuple[str, str] | None = None  # erreur SAM fatale à remonter
         self.last_slow_said: float | None = None  # SRV-R7.3 : au plus une fois par minute
         self.last_result_at: float | None = None
+        self.last_image_at: float | None = None  # SRV-R7.3 : le retard ne compte que si des images arrivent
         self.started_at: float | None = None  # SRV-R8.2 : durée max 10 min
         self.consec_errors = 0  # 3 exceptions de suite -> arrêt (design 05, section 6)
 
@@ -558,7 +565,9 @@ class LiveSession:
                 continue
             now = self.clock()
             can_warn = self.last_slow_said is None or now - self.last_slow_said >= 60.0
-            state = watchdog_state(now - self.last_result_at, can_warn)
+            sending = self.last_image_at is not None and now - self.last_image_at <= 5.0
+            # client arrêté (fin de vidéo, onglet en veille) : pas de « connexion lente » ni d'abandon
+            state = watchdog_state(now - self.last_result_at, can_warn) if sending else "ok"
             if state == "warn":
                 self.last_slow_said = now
                 self.output.say(SLOW_PHRASE)
@@ -644,6 +653,7 @@ class LiveSession:
     def _on_image(self, jpeg: bytes, t_ms: int) -> None:
         fi = self.frame_index
         self.frame_index += 1
+        self.last_image_at = self.clock()
         if not self.fps_guard.allow(self.clock()):  # SRV-R3.2 : au-delà de 10 img/s
             self.counters["dropped"] += 1
             return
@@ -697,7 +707,7 @@ class LiveSession:
             self.counters["stale" if verdict == "stale" else "out_of_order"] += 1
             return
         self.last_applied = fi
-        t = session_time(t_ms, self.t0_ms or t_ms)  # SRV-R4.5
+        t = session_time(t_ms, self.t0_ms if self.t0_ms is not None else t_ms)  # SRV-R4.5 (0 est une heure valide)
         fm = result.to_frame_masks()
         fm.t = t
         proc = self.sm.procedure if self.sm is not None else None
@@ -776,6 +786,7 @@ class LiveSession:
     async def _apply(self, func: object, *args: object) -> bool:
         """Un appel machine à états : True pour continuer, False pour arrêter (SRV-T7)."""
         import asyncio
+        self.work.busy = True
         try:
             await asyncio.to_thread(func, *args)
         except Exception:
@@ -783,6 +794,8 @@ class LiveSession:
                 await self._abort("internal", "La session est interrompue, reconnecte-toi.")
                 return False
             return True
+        finally:
+            self.work.busy = False
         self.note_worker_ok()
         return True
 

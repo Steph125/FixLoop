@@ -35,7 +35,7 @@ def test_invalid_control_messages_are_ignored():
     assert parse_client_message({"type": "user_done", "t_ms": -5}) is None
     assert parse_client_message({"type": "command", "cmd": "danse", "t_ms": 1}) is None
     assert parse_client_message({"type": "speaking", "on": 1, "t_ms": 1}) is None
-    assert parse_client_message({"type": "hello", "bike_id": "b-1"}) is None  # client manquant
+    assert parse_client_message({"type": "hello", "bike_id": "b-1", "client": "pas un objet"}) is None  # client facultatif, mais un objet s'il est là
     assert parse_client_message({"type": "hello", "bike_id": "b-1", "client": {},
                                  "access_code": 42}) is None
 

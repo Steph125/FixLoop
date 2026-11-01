@@ -2,13 +2,16 @@
 
 Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en bout en local avec `ws_client.py`.
 
-- [~] **SRV-T1 — Squelette FastAPI.** `server/app.py` : fichiers statiques, `/api/health`, `/api/procedures`,
+- [x] **SRV-T1 — Squelette FastAPI.** `server/app.py` : fichiers statiques, `/api/health`, `/api/procedures`,
   chargement des fiches au démarrage, lecture de `.env`. Ajouter `fastapi`, `uvicorn[standard]`, `websockets` à
   `requirements.txt`.
   Exigences : `SRV-R1.1` à `R1.4`. Fait quand : `curl http://127.0.0.1:8000/api/health` rend `ok`.
   À vérifier hors sandbox : PyPI injoignable ici (3 tentatives pip sans réponse), `fastapi`/`httpx`
   absents donc `tests/test_server.py` ignoré ici et le `curl` local impossible (sockets interdits).
   Preuve partielle : `py_compile` OK, `pytest` 97 passed + 13 skipped, `check_spec.py` OK.
+  Relecture du 1er nov. (hors sandbox, Linux, `pytest` 146 passed + 4 skipped faute de `probe_out2/`) : `test_server.py` passe ;
+  corrigé : la route `/ws/session` rendait 403 (paramètre `ws` sans annotation `WebSocket`), le montage statique
+  sur `/` passe après les routes. Nouveau test : `test_websocket_route_accepts_hello`.
 - [x] **SRV-T2 — Journal des coûts.** `fixloop/costs.py` (`PRICES`, `CostLog`, persistance par jour, estimation
   des jetons manquants), `tests/test_costs.py`.
   Exigences : `SRV-R8.1`, `R8.5`. Bloque : `PERC-T7`, `AGT-T9`, `MEM-T4`.
@@ -22,7 +25,7 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   Preuve : `tests/test_session.py` (8 tests, logique synchrone sans FastAPI, passent ici),
   le câblage WebSocket vient avec SRV-T5.
   `pytest` 103 passed + 1 skipped (+ live/équivalence hors de cette passe), `check_spec.py` OK.
-- [~] **SRV-T5 — Boucle de session.** `LiveSession` : images de démarrage, `Session.start` dans un fil, soumission
+- [x] **SRV-T5 — Boucle de session.** `LiveSession` : images de démarrage, `Session.start` dans un fil, soumission
   à la perception, filtre âge et ordre, mesures, `overlay`, `sm_worker` avec `pending`, `QueueOutput`,
   `send_loop`, `debounce_frames = 3`, temps client, image clé recadrée.
   Exigences : `SRV-R4.1` à `R4.5`, `R5.1` à `R5.3`, `R6.1`, `R6.2`, `CORE-R9.2`.
@@ -30,10 +33,15 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   À vérifier hors sandbox : les 3 tests de boucle sont async (sockets interdits ici).
   Preuve partielle : 16 tests sync de `tests/test_session.py` passent ici,
   `pytest` 111 passed + 4 skipped, `check_spec.py` OK.
+  Relecture du 1er nov. (hors sandbox, Linux, `pytest` 146 passed + 4 skipped faute de `probe_out2/`) : les 3 tests de boucle
+  **échouaient** mais étaient comptés « ignorés » (le garde-fou attrapait `OSError`, donc `TimeoutError`). Corrigé :
+  garde-fou limité à `PermissionError` ; file des mesures qui ne jette plus rien quand la machine à états est libre
+  (`SRV-D7`) ; temps de session faux quand l'horodatage client vaut 0 ; scénario du test complété (test dynamique).
+  Les 3 tests passent ; nouveau test `test_work_queue_keeps_burst_in_order_when_idle`.
 - [ ] **SRV-T6 — Commandes et voix.** `user_done`, `command`, `speaking`, `pause` / `resume`, `stop` ; audio
   binaire vers `VoiceBridge` ; `voice_status`.
   Exigences : `SRV-R5.4`. Dépend de : T5, `VOX-T3`.
-- [~] **SRV-T7 — Clôture et erreurs.** `closed` puis fermeture après 2 s ; 401, 402 / 429, budget, lenteur 15 s,
+- [x] **SRV-T7 — Clôture et erreurs.** `closed` puis fermeture après 2 s ; 401, 402 / 429, budget, lenteur 15 s,
   exceptions (3 de suite → arrêt), déconnexion.
   Exigences : `SRV-R6.3`, `R7.1` à `R7.4`.
   À vérifier hors sandbox : les 2 tests de fermeture sont async (sockets interdits ici).
@@ -42,13 +50,17 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   `test_worker_stops_after_three_consecutive_errors`, `test_closed_summary_counts_rejections`
   (passent ici), `test_stop_closes_unsuccessful`, `test_fatal_result_error_closes_with_code`
   (ignorés ici), `pytest` 116 passed + 6 skipped, `check_spec.py` OK.
-- [~] **SRV-T8 — Limites de coût et de durée.** Arrêt à 1,50 $ ou 10 min ; refus au-delà du budget du jour ;
+  Relecture du 1er nov. (hors sandbox, Linux, `pytest` 146 passed + 4 skipped faute de `probe_out2/`) : les 2 tests de fermeture passent ;
+  corrigé : « connexion lente » et abandon ne se déclenchent plus quand le client a cessé d'envoyer des images
+  (`SRV-R7.3` : « alors que des images sont envoyées »).
+- [x] **SRV-T8 — Limites de coût et de durée.** Arrêt à 1,50 $ ou 10 min ; refus au-delà du budget du jour ;
   `/api/costs` protégé.
   Exigences : `SRV-R8.2` à `R8.4`. Dépend de : T2.
   À vérifier hors sandbox : `test_costs_needs_access_code` ignoré ici (fastapi absent).
   Preuve partielle : `test_session_limits_cost_and_duration`,
   `test_new_session_refused_beyond_daily_budget` (passent ici),
   `pytest` 118 passed + 6 skipped, `check_spec.py` OK.
+  Relecture du 1er nov. (hors sandbox, Linux, `pytest` 146 passed + 4 skipped faute de `probe_out2/`) : `test_costs_needs_access_code` passe.
 - [x] **SRV-T9 — Journal et enregistrement.** `data/sessions/<id>.jsonl` ; option `FIXLOOP_RECORD=1` (images
   reçues + sorties SAM brutes dans `data/recordings/<id>/`).
   Exigences : `SRV-R9.1` à `R9.3`. Utilisé par : `RPL-T2`, `EVAL-T2`, `AGT-T11`.
@@ -64,6 +76,10 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   Preuve partielle : `test_fake_models_run_without_network`,
   `test_fake_perception_replays_raw_files` (passent ici),
   `pytest` 122 passed + 6 skipped, `check_spec.py` OK.
+  Relecture du 1er nov. (hors sandbox, Linux, `pytest` 146 passed + 4 skipped faute de `probe_out2/`) : session complète jusqu'à
+  `closed` (`success: true`) avec `uvicorn` + `ws_client.py` sur une vidéo synthétique. Corrigé dans `ws_client.py` :
+  `user_done` sans `t_ms` (refusé par le protocole), envoi sans rythme (plafond de 10 img/s), index de `--done`,
+  lecture des messages pendant l'envoi. Reste : la même session sur `velo2` chez l'auteur, puis [x].
 - [ ] **SRV-T11 — Première session réelle en local.** `ws_client.py` sur `velo2` avec les vrais modèles ;
   noter dans `eval/day3/findings.md` : délai du verdict après le geste, `dropped`, résultats écartés, appels Spark,
   coût estimé, puis comparer au coût affiché sur la page Usage.

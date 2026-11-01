@@ -17,7 +17,7 @@ COMMANDS = ("repeat", "help")
 
 # type -> champs requis (nom -> types acceptés). Les champs en plus sont permis.
 _CLIENT_SPEC = {
-    "hello": {"bike_id": (str,), "client": (dict,)},
+    "hello": {"bike_id": (str,)},
     "start": {},
     "user_done": {"t_ms": (int,)},
     "command": {"cmd": (str,), "t_ms": (int,)},
@@ -29,7 +29,7 @@ _CLIENT_SPEC = {
 
 # champs permis mais non requis.
 _CLIENT_OPTIONAL = {
-    "hello": {"access_code": (str, type(None))},
+    "hello": {"access_code": (str, type(None)), "client": (dict,)},  # client : informations facultatives
 }
 
 

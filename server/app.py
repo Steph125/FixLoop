@@ -11,7 +11,7 @@ import subprocess
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket  # WebSocket au niveau du module : annotations en chaînes (__future__)
 from fastapi.staticfiles import StaticFiles
 
 from fixloop.procedures import load_all
@@ -73,12 +73,8 @@ def create_app(procedures: dict | None = None) -> FastAPI:
         return {"day": date.today().isoformat(), "total_usd": round(log.day_total(), 6),
                 "by_model": {m: round(c, 6) for m, c in log.by_model().items()}}
 
-    web = ROOT / "web"
-    if web.is_dir():  # SRV-R1.1 : l'appli statique arrive avec 06-phone-app
-        app.mount("/", StaticFiles(directory=web, html=True), name="web")
-
     @app.websocket("/ws/session")
-    async def ws_session(ws):  # SRV-R4 : une session en direct par connexion
+    async def ws_session(ws: WebSocket):  # SRV-R4 ; sans l'annotation, FastAPI lit `ws` comme un paramètre de requête (403)
         from server.session import LiveSession, SessionRecorder, build_models
         from fixloop.costs import CostLog
         await ws.accept()
@@ -89,6 +85,11 @@ def create_app(procedures: dict | None = None) -> FastAPI:
         session = LiveSession(ws, app.state.registry, ip, app.state.procedures,
                               models, app.state.registry.limits, recorder=recorder)
         await session.run()
+
+
+    web = ROOT / "web"
+    if web.is_dir():  # SRV-R1.1 ; monté en dernier, sinon "/" masquerait /ws/session
+        app.mount("/", StaticFiles(directory=web, html=True), name="web")
 
     return app
 

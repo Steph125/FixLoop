@@ -162,7 +162,7 @@ stateDiagram-v2
 
 ```python
 class Agent(Protocol):                       # 03-agent-spark
-    def diagnose(self, images, procedures, history: str) -> str: ...          # id de fiche
+    def diagnose(self, images, procedures, history: str) -> tuple[str, str]: ...  # id de fiche, raison (AGT-T6)
     def arbitrate(self, step, keyframes, window: list[Measures]) -> Verdict: ... # "eps" ou "0"
     def explain(self, step, verdict, keyframes) -> tuple[str, str | None]: ...  # phrase, pièce
     def help(self, step, keyframes) -> str: ...                                 # CORE-R12.2 (à ajouter)
@@ -227,7 +227,7 @@ Une ligne JSON par événement, dans `Session.log`, exportée par le serveur dan
 
 | `event` | Champs en plus |
 |---|---|
-| `diagnose` | `procedure` |
+| `diagnose` | `procedure` ; `fallback: true` si la 1re fiche a été prise par défaut |
 | `step` | `step` |
 | `user_done` | — |
 | `validated` | `step`, `evidence` |

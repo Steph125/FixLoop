@@ -39,3 +39,19 @@ def test_costs_needs_access_code(monkeypatch):
     assert set(body) == {"day", "total_usd", "by_model"}  # totaux du jour par modèle
     monkeypatch.delenv("FIXLOOP_ACCESS_CODE")
     assert TestClient(create_app()).get("/api/costs").status_code == 200  # code non défini
+
+
+def test_websocket_route_accepts_hello(monkeypatch, tmp_path):
+    """La route /ws/session répond hello_ack (régression : sans annotation WebSocket, FastAPI rendait 403)."""
+    monkeypatch.setenv("FIXLOOP_FAKE_MODELS", "1")
+    monkeypatch.chdir(tmp_path)  # journaux de coûts et de session dans un dossier jetable
+    import shutil
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    shutil.copytree(root / "procedures", tmp_path / "procedures")
+    c = TestClient(create_app())
+    with c.websocket_connect("/ws/session") as ws:
+        ws.send_json({"type": "hello", "bike_id": "velo-1"})
+        msg = ws.receive_json()
+        assert msg["type"] == "hello_ack"  # SRV-R2.1
+        assert msg["limits"]["fps"] == 1

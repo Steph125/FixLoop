@@ -1,0 +1,21 @@
+{
+  "images": 10,
+  "verdict_par_image_s": {
+    "mediane": 1.86,
+    "p90": 4.37,
+    "max": 4.37
+  },
+  "par_piece_total_s": {
+    "chain": {
+      "mediane": 1.7,
+      "p90": 4.37
+    },
+    "chainring": {
+      "mediane": 1.77,
+      "p90": 4.03
+    }
+  },
+  "premier_octet_mediane_s": 1.22,
+  "relances": 0,
+  "accord_avec_mode_video": "8/10"
+}

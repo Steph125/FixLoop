@@ -24,17 +24,19 @@
   Fait quand : tests avec `FakeSamClient` (relance, 401, 4e image refusée) passent.
   Preuve : `tests/test_perception_live.py` (10 tests, exécutés 10/10 sur boucle réelle
   sans socket le 30 oct. ; ignorés proprement là où `listen()` est bloqué).
-- [~] **PERC-T5 — Mode vidéo dans le module.** `segment_video` (préparation, morceaux, Files API, cache par
+- [x] **PERC-T5 — Mode vidéo dans le module.** `segment_video` (préparation, morceaux, Files API, cache par
   empreinte, confirmation du nombre d'images facturées). `probe/sam_api_probe.py` reste inchangé (preuve datée).
   Exigences : `PERC-R3.1` à `R3.6`, `R4.2`. Fait quand : test du cache (2e passage sans requête) passe.
   À vérifier hors sandbox : `test_video_cache_skips_second_pass` ignoré ici (sockets interdits).
   Preuve partielle : `test_assemble_frames_merges_shifted_chunks`, `test_chunk_key_stable_and_content_bound`
   (passent ici), `pytest` 96 passed + 12 skipped, `check_spec.py` OK.
+  Relecture du 1er nov. (hors sandbox, Linux, `pytest` 146 passed + 4 skipped faute de `probe_out2/`) : `test_video_cache_skips_second_pass`
+  et `test_video_explicit_parts_override_default` passent.
 - [x] **PERC-T6 — Contours SVG et boîtes.** `mask_to_svg_path` ; comparer avec `decode_mask_to_svg_path` sur
   20 masques enregistrés (taille, rendu) ; noter le choix dans `design.md` section 9.
   Exigences : `PERC-R6.1` à `R6.3`. Fait quand : taille médiane < 4 ko notée.
   Preuve : `test_recorded_masks_svg_median_under_4k` (médiane 303 o, max 410 o) ; décision `PERC-D6`.
-- [~] **PERC-T7 — Journal des coûts.** Appeler `CostLog.add(model="sam-3.1", mode, part, images, seconds,
+- [x] **PERC-T7 — Journal des coûts.** Appeler `CostLog.add(model="sam-3.1", mode, part, images, seconds,
   attempts, ok)` à chaque requête ; facturation vidéo max(images, 50).
   Exigences : `PERC-R7.1`, `R7.2`. Dépend de : `SRV-T2` (`fixloop/costs.py`).
   À vérifier hors sandbox : les 2 tests async bout-en-bout sont ignorés ici (sockets interdits).
@@ -42,6 +44,7 @@
   `test_image_requests_are_logged_to_costs`, `test_failed_request_is_logged_not_ok` (ignorés ici),
   `pytest` 94 passed + 11 skipped, `check_spec.py` OK. Aucun code à écrire (`_cost` couvrait déjà
   les 4 chemins de `_segment_part`) ; le mode vidéo sera couvert par PERC-T5.
+  Relecture du 1er nov. (hors sandbox, Linux, `pytest` 146 passed + 4 skipped faute de `probe_out2/`) : les 2 tests asynchrones passent.
 - [x] **PERC-T8 — Équivalence avec `eval/day1`.** Test `recorded` : rejouer `probe_out2/raw_*.txt` avec le module,
   comparer les médianes par phase (± 0,005) et le classement des 285 images (0 erreur).
   Exigences : `PERC-R9.1`, `R9.2`.

@@ -56,7 +56,7 @@ File de la machine à états : `sm_queue` d'éléments `("measure", m, kf)`, `("
 
 | `type` | Champs | Effet |
 |---|---|---|
-| `hello` | `bike_id`, `access_code`, `client` (`{ua, w, h}`) | ouverture, contrôle d'accès |
+| `hello` | `bike_id` ; facultatifs : `access_code`, `client` (`{ua, w, h}`) | ouverture, contrôle d'accès |
 | `start` | — | démarrage : les 3 images suivantes servent au diagnostic |
 | `user_done` | `t_ms` | « c'est fait » (bouton) |
 | `command` | `cmd` (`repeat` / `help`), `t_ms` | bouton d'aide ou de répétition |
@@ -158,5 +158,8 @@ marquée `estimated: true`.
   bouger pendant 8 s, les anciennes mesures ne décrivent plus la scène.
 - **SRV-D5 (30 oct.)** — Temps de la machine à états = horloge du téléphone, pour que l'anti-rebond ne dépende pas
   de la latence du réseau.
+- **SRV-D7 (1er nov.)** — La règle « une seule mesure en attente » ne s'applique que pendant un appel à la
+  machine à états (`WorkQueue.busy`). Sinon, une rafale de résultats SAM (3 requêtes qui se chevauchent et
+  finissent ensemble) est appliquée dans l'ordre : jeter ces mesures retardait la validation de plusieurs secondes.
 - **SRV-D6 (30 oct.)** — Limites : 2 sessions en direct, 10 min, 1,50 $ par session, 10 $ par jour. Raison :
   crédit total de 150 $ (`steering/tech.md`).

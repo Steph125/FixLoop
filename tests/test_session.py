@@ -151,6 +151,7 @@ def test_result_filters_stale_and_out_of_order():
 def test_work_queue_keeps_only_latest_measure():
     from server.session import WorkQueue
     q = WorkQueue()
+    q.busy = True  # un appel à la machine à états est en cours (appel Spark de 8 s, par exemple)
     for i in range(5):
         q.put_measure(f"m{i}", None)
     assert q.dropped_measures == 4  # SRV-R5.3 : 1 seule appliquée ensuite
@@ -158,9 +159,19 @@ def test_work_queue_keeps_only_latest_measure():
     assert q.take() is None
 
 
+def test_work_queue_keeps_burst_in_order_when_idle():
+    from server.session import WorkQueue
+    q = WorkQueue()  # machine à états libre : une rafale de résultats SAM garde toutes ses mesures
+    for i in range(3):
+        q.put_measure(f"m{i}", None)
+    assert q.dropped_measures == 0
+    assert [q.take()[1] for _ in range(3)] == ["m0", "m1", "m2"]
+
+
 def test_work_queue_never_drops_controls_and_keeps_order():
     from server.session import WorkQueue
     q = WorkQueue()
+    q.busy = True  # appel en cours : m1 est remplacée par m2, les contrôles restent
     q.put_measure("m1", None)
     q.put_control("done", None)
     q.put_measure("m2", None)
@@ -230,7 +241,7 @@ def arun(coro):
     import asyncio
     try:
         return asyncio.run(coro)
-    except OSError:
+    except PermissionError:  # sockets interdits (WinError 10013) ; un TimeoutError est un vrai échec
         coro.close()  # évite "coroutine was never awaited" dans les avertissements
         pytest.skip("boucle asyncio interdite ici : à vérifier hors sandbox")
 
@@ -310,7 +321,7 @@ class FakeWS:
 
     def feed_image(self, t_ms):
         import struct
-        self.incoming.append({"bytes": struct.pack(">Q", t_ms) + jpeg_bytes()})
+        self.incoming.append({"bytes": b"\x02" + struct.pack(">Q", t_ms) + jpeg_bytes()})
 
 
 def make_live(kinds, clock=None):
@@ -349,38 +360,39 @@ async def wait_step(sess, step_id, timeout=15.0):
 def test_full_session_closes_success():
     async def main():
         import asyncio
-        ws, sess = make_live({i: ("off" if i < 9 else "on") for i in range(16)})
+        ws, sess = make_live({i: ("off" if i < 9 else "on") for i in range(24)})
         run = asyncio.create_task(sess.run())
         ws.feed_text({"type": "hello", "bike_id": "velo-1"})
         await wait_for(lambda: any(m.get("type") == "hello_ack" for m in ws.sent))
         ws.feed_text({"type": "start"})
-        for t in range(0, 9000, 1000):  # fi0-8 : chaîne tombée
-            ws.feed_image(t)
-            await asyncio.sleep(0.12)  # rythme client ≤ 10 img/s (SRV-R3.2)
-        await wait_for(lambda: sess.sm is not None)
-        complete_all(sess)
+
+        async def images(times):
+            for t in times:
+                ws.feed_image(t)
+                await asyncio.sleep(0.12)  # rythme client ≤ 10 img/s (SRV-R3.2)
+            await asyncio.sleep(0.2)
+            complete_all(sess)  # les résultats SAM arrivent en rafale (requêtes qui se chevauchent)
+
+        await images(range(0, 9000, 1000))  # fi0-8 : chaîne tombée
         await wait_step(sess, "engage_top_teeth")
-        for t in (9000, 10000, 11000):  # fi9-11 : chaîne posée
-            ws.feed_image(t)
-            await asyncio.sleep(0.12)
-        complete_all(sess)
+        await images((9000, 10000, 11000))  # fi9-11 : chaîne posée
         await wait_step(sess, "turn_backward")
-        ws.feed_text({"type": "user_done"})
-        for t in (12000, 13000, 16000):  # fi12-14 : essai, 4 s de rotation
-            ws.feed_image(t)
-            await asyncio.sleep(0.12)
-        complete_all(sess)
+        ws.feed_text({"type": "user_done", "t_ms": 11500})
+        await images((12000, 13000, 14000))  # fi12-14 : demi-tour arrière, validé après « c'est fait »
+        await wait_for(lambda: sess.sm.state == "ESSAI_DYNAMIQUE")
+        await images((15000, 16000, 17000, 18500))  # fi15-18 : 3,5 s de rotation, chaîne en place
         await wait_for(lambda: any(m.get("type") == "closed" for m in ws.sent))
         closed = [m for m in ws.sent if m.get("type") == "closed"][0]
         assert closed["success"] is True  # SRV-T5 : session complète jusqu'au bout
         said = [m["text"] for m in ws.sent if m.get("type") == "say"]
-        assert any("Montre-moi" in s for s in said)
-        assert any("tourne" in s for s in said)
+        assert said.count("C'est bon.") == 3  # trois étapes validées par la mesure
+        assert any("en avant pendant trois secondes" in s for s in said)  # test dynamique
         await ws.close()
         await asyncio.wait_for(run, 10)
         return sess
     sess = arun(main())
     assert sess.counters["stale"] == 0 and sess.counters["out_of_order"] == 0
+    assert sess.work.dropped_measures == 0  # rafales gardées dans l'ordre (SRV-R5.3)
 
 
 def test_stale_result_is_dropped():

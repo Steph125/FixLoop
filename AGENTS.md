@@ -45,6 +45,9 @@ Montre ton plan avant de modifier plus de 3 fichiers. Une tâche à la fois.
    anglais.
 8. Les appels réseau échouent parfois : relance, cache, et jamais de blocage de la session sur une erreur réseau.
 9. Aucun test n'appelle l'API : faux clients (`tests/fakes.py`, `FakeClient`, `FakeSamClient`).
+   Un test ne s'ignore (`pytest.skip`) que sur une cause précise et nommée (par exemple `PermissionError`
+   WinError 10013), jamais sur `except OSError` ou `except Exception` : `TimeoutError` est une `OSError`, et un
+   vrai échec deviendrait « ignoré » (constaté le 1er nov.).
 10. Aucun appel payant (SAM, Spark, Wonder, Transcribe) sans afficher d'abord une estimation du coût.
 
 ## Environnement

@@ -431,3 +431,28 @@ aucune dépendance ajoutée, aucune suppression hors scripts jetables créés pu
   `$env:FIXLOOP_FAKE_MODELS = "1"`, `python -m uvicorn server.app:app --port 8000`,
   puis `python scripts/ws_client.py --video probe_out2/input_small.mp4 --bike velo2 --done 18,30`
   (attendre `closed`, sans réseau).
+
+## Relecture du 1er nov. (hors sandbox) — corrections faites à la main
+
+Constat : 3 tests de boucle de `tests/test_session.py` échouaient (délai dépassé) mais étaient comptés
+« ignorés », chez Muse Code comme chez l'auteur : le garde-fou `arun` attrapait `OSError`, et `TimeoutError`
+en est une sous-classe depuis Python 3.11. Le serveur n'avait donc jamais fait une session complète.
+
+Corrigé (fichiers : `server/session.py`, `server/app.py`, `server/protocol.py`, `scripts/ws_client.py`,
+`tests/test_session.py`, `tests/test_server.py`, `tests/test_protocol.py`) :
+- garde-fou `arun` limité à `PermissionError` (sockets interdits) ;
+- `WorkQueue` : une seule mesure en attente seulement pendant un appel (`busy`), sinon ordre conservé (SRV-D7) ;
+- temps de session : `self.t0_ms or t_ms` donnait 0 s partout quand la 1re image est à 0 ms ;
+- route `/ws/session` : `ws: WebSocket` (sans annotation, FastAPI répondait 403), `WebSocket` importé au niveau du
+  module (annotations en chaînes), montage statique sur `/` après les routes ;
+- `hello` : `client` facultatif (la spec ne l'exige pas) ;
+- chien de garde : pas de « connexion lente » ni d'abandon quand le client n'envoie plus d'images ;
+- `ws_client.py` : `user_done` avec `t_ms`, rythme d'envoi (`--speed`), index de `--done`, lecture continue ;
+- tests : en-tête binaire `0x02` dans `FakeWS.feed_image`, `user_done` avec `t_ms`, scénario complet jusqu'au
+  test dynamique ; nouveaux tests `test_work_queue_keeps_burst_in_order_when_idle`,
+  `test_websocket_route_accepts_hello`.
+Résultat : `pytest` 146 passed + 4 skipped (`probe_out2/` absent ici) ; session `uvicorn` + `ws_client.py` en
+faux modèles jusqu'à `closed` avec `success: true`.
+
+Leçon pour les prochaines séries : un test « ignoré » doit nommer une cause précise (code d'erreur), jamais une
+famille d'exceptions large ; et une tâche n'est cochée qu'après un passage hors sandbox.
