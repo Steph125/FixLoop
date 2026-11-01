@@ -604,3 +604,13 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   3 passed, `check_spec.py` OK.
   Fichiers : `scripts/benchmark.py`, `scripts/label_clip.py`, `eval/benchmark/labels_template.csv`,
   `tests/test_benchmark.py`, `tests/test_label_clip.py`, `spec/08-evaluation/tasks.md`.
+
+- RPL-T2 (construction replay, [x]) : `replay/build_replay.py` (source `synthetic`, `Session` +
+  `visit`, `TSOut` horodaté, `overlays.json` 5 fps, `events.json` + modèle par événement, `video.mp4`
+  en flux, `meta.json`, `index.json`, `state_at`, `nearest_overlay`, refus propre `video`/`recording`).
+  Tests d'abord (échec authentique : module absent), 2 essais ratés : nom de module (`replay_build`
+  contre `build_replay`), puis 288 Mo d'images gardées en RAM (60 s) → écriture vidéo en flux.
+  `.gitignore` couvre `replay/build/` (exigé par la spec, mes propres sorties).
+  Preuve : `tests/test_replay.py` 9 passed, `check_spec.py` OK.
+  Fichiers : `replay/build_replay.py`, `fixloop/benchmark.py` (crochet `visit`), `tests/test_replay.py`,
+  `.gitignore`, `spec/07-replay-mode/tasks.md`.

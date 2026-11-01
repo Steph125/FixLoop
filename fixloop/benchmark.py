@@ -253,8 +253,13 @@ class CannedAgent:
 
 
 def drive_measures(procedure_id: str, measures: list, done_at: list[float],
-                   setting: str = "replay", agent=None, memory=None, out=None):
-    """Session complète sur des mesures déjà calculées (EVAL-R3.4, RPL-T2)."""
+                   setting: str = "replay", agent=None, memory=None, out=None,
+                   visit=None):
+    """Session complète sur des mesures déjà calculées (EVAL-R3.4, RPL-T2).
+
+    `visit(i, t, frame_or_None, m)` est appelé après chaque mesure (replay :
+    contours et vidéo à partir de l'image ; None en mode mesures seules).
+    """
     from .procedures import load_all
     from .state_machine import Session
     procedures = load_all()
@@ -262,19 +267,23 @@ def drive_measures(procedure_id: str, measures: list, done_at: list[float],
                       memory or NullMemory(), out or RecOutput(),
                       bike_id="synthetique",
                       debounce_frames=SETTINGS[setting]["debounce"])
+    if hasattr(out, "session"):
+        out.session = session  # TSOut : horodatage dès `start()` (replay)
     session.start(images=[])
     pending = sorted(done_at)
-    for m in measures:
+    for i, m in enumerate(measures):
         while pending and pending[0] <= m.t + 1e-9:
             session.on_user_done()
             pending.pop(0)
         session.on_measures(m)
+        if visit is not None:
+            visit(i, m.t, None, m)
     return session
 
 
 def drive_session(procedure_id: str, segments: list[tuple[str, float]],
                   done_at: list[float], setting: str = "replay",
-                  agent=None, memory=None, out=None):
+                  agent=None, memory=None, out=None, visit=None):
     """Session complète sur la scène synthétique (EVAL-R3.4, RPL-T2).
 
     `segments` : [(sorte sim, secondes)] ; `done_at` : instants de « c'est fait ».
@@ -285,10 +294,16 @@ def drive_session(procedure_id: str, segments: list[tuple[str, float]],
     from .sim import frame
     fps = SETTINGS[setting]["fps"]
     procedure = load_all()[procedure_id]
-    measures = [measure(frame(kind, i, i / fps), procedure)
-                for i, kind in enumerate(synthetic_kinds(segments, fps))]
+    kinds = synthetic_kinds(segments, fps)
+    frames = [frame(kind, i, i / fps) for i, kind in enumerate(kinds)]
+    measures = [measure(fm, procedure) for fm in frames]
+
+    def _visit(i, t, _none, m):
+        if visit is not None:
+            visit(i, t, frames[i], m)
+
     session = drive_measures(procedure_id, measures, done_at, setting,
-                             agent=agent, memory=memory, out=out)
+                             agent=agent, memory=memory, out=out, visit=_visit)
     return session, measures
 
 

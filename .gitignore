@@ -12,3 +12,5 @@ __pycache__/
 *.pyc
 .DS_Store
 probe_out*/
+# sortie du replay (construite, jamais committée)
+replay/build/

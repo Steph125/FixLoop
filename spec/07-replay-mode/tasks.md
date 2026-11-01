@@ -7,11 +7,15 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   Exigences : `RPL-R2.1`, `R2.3`, `R2.4`.
   Preuve : `tests/test_replay.py` 4 passed (enregistrement, rejeu hors ligne à l'identique,
   `OfflineError` sur clé absente ou historique modifié, date d'obtention).
-- [ ] **RPL-T2 — Construction d'une session.** `replay/build_replay.py` : fichier de session, source `video`
+- [x] **RPL-T2 — Construction d'une session.** `replay/build_replay.py` : fichier de session, source `video`
   (`segment_video`) ou `recording`, rejeu par `Session` avec `RecordingOutput`, écriture de `video.mp4`
   (ffmpeg, `-preset veryfast`, faststart), `overlays.json` (5 fps), `events.json`, `meta.json`, `index.json`.
-  Exigences : `RPL-R2.2`, `R2.3`, `R5.2`, `R7.1`. Dépend de : T1, `PERC-T5`, `PERC-T6`.
-  Fait quand : la session synthétique se construit deux fois à l'identique.
+  Exigences : `RPL-R2.2`, `R2.3`, `R5.2`, `R7.1`. Dépend de : T1 ([x]), `PERC-T5` ([~]), `PERC-T6` ([x]).
+  Fait quand : la session synthétique se construit deux fois à l'identique — fait (octet par octet
+  pour `events.json` et `overlays.json`).
+  Choix : source `synthetic` ajoutée pour le code seul (vidéos réelles en RPL-T4) ; `state_at` et
+  `nearest_overlay` (référence Python du lecteur) ; `.gitignore` couvre `replay/build/`.
+  Preuve : `tests/test_replay.py` (déterminisme, 60 s sous 2 Mo, `state_at`, refus `video` sans modèles).
 - [ ] **RPL-T3 — Tourner les vidéos A et B.** Vélo de l'auteur, téléphone posé, son activé (« c'est fait » dit à
   voix haute) ; A : chaîne tombée → posée sur le disque → « c'est fait » → correction → rotation arrière → test
   dynamique ; B : mains devant le plateau, angle de 30°, pour provoquer un arbitrage. Noter les instants de
