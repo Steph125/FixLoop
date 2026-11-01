@@ -551,3 +551,12 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   destinataire du `background`), corrigé, vert.
   Preuve : `tests/test_memory.py` 15 passed, `check_spec.py` OK.
   Fichiers : `tests/test_memory.py` (+1 test), `spec/04-memory-voice/tasks.md` (case + preuve).
+
+- RPL-T1 (cache des modèles, [x]) : `fixloop/cached_models.py` (`ResponseCache` atomique, `CachedAgent`
+  enveloppant l'`Agent` + `spark_only` pour le benchmark, `CachedMemory` avec contrôle de l'historique,
+  `OfflineError` en mode hors ligne strict). Tests d'abord (échec authentique : module absent), 1 essai
+  raté sur mes propres attentes (`explain` renvoie le message du verdict, `load` synchrone rend la
+  synthèse) — code bon dès le 1er essai. Environnement : `numpy` refusait de s'importer (OpenBLAS,
+  allocation mémoire) → `$env:OPENBLAS_NUM_THREADS = '1'` pour tous les lancements Python de la série.
+  Preuve : `tests/test_replay.py` 4 passed, `check_spec.py` OK.
+  Fichiers : `fixloop/cached_models.py`, `tests/test_replay.py`, `spec/07-replay-mode/tasks.md`.

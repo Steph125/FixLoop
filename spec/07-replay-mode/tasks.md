@@ -2,9 +2,11 @@
 
 Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
 
-- [ ] **RPL-T1 — Cache des modèles.** `fixloop/cached_models.py` (`CachedAgent`, `CachedMemory`, clé sha256,
+- [x] **RPL-T1 — Cache des modèles.** `fixloop/cached_models.py` (`CachedAgent`, `CachedMemory`, clé sha256,
   date d'obtention, mode hors ligne strict) et tests.
   Exigences : `RPL-R2.1`, `R2.3`, `R2.4`.
+  Preuve : `tests/test_replay.py` 4 passed (enregistrement, rejeu hors ligne à l'identique,
+  `OfflineError` sur clé absente ou historique modifié, date d'obtention).
 - [ ] **RPL-T2 — Construction d'une session.** `replay/build_replay.py` : fichier de session, source `video`
   (`segment_video`) ou `recording`, rejeu par `Session` avec `RecordingOutput`, écriture de `video.mp4`
   (ffmpeg, `-preset veryfast`, faststart), `overlays.json` (5 fps), `events.json`, `meta.json`, `index.json`.
