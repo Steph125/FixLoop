@@ -525,3 +525,22 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   lecture) — restaurés par `git checkout --`, coches refaites, contrôle `check_spec.py` OK.
   Preuve : `test_voice_input_worklet`, `test_voice_fallback_status`, `node web/selftest.mjs` 17/17.
   Fichiers : `spec/06-phone-app/tasks.md` (case + preuve).
+
+- VOX-T5 (repli bouton, [x]) : code du lot 3 vérifié (`voiceStatusText` dans `web/lib.js`, `onVoiceStatus`
+  dans `web/live.js`, `voice_status` serveur `on` / `error` + `off`).
+  Preuve : `test_voice_fallback_status`, `test_voice_status_shapes`, `pytest` ciblé OK, `check_spec.py` OK.
+  Fichiers : `spec/04-memory-voice/tasks.md` (case + preuve).
+
+- VOX-T4 (branchement session, [~]) : routage voix → file (`done` / `command`) et journal texte normalisé
+  vérifiés ici ; durée audio dans les coûts et voix de bout en bout à vérifier hors sandbox.
+  Choix prudent : tâche [~] (tests principaux async ignorés ici, WinError 10013).
+  Preuve partielle : `test_voice_final_routes_done_help_repeat`,
+  `test_voice_command_text_reaches_session_queue`, `test_detector_history_journals_normalized_text`.
+  Fichiers : `spec/04-memory-voice/tasks.md` (case + preuve).
+
+- SRV-T6 (commandes et voix, [~]) : `speaking` → détecteur, audio 0x01 → pont ou `audio_dropped`,
+  file commune mesures/contrôles, `voice_status`, `endStream` à la clôture — vérifiés ici en sync ;
+  `test_voice_run_reports_on_and_drains` (pont réel) à vérifier hors sandbox.
+  Choix prudent : tâche [~] (test principal async ignoré ici, WinError 10013).
+  Preuve partielle : 7 tests sync de `tests/test_session.py` (voir tâche).
+  Fichiers : `spec/05-session-server/tasks.md` (case + preuve).

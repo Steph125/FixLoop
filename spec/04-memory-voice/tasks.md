@@ -21,11 +21,15 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   durée et réponse dans `eval/day3/findings.md`. Coût : quelques centimes.
   Exigences : `MEM-R1.2`. Fait quand : durée notée, réponse < 60 mots.
   Preuve : `eval/day3/findings.md` (section Sonde Muse Wonder), `eval/day3/wonder_probe.json` ; 6,25 s et 5,31 s.
-- [ ] **MEM-T4 — Synthèse et rapport par Wonder.** Appels de `load` et `save` (délai 20 s, journal `calls`,
+- [x] **MEM-T4 — Synthèse et rapport par Wonder (faux client, jamais bloquant).** Appels de `load` et `save` (délai 20 s, journal `calls`,
   coûts). Si la sonde montre plus de 5 s : synthèse lancée en parallèle du diagnostic (`MEM-D3`).
   Exigences : `MEM-R1.2`, `R1.3`, `R2.2`. Dépend de : T1, T3, `SRV-T2`.
   Appliquer MEM-D3 (appels Wonder en tâche de fond, jamais bloquants). Essayer un effort de raisonnement faible et
-  noter durée et jetons.
+  noter durée et jetons. MEM-D3 appliqué : `load` rend le texte local aussitôt, synthèse en fil de fond
+  (`synthesis` journalisée à l'arrivée) ; `save` écrit l'entrée sans `summary` puis 2e écriture atomique.
+  Effort réglable `FIXLOOP_WONDER_EFFORT` (défaut `low`), délai 20 s, appels reportés dans `CostLog`.
+  Preuve : `tests/test_memory.py` 15 passed (dont `test_load_background_returns_local_text_immediately`,
+  `test_save_background_writes_first_without_summary`, `test_wonder_calls_are_reported_to_costs`).
 - [x] **MEM-T5 — Phrase de panne répétée.** Après le diagnostic, si `repeated() ≥ 2`, la session dit la phrase de
   `design.md` 1.2. Exigences : `MEM-R1.4`. Touche `01-core-loop`.
   Preuve : `tests/test_state_machine.py::test_repeated_failure_is_said_after_diagnose`,
@@ -55,11 +59,14 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   Exigences : `VOX-R1.1`, `R1.3`, `R3.2`, `R4.1`. Dépend de : T1.
   À vérifier hors sandbox : les 2 tests e2e (faux serveur local, sockets interdits ici, WinError 10013).
   Preuve partielle : `tests/test_voice_bridge.py` 4 sync passed + 2 skipped, `check_spec.py` OK.
-- [ ] **VOX-T4 — Branchement à la session.** Commande → `on_user_done` / `on_command` ; journal `command` avec texte
+- [~] **VOX-T4 — Branchement à la session.** Commande → `on_user_done` / `on_command` ; journal `command` avec texte
   normalisé ; durée audio dans les coûts.
-  Exigences : `VOX-R2.5`, `R4.2`. Dépend de : T2, T3, `SRV-T6`, `CORE-T15`.
-- [ ] **VOX-T5 — Repli bouton.** Côté serveur : message `voice_status` (`on`, `off`, `error`) ; côté appli : texte
-  « Commande vocale indisponible ». Exigences : `VOX-R3.1`, `R3.2`. Dépend de : `APP-T5`.
+  Exigences : `VOX-R2.5`, `R4.2`. Dépend de : T2, T3 ([~]), `SRV-T6` ([~]), `CORE-T15` ([x]).
+  À vérifier hors sandbox : durée audio dans les coûts en session réelle (`test_voice_seconds_are_logged_to_costs`, voix de bout en bout).
+  Preuve partielle : `test_voice_final_routes_done_help_repeat`, `test_voice_command_text_reaches_session_queue`, `test_detector_history_journals_normalized_text` (passent ici).
+- [x] **VOX-T5 — Repli bouton.** Côté serveur : message `voice_status` (`on`, `off`, `error`) ; côté appli : texte
+  « Commande vocale indisponible ». Exigences : `VOX-R3.1`, `R3.2`. Dépend de : `APP-T5` ([x]).
+  Preuve : `tests/test_phone_app.py::test_voice_fallback_status`, `tests/test_session.py::test_voice_status_shapes`.
 
 ## Couverture
 

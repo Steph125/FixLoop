@@ -38,9 +38,12 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   garde-fou limité à `PermissionError` ; file des mesures qui ne jette plus rien quand la machine à états est libre
   (`SRV-D7`) ; temps de session faux quand l'horodatage client vaut 0 ; scénario du test complété (test dynamique).
   Les 3 tests passent ; nouveau test `test_work_queue_keeps_burst_in_order_when_idle`.
-- [ ] **SRV-T6 — Commandes et voix.** `user_done`, `command`, `speaking`, `pause` / `resume`, `stop` ; audio
+- [~] **SRV-T6 — Commandes et voix.** `user_done`, `command`, `speaking`, `pause` / `resume`, `stop` ; audio
   binaire vers `VoiceBridge` ; `voice_status`.
-  Exigences : `SRV-R5.4`. Dépend de : T5, `VOX-T3`.
+  Exigences : `SRV-R5.4`. Dépend de : T5 ([~]), `VOX-T3` ([~]).
+  À vérifier hors sandbox : `test_voice_run_reports_on_and_drains` (pont réel, file voix → mesures).
+  Preuve partielle : `test_speaking_mutes_detector_then_releases`, `test_audio_dropped_without_bridge`,
+  `test_audio_queued_with_ready_bridge`, `test_voice_final_routes_done_help_repeat` (passent ici).
 - [x] **SRV-T7 — Clôture et erreurs.** `closed` puis fermeture après 2 s ; 401, 402 / 429, budget, lenteur 15 s,
   exceptions (3 de suite → arrêt), déconnexion.
   Exigences : `SRV-R6.3`, `R7.1` à `R7.4`.
