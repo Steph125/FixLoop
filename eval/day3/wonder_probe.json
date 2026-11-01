@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-01T14:41:23",
+  "model": "muse-wonder-1.0",
+  "history": "fictive, demo: true",
+  "results": [
+    {
+      "kind": "load",
+      "ok": true,
+      "seconds": 6.25,
+      "words": 45,
+      "text": "Entre le 3 et le 28 octobre 2026, la chaîne est tombée du plateau cinq fois. Quatre remises en place ont réussi, une a échoué le 20 octobre. Panne récurrente. Conseil : vérifier l'usure de la chaîne, le plateau et le réglage du dérailleur avant.",
+      "input_tokens": 394,
+      "output_tokens": 1147,
+      "cost_usd": 0.02452
+    },
+    {
+      "kind": "save",
+      "ok": true,
+      "seconds": 5.31,
+      "words": 23,
+      "text": "La chaîne a été remise avec succès sur le plateau en 142 secondes, malgré une difficulté initiale pour l'engager correctement sur les dents.",
+      "input_tokens": 118,
+      "output_tokens": 597,
+      "cost_usd": 0.01241
+    }
+  ]
+}

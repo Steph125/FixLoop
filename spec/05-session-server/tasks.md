@@ -80,10 +80,12 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   `closed` (`success: true`) avec `uvicorn` + `ws_client.py` sur une vidéo synthétique. Corrigé dans `ws_client.py` :
   `user_done` sans `t_ms` (refusé par le protocole), envoi sans rythme (plafond de 10 img/s), index de `--done`,
   lecture des messages pendant l'envoi. Reste : la même session sur `velo2` chez l'auteur, puis [x].
-- [ ] **SRV-T11 — Première session réelle en local.** `ws_client.py` sur `velo2` avec les vrais modèles ;
+- [x] **SRV-T11 — Première session réelle en local.** `ws_client.py` sur `velo2` avec les vrais modèles ;
   noter dans `eval/day3/findings.md` : délai du verdict après le geste, `dropped`, résultats écartés, appels Spark,
   coût estimé, puis comparer au coût affiché sur la page Usage.
   Exigences : `SRV-R8.5`, indicateurs de `steering/product.md` section 9. Coût prévu : 57 images × 2 pièces ≈ 0,29 $ de SAM, plus quelques centimes de Spark et Wonder.
+  Preuve : `eval/day3/findings.md` (session du 1er nov., 0,130 $ au journal ; page Usage : 50 images SAM sur 50,
+  dépense 0 € sous crédits gratuits).
 
 ## Couverture
 

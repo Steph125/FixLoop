@@ -49,6 +49,11 @@ Répartition des 150 $ : développement et essais 50 $, benchmark 30 $, démos e
 Avec les crédits gratuits, les contenus envoyés peuvent servir à l'amélioration des produits Meta (page Billing) :
 aucune donnée personnelle (visages, documents) dans les images envoyées.
 
+Suivi au 1er nov. : 103,42 $ de crédits restants (46,58 $ dépensés, dont l'essentiel par Muse Code ; une session
+FixLoop réelle coûte quelques centimes à environ 1 $). La page Usage affiche 0 € tant que les crédits gratuits
+s'appliquent : on compare les unités (images, secondes d'audio), pas les montants. Reste à prévoir : benchmark
+3 à 6 $, replay 0,50 $, sessions en direct 10 à 15 $, Muse Code 10 à 20 $.
+
 ## 4. Contraintes
 
 | Contrainte | Conséquence |

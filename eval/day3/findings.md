@@ -26,7 +26,11 @@ Appels Spark : 1 (aucun arbitrage ni anomalie dans ce déroulé). Session close 
 | Abandonnées (déjà 3 en cours) | 10 |
 | Périmées (plus de 5 s) | 6 |
 | Arrivée dans le désordre | 1 |
-| Coût estimé de la journée au moment de la clôture (journal local) | 0,125 $ |
+| Coût estimé de la journée (journal local `data/costs/2026-11-01.jsonl`) | 0,130 $ : SAM 50 images 0,125 $, Spark 1 appel (1 414 jetons d'entrée, 661 de sortie) 0,005 $ |
+| Dépense du 1er nov. sur la page Usage de Meta (export relevé vers 14 h 40) | 0 € : crédits gratuits en cours, rien n'est imputé en euros |
+| Images SAM, page Usage / journal local | 50 / 50 |
+| Audio transcrit, page Usage | 23 s (sonde Transcribe, hors serveur, 21,2 s d'enregistrement) |
+| Jetons, page Usage | 0,69 M d'entrée hors cache, 9,65 M en cache, 0,11 M de sortie, 249 requêtes : surtout Muse Code (même compte) |
 
 ## Constats et décisions
 
@@ -37,7 +41,10 @@ Appels Spark : 1 (aucun arbitrage ni anomalie dans ce déroulé). Session close 
    de 1,50 $ par session (`SRV-R8.2`) ne pouvait pas jouer. Corrigé (`SessionCosts`, test
    `test_costs_are_attributed_to_the_session`).
 3. Le délai médian est plus long que le 30 oct. (1,9 s, `eval/day1`) : à remesurer après la correction 1.
-4. Reste à faire : comparer le coût de la journée avec la page Usage de la console Meta (`SRV-R8.5`).
+4. **Page Usage (`SRV-R8.5`)** : tant que les crédits gratuits s'appliquent, la dépense affichée reste à 0 € ; la
+   comparaison se fait donc sur les unités. Les 50 images SAM de la page sont exactement les 50 du journal, soit
+   0,125 $ à 2,50 $ / 1 000 images. Les jetons ne sont pas comparables : la page cumule Muse Code et les sondes,
+   sans détail par clé ni par modèle.
 
 # Sonde Muse Voice Transcribe (VOX-T1)
 
@@ -61,3 +68,19 @@ par des silences), converti en PCM16 mono 24 kHz. Voie temps réel : WebSocket, 
   requête réduite au strict nécessaire dans la sonde, à réessayer. Sans conséquence : FixLoop n'utilise que le
   temps réel.
 - Coût estimé : 0,002 $ pour les deux voies.
+
+# Sonde Muse Wonder (MEM-T3)
+
+1er nov. 2026, 14 h 41. `probe/wonder_probe.py`, historique fictif de 5 réparations (`demo: true`).
+Résultats : `eval/day3/wonder_probe.json`.
+
+| Appel | Durée | Mots (limite) | Jetons entrée / sortie | Coût estimé |
+|---|---|---|---|---|
+| Synthèse au démarrage (`load`) | 6,25 s | 45 (60) | 394 / 1 147 | 0,025 $ |
+| Phrase de rapport (`save`) | 5,31 s | 23 (30) | 118 / 597 | 0,012 $ |
+
+- Contenu juste : 5 chutes, 1 échec le 20 oct., « panne récurrente », conseil sur l'usure de la chaîne.
+- Plus de 5 s par appel : décision MEM-D3 appliquée (Wonder ne bloque ni le démarrage ni la clôture).
+- Beaucoup de jetons de sortie pour peu de mots (raisonnement probable) : essayer un effort de raisonnement
+  plus faible dans MEM-T4, si l'API l'accepte pour Wonder.
+- Coût par session : environ 0,04 $ pour les deux appels.

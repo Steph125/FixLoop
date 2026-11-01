@@ -17,12 +17,15 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   Fichiers : `state_machine.py`. Exigences : `MEM-R2.1`. Touche `01-core-loop`.
   Preuve : `tests/test_state_machine.py::test_close_report_lists_anomalies_with_step_time_and_message`,
   `pytest` 91 passed + 9 skipped (async PERC-T4, sandbox), `check_spec.py` OK.
-- [ ] **MEM-T3 — Sonde Wonder.** `probe/wonder_probe.py` : une synthèse sur un historique de 5 entrées ; noter
+- [x] **MEM-T3 — Sonde Wonder.** `probe/wonder_probe.py` : une synthèse sur un historique de 5 entrées ; noter
   durée et réponse dans `eval/day3/findings.md`. Coût : quelques centimes.
   Exigences : `MEM-R1.2`. Fait quand : durée notée, réponse < 60 mots.
+  Preuve : `eval/day3/findings.md` (section Sonde Muse Wonder), `eval/day3/wonder_probe.json` ; 6,25 s et 5,31 s.
 - [ ] **MEM-T4 — Synthèse et rapport par Wonder.** Appels de `load` et `save` (délai 20 s, journal `calls`,
   coûts). Si la sonde montre plus de 5 s : synthèse lancée en parallèle du diagnostic (`MEM-D3`).
   Exigences : `MEM-R1.2`, `R1.3`, `R2.2`. Dépend de : T1, T3, `SRV-T2`.
+  Appliquer MEM-D3 (appels Wonder en tâche de fond, jamais bloquants). Essayer un effort de raisonnement faible et
+  noter durée et jetons.
 - [x] **MEM-T5 — Phrase de panne répétée.** Après le diagnostic, si `repeated() ≥ 2`, la session dit la phrase de
   `design.md` 1.2. Exigences : `MEM-R1.4`. Touche `01-core-loop`.
   Preuve : `tests/test_state_machine.py::test_repeated_failure_is_said_after_diagnose`,

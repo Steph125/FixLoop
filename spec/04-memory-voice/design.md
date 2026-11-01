@@ -45,8 +45,8 @@ class WonderMemory:
 
 Pourquoi Wonder et pas Spark pour la mémoire : Wonder a un contexte d'un million de jetons, pensé pour les longs
 historiques ; ici l'historique est court, l'intérêt est de **montrer** l'usage d'un 4e modèle Meta à sa place
-naturelle (tenue d'un dossier), avec un repli sans lui. Si Wonder ajoute plus de 5 s au démarrage, la synthèse est
-lancée en parallèle du diagnostic et transmise au premier appel suivant (`MEM-D3`).
+naturelle (tenue d'un dossier), avec un repli sans lui. Wonder met plus de 5 s par appel (6,25 s mesurées au
+démarrage) : il ne bloque jamais la session (`MEM-D3`).
 
 ### 1.3 Historique de démonstration
 
@@ -152,8 +152,11 @@ ne correspond pas à « c est fait ». Le silence pendant la synthèse protège 
 - **MEM-D1 (30 oct.)** — Historique en JSON local, Wonder pour la synthèse et le rapport seulement. Raison :
   l'historique doit survivre sans le modèle (preview) et sans compte utilisateur.
 - **MEM-D2 (30 oct.)** — Calcul des pannes répétées en local, pas par le modèle : chiffre exact, testable.
-- **MEM-D3 (30 oct., conditionnel)** — Si Wonder ajoute plus de 5 s au démarrage, sa synthèse est calculée en
-  parallèle du diagnostic ; Spark diagnostique alors sans historique et la phrase de panne répétée (locale) reste.
+- **MEM-D3 (30 oct., appliquée le 1er nov.)** — Wonder ne bloque jamais la session. Mesuré (`eval/day3`) :
+  6,25 s pour la synthèse, 5,31 s pour le rapport. Au démarrage, `load` rend tout de suite l'historique local
+  (texte brut) pour le diagnostic de Spark et la phrase de panne répétée (calcul local), et la synthèse Wonder
+  est calculée en tâche de fond ; elle est journalisée quand elle arrive. À la clôture, l'entrée est écrite sans
+  `summary`, `closed` part aussitôt, et `summary` est ajouté par une deuxième écriture atomique quand Wonder répond.
 - **VOX-D1 (30 oct.)** — Audio relayé par le serveur : la clé API ne quitte jamais le serveur (`steering/tech.md`
   section 6).
 - **VOX-D2 (30 oct.)** — Bouton « C'est fait » toujours visible : la voix est un confort, pas une dépendance.
