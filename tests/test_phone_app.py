@@ -160,6 +160,15 @@ def test_replay_timeline_detail_curve():
     assert "0.18" in js and "0.26" in js  # seuils tracés (RPL-R4.4)
 
 
+def test_replay_honesty_and_links():
+    html = read("replay.html")
+    js = read("replay.js")
+    for token in ("honesty", "links", "renderHonesty", "renderLinks",
+                  "honestyText", "linksFor", "?session="):
+        assert token in (html + js), f"{token} manquant"  # RPL-R5.1 à R5.3, R7.2
+    assert "Benchmark" in (html + js)
+
+
 def test_voice_fallback_status():
     live = read("live.js")
     lib = read("lib.js")

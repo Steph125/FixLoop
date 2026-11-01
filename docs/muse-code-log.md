@@ -635,3 +635,11 @@ preuves (`SPEC À REVOIR` notés ci-dessous) ; `git checkout --` unique correcti
   Preuve : `node web/selftest.mjs` 23/23, `tests/test_phone_app.py` ciblé vert.
   Fichiers : `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
   `spec/07-replay-mode/tasks.md`.
+
+- RPL-T7 (honnêteté et liens, [x]) : `honestyText` (date fr + mode + historique démo ou vélo),
+  `linksFor` (rapport du Benchmark + autres sessions `?session=`, jamais la courante), démarrage
+  du lecteur (`wire`, `loadIndex`, `selectSession`, boutons) dans `web/replay.html`.
+  Tests d'abord (échec authentique : exports absents), vert du 1er coup après le code.
+  Preuve : `node web/selftest.mjs` 24/24, `tests/test_phone_app.py` ciblé vert.
+  Fichiers : `web/replay.html`, `web/replay.js`, `web/selftest.mjs`, `tests/test_phone_app.py`,
+  `spec/07-replay-mode/tasks.md`.

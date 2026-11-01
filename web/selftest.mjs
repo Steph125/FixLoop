@@ -2,7 +2,7 @@
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
 import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
-import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX } from "./replay.js";
+import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor } from "./replay.js";
 
 const checks = [];
 
@@ -258,6 +258,22 @@ check("replay : courbe du contact (RPL-T6)", () => {
   if (!(g.onY > g.offY)) throw new Error("seuils"); // 0,18 en bas, 0,26 en haut
   if (cursorX(1, 300, 2) !== 150) throw new Error("curseur");
   if (g.d === "") throw new Error("tracé");
+});
+
+check("replay : honnêteté et liens (RPL-T7)", () => {
+  const meta = { built: "2026-11-04T10:00:00+00:00",
+    mode: "session synthétique 10 images/s, anti-rebond 4 (RPL-R5.2)",
+    bike_id: "demo-velo", demo_history: false, name: "syn-A" };
+  const banner = honestyText(meta);
+  if (!banner.includes("Rejoué le")) throw new Error("date");
+  if (!banner.includes("synthétique")) throw new Error("mode");
+  const links = linksFor(meta, [{ name: "syn-A", title: "A" }, { name: "syn-B", title: "B" }]);
+  if (!links.some((l) => l.text.includes("Benchmark"))) throw new Error("rapport");
+  if (!links.some((l) => l.href.includes("?session=syn-B"))) throw new Error("brève B");
+  if (links.some((l) => l.href.includes("?session=syn-A"))) throw new Error("soi-même");
+  if (!honestyText({ ...meta, demo_history: true }).includes("démonstration")) {
+    throw new Error("historique");
+  }
 });
 
 export async function runAll() {

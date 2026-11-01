@@ -42,6 +42,26 @@
 <p id="links"></p>
 
 </main>
-<script type="module" src="replay.js"></script>
+<script type="module">
+import { wire, loadIndex, selectSession, onPlayPressed, onSpeedPressed, onSoundPressed } from "./replay.js";
+
+const video = document.getElementById("replay-video");
+const svg = document.getElementById("replay-overlay");
+wire(video, svg);
+const select = document.getElementById("session-select");
+const index = await loadIndex();
+for (const s of index) {
+  const opt = document.createElement("option");
+  opt.value = s.name;
+  opt.textContent = s.title || s.name;
+  select.appendChild(opt);
+}
+const wanted = new URLSearchParams(location.search).get("session");
+await selectSession(select.value = (index.some((s) => s.name === wanted) && wanted) || (index[0] && index[0].name) || "");
+select.addEventListener("change", () => selectSession(select.value));
+document.getElementById("btn-play").addEventListener("click", onPlayPressed);
+document.getElementById("btn-speed").addEventListener("click", onSpeedPressed);
+document.getElementById("btn-sound").addEventListener("click", onSoundPressed);
+</script>
 </body>
 </html>

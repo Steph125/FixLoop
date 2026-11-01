@@ -297,6 +297,47 @@ export function seekTo(t) {
   render(t);
 }
 
+// Bandeau permanent : date de construction et mode de calcul (RPL-R5.1).
+export function honestyText(meta) {
+  const built = meta && meta.built ? new Date(meta.built) : null;
+  const date = built && !Number.isNaN(+built)
+    ? built.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+    : "date inconnue";
+  const mode = (meta && meta.mode) || "mode inconnu";
+  const history = meta && meta.demo_history
+    ? "Historique de démonstration préparé, comme indiqué."
+    : `Ton vélo : ${(meta && meta.bike_id) || "inconnu"}.`;
+  return `Rejoué le ${date} en mode ${mode}. ${history}`;
+}
+
+// Liens : rapport du Benchmark, brèves des autres sessions (RPL-R7.2).
+export function linksFor(meta, index) {
+  const links = [{ text: "Rapport du Benchmark", href: "../eval/benchmark/report.md" }];
+  for (const s of index || []) {
+    if (meta && s.name === meta.name) continue;
+    links.push({ text: s.title || s.name, href: `replay.html?session=${s.name}` });
+  }
+  return links;
+}
+
+export function renderHonesty(meta) {
+  const el = document.getElementById("honesty");
+  if (el) el.textContent = honestyText(meta || app.meta);
+}
+
+export function renderLinks(meta, index) {
+  const el = document.getElementById("links");
+  if (!el) return;
+  el.innerHTML = "";
+  for (const link of linksFor(meta || app.meta, index || app.index)) {
+    const a = document.createElement("a");
+    a.href = link.href;
+    a.textContent = link.text;
+    el.appendChild(a);
+    el.appendChild(document.createTextNode(" "));
+  }
+}
+
 export function onPlayPressed(ev) {
   const video = app.video;
   if (!video) return;
@@ -341,6 +382,8 @@ export async function selectSession(name) {
     app.video.playbackRate = app.speed;
   }
   app.spokenUntil = -1;
+  renderHonesty();
+  renderLinks();
   renderTimeline();
   renderCurve();
   render(0);

@@ -35,8 +35,11 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   Exigences : `RPL-R4.2` à `R4.4`.
   Preuve : `tests/test_phone_app.py::test_replay_timeline_detail_curve`, `node web/selftest.mjs`
   23/23 (`timelineItems`, `eventDetail` avec modèle et preuve, `curveGeometry` + seuils 0,18/0,26).
-- [ ] **RPL-T7 — Honnêteté et liens.** Bandeau permanent, mode de calcul, mention de l'historique de démo, liens.
+- [x] **RPL-T7 — Honnêteté et liens.** Bandeau permanent, mode de calcul, mention de l'historique de démo, liens.
   Exigences : `RPL-R5.1` à `R5.3`, `R7.2`.
+  Choix : lien rapport vers `eval/benchmark/report.md` (chemin du dépôt ; ajusté au déploiement RPL-T9).
+  Preuve : `tests/test_phone_app.py::test_replay_honesty_and_links`, `node web/selftest.mjs`
+  24/24 (`honestyText`, `linksFor` sans la session courante).
 - [ ] **RPL-T8 — Session enregistrée en direct (Should).** Une session réelle avec `FIXLOOP_RECORD=1`, construite
   en source `recording`. Exigences : `RPL-R3.2`. Dépend de : `SRV-T9`, `APP-T9`.
 - [ ] **RPL-T9 — Déploiement et vérification.** `replay/deploy_check.py` ; déploiement statique ; vérification en
