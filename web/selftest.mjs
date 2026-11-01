@@ -1,6 +1,6 @@
 // FixLoop : vérifications de lib.js, sans DOM (APP-T10).
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
-import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES,
+import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
 
 const checks = [];
@@ -32,6 +32,20 @@ check("textes utilisateur courts (≤ 20 mots)", () => {
   for (const t of texts) {
     if (wordCount(t) > 20) throw new Error(`trop long : ${t}`);
   }
+});
+
+check("bike_id : format et validation (APP-R6)", () => {
+  if (makeBikeId("1a2b3c4d") !== "b-1a2b3c4d") throw new Error("makeBikeId");
+  if (!isBikeId("b-1a2b3c4d")) throw new Error("valide refusé");
+  for (const bad of ["Vélo!", "ab", "b-xyz!", "", "c-1a2b3c4d"]) {
+    if (isBikeId(bad)) throw new Error(`accepté : ${bad}`);
+  }
+});
+
+check("champ de code selon la santé (APP-R1.5)", () => {
+  if (!codeRequired({ access_code_required: true })) throw new Error("exigé");
+  if (codeRequired({ access_code_required: false })) throw new Error("non exigé");
+  if (codeRequired(null)) throw new Error("santé inconnue");
 });
 
 check("texte caméra exact (APP-R1.3)", () => {

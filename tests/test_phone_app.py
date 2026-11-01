@@ -47,6 +47,16 @@ def test_text_sizes_and_contrast_in_css():
     assert "rgba" in css  # fond semi-opaque sur la vidéo (contraste 4,5:1)
 
 
+def test_bike_id_and_access_code():
+    live = read("live.js")
+    assert "localStorage" in live  # APP-R6.1 : bike_id persisté
+    assert "try" in live and "catch" in live  # lecture/écriture protégées
+    assert "Historique non conservé" in live or "HISTORY_MESSAGE" in live  # APP-R6.2
+    html = read("index.html")
+    assert 'id="code"' in html  # APP-R1.5 : champ de code
+    assert "/api/health" in live  # affiché si le serveur exige un code
+
+
 def test_no_external_dependency_and_small_size():
     total = 0
     for name in ("index.html", "live.js", "style.css", "lib.js"):

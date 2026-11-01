@@ -26,6 +26,19 @@ export const CAMERA_MESSAGE = "FixLoop a besoin de la caméra pour vérifier ta 
 export const HISTORY_MESSAGE = "Historique non conservé sur ce navigateur";
 export const VOICE_MESSAGE = "Commande vocale indisponible";
 
+export function makeBikeId(hex8) {
+  return `b-${hex8}`;
+}
+
+export function isBikeId(s) {
+  return typeof s === "string" && /^[a-z0-9-]{4,32}$/.test(s) && s.startsWith("b-");
+}
+
 export function wordCount(text) {
   return String(text).trim().split(/\s+/).filter(Boolean).length;
+}
+
+// Santé du serveur : le champ de code ne s’affiche que si exigé (APP-R1.5).
+export function codeRequired(health) {
+  return !!(health && health.access_code_required);
 }
