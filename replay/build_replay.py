@@ -36,7 +36,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 
 from fixloop.benchmark import CannedAgent, NoSparkAgent, classify_contact, drive_session  # noqa: E402
 from fixloop.cached_models import CachedAgent, CachedMemory  # noqa: E402
@@ -125,19 +126,31 @@ def render_frame(fm) -> object:
 # ------------------------------------------------------- chemin réel (RPL-T2)
 
 
-def read_video_frames(video_path):
-    """Toutes les images BGR d'une vidéo + sa cadence (sync, OpenCV)."""
+def read_video_frames(video_path, every_fps: float | None = None):
+    """Images BGR d'une vidéo + sa cadence (sync, OpenCV).
+
+    `every_fps` : ne garde que l'image la plus proche de chaque instant k / every_fps
+    (l'image k est alors celle de t = k / every_fps, comme les sorties SAM à
+    10 images/s) ; une vidéo de téléphone à 30 images/s ne tient pas en RAM sinon.
+    """
     import cv2
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise RuntimeError(f"vidéo illisible : {video_path}")
     fps = cap.get(cv2.CAP_PROP_FPS) or FPS
     frames = []
+    j, next_k = 0, 0
     while True:
         ok, img = cap.read()
         if not ok:
             break
-        frames.append(img)
+        if every_fps is None:
+            frames.append(img)
+        else:  # image la plus proche de k / every_fps (répétée si la vidéo est plus lente)
+            while int(round(next_k * fps / every_fps)) <= j:
+                frames.append(img)
+                next_k += 1
+        j += 1
     cap.release()
     if not frames:
         raise RuntimeError(f"vidéo vide : {video_path}")
@@ -370,12 +383,17 @@ def write_session(out_dir, session_def: dict, procedure_id: str, events: list,
 def build_video(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=None,
                 offline: bool = False, agent: str = "fixloop", memory=None,
                 spark_inner=None, sam_client=None, raws_fn=None, prepare=None,
-                uploader=None, sam_dir=None, keep_audio: bool = False) -> dict:
-    """Construit depuis une vidéo filmée (source `video`, RPL-T2)."""
+                uploader=None, sam_dir=None, keep_audio: bool = False,
+                online: bool = False) -> dict:
+    """Construit depuis une vidéo filmée (source `video`, RPL-T2).
+
+    `online` : vrais SAM et Spark (ligne de commande de l'auteur, RPL-T4) ; sans lui,
+    ni faux client ni cache, la construction refuse tout appel réseau (tests).
+    """
     from fixloop.geometry import measure
     from fixloop.procedures import load_all
     name = session_def["name"]
-    if (not offline and raws_fn is None and sam_client is None
+    if (not offline and not online and raws_fn is None and sam_client is None
             and prepare is None and uploader is None):
         raise RuntimeError("source 'video' : vidéos et vrais modèles requis "
                            "(EVAL-T7 / RPL-T4, pas pour cette série)")
@@ -397,15 +415,15 @@ def build_video(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=N
         merged = fetch_sam_raws(video_path, procedure, sam_out, client=sam_client,
                                 prepare=prepare, uploader=uploader, fps=FPS)
 
-    bgr_frames, _src_fps = read_video_frames(video_path)
+    bgr_frames, _src_fps = read_video_frames(video_path, every_fps=FPS)  # image k = t k / 10
     h, w = bgr_frames[0].shape[:2]
     frames = frames_from_raws(merged, h, w, FPS, procedure)
     if not frames:
         raise RuntimeError("aucune image segmentée (SAM muet sur toute la vidéo)")
     measures = [measure(fm, procedure) for fm in frames]
     keyframes = []
-    for i, fm in enumerate(frames):
-        bgr = bgr_frames[min(i, len(bgr_frames) - 1)]
+    for fm in frames:  # image de la vidéo au même instant que le masque
+        bgr = bgr_frames[min(int(round(fm.t * FPS)), len(bgr_frames) - 1)]
         keyframes.append(keyframe_for(bgr, fm))
 
     if offline and agent == "fixloop" and cache_dir is None:
@@ -529,7 +547,8 @@ def encode_video_from_frames(bgr_frames: list, dest, fps: float = RECORDING_FPS)
 def build(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=None,
           offline: bool = False, agent: str = "rules", memory=None,
           spark_inner=None, sam_client=None, raws_fn=None, prepare=None,
-          uploader=None, sam_dir=None, keep_audio: bool = False) -> dict:
+          uploader=None, sam_dir=None, keep_audio: bool = False,
+          online: bool = False) -> dict:
     """Construit `replay/build/<nom>/` depuis une description de session."""
     from fixloop.perception import mask_to_svg_path
     source = session_def.get("source", "synthetic")
@@ -538,7 +557,8 @@ def build(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=None,
                            cache_dir=cache_dir, offline=offline, agent=agent,
                            memory=memory, spark_inner=spark_inner,
                            sam_client=sam_client, raws_fn=raws_fn, prepare=prepare,
-                           uploader=uploader, sam_dir=sam_dir, keep_audio=keep_audio)
+                           uploader=uploader, sam_dir=sam_dir, keep_audio=keep_audio,
+                           online=online)
     if source == "recording":
         return build_recording(session_def, out_dir, bikes_root=bikes_root,
                                cache_dir=cache_dir, offline=offline, agent=agent,
@@ -665,11 +685,15 @@ def main() -> None:
     ap.add_argument("--keep-audio", action="store_true",
                     help="garder la piste audio (RPL-D5 : sans son par défaut)")
     args = ap.parse_args()
+    if not args.offline:
+        from dotenv import load_dotenv
+        load_dotenv(ROOT / ".env")  # MODEL_API_KEY, jamais affichée
     with open(args.session, encoding="utf-8") as fh:
         session_def = json.load(fh)
     info = build(session_def, args.out, bikes_root=args.bikes_root,
                  cache_dir=args.cache, offline=args.offline, agent=args.agent,
-                 sam_dir=args.sam_dir, keep_audio=args.keep_audio)
+                 sam_dir=args.sam_dir, keep_audio=args.keep_audio,
+                 online=not args.offline)
     print(f"{session_def['name']} : {info['events']} événements, "
           f"{info['overlays']} overlays -> {info['dir']}")
 

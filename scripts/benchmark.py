@@ -365,6 +365,9 @@ def main() -> None:
         answer = input("Lancer le benchmark en ligne ? [o/N] ")
         if answer.strip().lower() not in ("o", "oui", "y", "yes"):
             sys.exit("abandon (sans confirmation, aucun appel).")
+    if not args.offline and not args.fake:
+        from dotenv import load_dotenv
+        load_dotenv(Path(__file__).resolve().parent.parent / ".env")  # MODEL_API_KEY, jamais affichée
 
     from fixloop.procedures import load_all
     procedure = load_all()[args.procedure]

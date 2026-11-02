@@ -305,3 +305,63 @@ def test_built_video_has_no_audio_track(tmp_path):
     assert meta["video_codec"] == "h264"
     assert audio_streams(muted / "vid-A" / "video.mp4") == 0  # RPL-D5 : sans son
     assert audio_streams(kept / "vid-A" / "video.mp4") == 1  # --keep-audio
+
+
+# --- Vidéo de téléphone à 30 images/s et chemin en ligne (correction du 2 nov.) ---
+
+def write_ramp_mp4(path, n_frames, fps):
+    """Image j = gris uniforme 4 j : l'instant d'une image se lit sur sa valeur."""
+    import cv2
+    import numpy as np
+    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (400, 400))
+    assert writer.isOpened()
+    for j in range(n_frames):
+        writer.write(np.full((400, 400, 3), 4 * j, np.uint8))
+    writer.release()
+
+
+class ImageAgent(FakeAgent):
+    """Faux Spark qui garde les images du diagnostic."""
+
+    def diagnose(self, images, procedures, history):
+        self.images = list(images)
+        return super().diagnose(images, procedures, history)
+
+
+def test_video_frames_follow_sam_times_at_30_fps(tmp_path):
+    video = tmp_path / "rampe30.mp4"
+    write_ramp_mp4(video, 60, fps=30)
+    frames, src_fps = build_replay.read_video_frames(video, every_fps=10)
+    assert round(src_fps) == 30 and len(frames) == 20  # 2 s à 10 images/s, pas 60 en RAM
+    for k, img in enumerate(frames):
+        assert abs(float(img.mean()) - 12 * k) < 6  # image k = vidéo à t = k / 10
+
+
+def test_video_keyframes_match_mask_times(tmp_path):
+    video = tmp_path / "rampe30.mp4"
+    write_ramp_mp4(video, 60, fps=30)
+    agent = ImageAgent()
+    build(video_session(video, diagnose_at=[1.0]), tmp_path / "b", bikes_root=tmp_path / "bikes",
+          cache_dir=tmp_path / "cache", agent="fixloop", spark_inner=agent,
+          raws_fn=fake_fetch(sim_raws(20, 10)))
+    assert abs(float(agent.images[0].mean()) - 120) < 6  # t = 1 s : image 30 de la vidéo, pas 10
+
+
+def test_video_online_goes_through_segment_video(tmp_path, monkeypatch):
+    video = tmp_path / "velo.mp4"
+    write_mp4(video, 20)
+    clients = []
+
+    def fetch_sam(video_path, procedure, sam_dir, client=None, prepare=None,
+                  uploader=None, fps=10.0):
+        clients.append(client)  # aucun réseau : faux `segment_video`
+        return fake_fetch(sim_raws(20, 10))(video_path, procedure, sam_dir)
+
+    monkeypatch.setattr(build_replay, "fetch_sam_raws", fetch_sam)
+    with pytest.raises(RuntimeError, match="EVAL-T7"):  # sans `online` : refus (tests)
+        build(video_session(video), tmp_path / "b0", bikes_root=tmp_path / "bikes0",
+              cache_dir=tmp_path / "cache0", agent="fixloop", spark_inner=FakeAgent())
+    build(video_session(video), tmp_path / "b", bikes_root=tmp_path / "bikes",
+          cache_dir=tmp_path / "cache", agent="fixloop", spark_inner=FakeAgent(), online=True)
+    assert clients == [None]  # ligne de commande : `segment_video` crée le vrai client
+    assert (tmp_path / "b" / "vid-A" / "meta.json").is_file()

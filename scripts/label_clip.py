@@ -6,7 +6,9 @@ Touches : o = off (tombée), f = on (en place, « faite »), t = transition,
 h = hidden (masquée), espace = « c'est fait » à cette seconde,
 n/p = seconde suivante/précédente, q = enregistrer et quitter.
 L'outil relit le CSV existant (reprise) et écrit une ligne par seconde.
-La partie interactive demande un écran ; les fonctions pures sont testées.
+Fenêtre tkinter (l'OpenCV du projet est sans affichage), chaque seconde
+rejouée en boucle. La partie interactive demande un écran ; les fonctions
+pures sont testées.
 """
 
 import argparse
@@ -64,7 +66,41 @@ def write_labels_csv(path: str | Path, rows: list[dict]) -> None:
         w.writerows(kept + rows)
 
 
+PLAY_FPS = 10  # images montrées par seconde de vidéo (la seconde est rejouée en boucle)
+LETTERS = {"off": "o", "on": "f", "transition": "t", "hidden": "h"}
+
+
+def frames_of_second(cap, sec: int, fps: float, width: int = 960) -> list:
+    """Images de la seconde `sec` (environ PLAY_FPS), réduites à `width` px au plus."""
+    import cv2
+    cap.set(cv2.CAP_PROP_POS_FRAMES, int(round(sec * fps)))
+    step = max(1, int(round(fps / PLAY_FPS)))
+    out = []
+    for j in range(max(1, int(round(fps)))):
+        ok, img = cap.read()
+        if not ok:
+            break
+        if j % step == 0:
+            if img.shape[1] > width:
+                img = cv2.resize(img, (width, width * img.shape[0] // img.shape[1]))
+            out.append(img)
+    return out
+
+
+def timeline(states: list, labelled: set, done: set, cur: int) -> str:
+    """Une lettre par seconde (· = pas encore étiquetée, ! = « c'est fait »), [ ] = seconde courante."""
+    cells = []
+    for t, s in enumerate(states):
+        cell = (LETTERS[s] if t in labelled else "·") + ("!" if t in done else "")
+        cells.append(f"[{cell}]" if t == cur else f" {cell} ")
+    return "".join(cells)
+
+
 def main() -> None:
+    """Fenêtre tkinter (livré avec Python) : l'OpenCV du projet est sans affichage."""
+    import base64
+    import tkinter as tk
+
     import cv2
     ap = argparse.ArgumentParser(description="Étiquette un extrait seconde par seconde.")
     ap.add_argument("--video", required=True)
@@ -73,41 +109,88 @@ def main() -> None:
     args = ap.parse_args()
 
     cap = cv2.VideoCapture(args.video)
+    if not cap.isOpened():
+        sys.exit(f"vidéo illisible : {args.video}")
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     seconds = max(1, round(total / fps))
     states, done_at = read_done(args.labels, args.clip)
-    states += ["transition"] * (seconds - len(states))
+    labelled = set(range(min(len(states), seconds)))  # reprise : déjà étiquetées
+    states = (states + ["transition"] * seconds)[:seconds]
     done = set(done_at)
-    cur = 0
+    view = {"cur": 0, "images": [], "i": 0}
     print(f"{args.clip} : {seconds} s. o/f/t/h = état, espace = c'est fait, q = sauver.")
-    while True:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, int(cur * fps))
-        ok, img = cap.read()
-        if not ok:
-            break
-        mark = "*" if cur in done else " "
-        cv2.imshow(f"{args.clip} t={cur}s [{states[cur]}]{mark}",
-                   cv2.resize(img, (min(960, img.shape[1]),
-                                    min(960, img.shape[1]) * img.shape[0] // img.shape[1])))
-        key = chr(cv2.waitKey(0) & 0xFF)
+
+    root = tk.Tk()
+    root.title(f"FixLoop : étiquetage {args.clip}")
+    picture = tk.Label(root)
+    picture.pack()
+    status = tk.Label(root, font=("Consolas", 12), justify="left")
+    status.pack(anchor="w", padx=8)
+    tk.Label(root, justify="left", font=("Segoe UI", 10),
+             text="o tombée   f en place   t bouge   h cachée   espace « c'est fait »   "
+                  "n / → suivante   p / ← précédente   q enregistrer et quitter").pack(anchor="w", padx=8, pady=4)
+
+    def load_second() -> None:
+        view["images"] = [tk.PhotoImage(data=base64.b64encode(
+            cv2.imencode(".png", img, [cv2.IMWRITE_PNG_COMPRESSION, 1])[1].tobytes()))
+            for img in frames_of_second(cap, view["cur"], fps)]
+        view["i"] = 0
+        refresh()
+
+    def refresh() -> None:
+        cur = view["cur"]
+        state = states[cur] if cur in labelled else "(à étiqueter)"
+        said = "   « c'est fait »" if cur in done else ""
+        status.config(text=f"{args.clip}   seconde {cur} / {seconds - 1}   état : {state}{said}\n"
+                           f"{timeline(states, labelled, done, cur)}")
+
+    def play() -> None:
+        if view["images"]:
+            picture.config(image=view["images"][view["i"] % len(view["images"])])
+            view["i"] += 1
+        root.after(1000 // PLAY_FPS, play)
+
+    def go(delta: int) -> None:
+        view["cur"] = min(seconds - 1, max(0, view["cur"] + delta))
+        load_second()
+
+    def on_key(event) -> None:
+        key, cur = event.char, view["cur"]
         if key == "q":
-            break
+            root.destroy()
         elif key == " ":
-            if cur in done:
-                done.remove(cur)
-            else:
-                done.add(cur)
-        elif key == "n":
-            cur = min(seconds - 1, cur + 1)
-        elif key == "p":
-            cur = max(0, cur - 1)
+            done.symmetric_difference_update({cur})
+            refresh()
+        elif key == "n" or event.keysym == "Right":
+            go(1)
+        elif key == "p" or event.keysym == "Left":
+            go(-1)
         elif state_for_key(key) is not None:
             states[cur] = state_for_key(key)
-            cur = min(seconds - 1, cur + 1)
-    cv2.destroyAllWindows()
+            labelled.add(cur)
+            if cur < seconds - 1:
+                go(1)
+            else:
+                refresh()
+
+    root.bind("<Key>", on_key)
+    root.protocol("WM_DELETE_WINDOW", root.destroy)  # fermer la fenêtre = enregistrer aussi
+    load_second()
+    play()
+    root.lift()
+    root.attributes("-topmost", True)
+    root.after(500, lambda: root.attributes("-topmost", False))
+    root.focus_force()
+    root.mainloop()
+    cap.release()
+
     write_labels_csv(args.labels, rows_for_clip(args.clip, states, sorted(done)))
-    print(f"{len(states)} s étiquetées -> {args.labels}")
+    missing = [t for t in range(seconds) if t not in labelled]
+    print(f"{len(states)} s enregistrées -> {args.labels}")
+    if missing:
+        print(f"ATTENTION : secondes non étiquetées (notées transition) : {missing}. "
+              "Relance la même commande pour les compléter.")
 
 
 if __name__ == "__main__":

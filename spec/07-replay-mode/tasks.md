@@ -32,6 +32,11 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   `test_video_without_ffmpeg_marks_opencv_codec`, `test_video_build_raises_when_ffmpeg_fails`,
   `test_encode_video_drops_audio_unless_keep_audio`),
   `tests/test_replay_publish.py::test_deploy_check_refuses_video_copied_without_ffmpeg`.
+  Correction du 2 nov. (vidéos de l'auteur à 30 images/s) : en ligne de commande, `build_replay.py` passe par le
+  vrai `segment_video` (`online` ; `build` refuse toujours le réseau sans lui) et charge `.env` ; l'image clé est
+  prise au même instant que le masque (l'image n de la vidéo n'est pas l'instant n / 10), vidéo lue à 10 images/s.
+  Preuve : `test_video_frames_follow_sam_times_at_30_fps`, `test_video_keyframes_match_mask_times`,
+  `test_video_online_goes_through_segment_video`.
 - [ ] **RPL-T3 — Tourner les vidéos A et B.** Vélo de l'auteur, téléphone posé, son activé (« c'est fait » dit à
   voix haute) ; A : chaîne tombée → posée sur le disque → « c'est fait » → correction → rotation arrière → test
   dynamique ; B : mains devant le plateau, angle de 30°, pour provoquer un arbitrage. Noter les instants de

@@ -47,3 +47,25 @@ def test_write_labels_csv_replaces_clip_and_keeps_others(tmp_path):
     assert any(r["clip"] == "c02" for r in got)
     states, done = lc.read_done(path, "c01")
     assert (states, done) == (["on", "on"], [1])  # reprise d'étiquetage
+
+
+def test_frames_of_second_reads_that_second_only(tmp_path):
+    import cv2
+    import numpy as np
+    lc = load()
+    video = tmp_path / "rampe.mp4"  # 30 images/s, image j = gris 4 j
+    writer = cv2.VideoWriter(str(video), cv2.VideoWriter_fourcc(*"mp4v"), 30, (200, 100))
+    for j in range(60):
+        writer.write(np.full((100, 200, 3), 4 * j, np.uint8))
+    writer.release()
+    cap = cv2.VideoCapture(str(video))
+    frames = lc.frames_of_second(cap, 1, 30.0)
+    cap.release()
+    assert len(frames) == lc.PLAY_FPS  # la seconde rejouée en boucle
+    assert abs(float(frames[0].mean()) - 120) < 6  # seconde 1 = images 30 à 59
+
+
+def test_timeline_shows_unlabelled_done_and_current():
+    lc = load()
+    line = lc.timeline(["off", "on", "transition"], {0, 1}, {1}, 2)
+    assert line == " o  f! [·]"

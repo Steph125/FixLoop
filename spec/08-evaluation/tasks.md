@@ -51,6 +51,8 @@
   Preuve (1er nov.) : `tests/test_benchmark_real.py` 2 passed (2 extraits vidéo OpenCV en ligne
   avec faux SAM + faux Spark, puis `--offline`, `results.csv` identiques ; `--offline` sans cache
   refusé) ; `scripts/benchmark.py --model` (EVAL-D5), `--sam-cache`, `--spark-cache`.
+  Correction du 2 nov. : `benchmark.py` charge `.env` avant le passage en ligne (sinon `KeyError` sur
+  `MODEL_API_KEY` juste après la confirmation du coût).
 - [ ] **EVAL-T7 — Exécution.** Passage en ligne, puis deux passages hors ligne identiques ; coût réel noté.
   Exigences : `EVAL-R2.2`, `R5.1`, `R6.2`, `R8.1`.
 - [ ] **EVAL-T8 — Rapport et graphique.** `report.md` (structure section 6), `chart.svg`, limites, extraits
