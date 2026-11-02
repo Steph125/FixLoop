@@ -18,10 +18,11 @@ replay/sessions/A.json  ──►  build_replay.py
         │      Agent = CachedAgent(SparkAgent)   Memory = CachedMemory(WonderMemory)
         │
         └─► replay/build/<nom>/
-               video.mp4       H.264, ≤ 960 px, faststart, son d'origine si présent
+               video.mp4       H.264, ≤ 960 px, faststart, sans piste audio sauf --keep-audio (RPL-D5)
                overlays.json   contours par image (5 images/s), contact, label
                events.json     journal de la session (CORE-R8) + texte dit + modèle concerné
-               meta.json       date de tournage, mode, anti-rebond, versions, modèles, coûts réels de construction
+               meta.json       date de tournage, mode, anti-rebond, versions, modèles, coûts réels de construction,
+                               video_codec (h264, ou opencv-mp4v si ffmpeg absent : refusé par deploy_check)
         └─► replay/build/index.json   liste des sessions
 ```
 
@@ -126,3 +127,7 @@ par session (`RPL-R7.1`).
 - **RPL-D3 (30 oct.)** — Mode vidéo (10 fps, anti-rebond 4) pour les sessions tournées exprès ; mode
   « enregistrement » (1 fps, anti-rebond 3) pour une session du direct. Le mode est affiché (`RPL-R5.2`).
 - **RPL-D4 (30 oct.)** — Contours à 5 images/s pour tenir le poids de 2 Mo.
+- **RPL-D5 (1er nov.)** — Les vidéos publiées (`replay/published/`) sont commitées, seule exception à la règle
+  « pas de vidéo dans le dépôt », car GitHub Pages publie le contenu du dépôt. Elles sont réencodées sans piste
+  audio (`-an`) : les « c'est fait » sont déjà des événements sous-titrés, et un fichier commité reste dans
+  l'historique public. Option `--keep-audio` de `build_replay.py` pour une décision explicite de l'auteur.

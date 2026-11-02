@@ -111,3 +111,13 @@ def test_deploy_check_refuses_secrets_and_big_video(tmp_path):
     assert any(".env" in e for e in errors)
     assert any(".jsonl" in e for e in errors)
     assert any("15" in e for e in errors)  # RPL-R7.1 : vidéo de plus de 15 Mo
+
+
+def test_deploy_check_refuses_video_copied_without_ffmpeg(tmp_path):
+    site = assemble_site_like_pages_yml(tmp_path)
+    meta_path = site / "build" / "pub-A" / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["video_codec"] = "opencv-mp4v"  # construite sans ffmpeg (RPL-D5)
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    errors = deploy_check.check_build(site)
+    assert any("opencv-mp4v" in e for e in errors)  # mal lue sur téléphone : refusée

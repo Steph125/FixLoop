@@ -14,7 +14,7 @@ __pycache__/
 probe_out*/
 # sortie du replay (construite, jamais committée)
 replay/build/
-# publication Pages (RPL-T11) : sessions choisies + liens, vidéos incluses
+# publication Pages (RPL-T11) : sessions choisies + liens, vidéos sans son incluses (RPL-D5)
 !replay/published/
 !replay/published/*/video.mp4
 # mesures locales (steering/tech.md : jamais commitées)

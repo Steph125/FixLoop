@@ -5,12 +5,12 @@ Couvre `EVAL-R1` à `EVAL-R8`. Fichiers : `eval/benchmark/labels.csv`, `eval/ben
 
 ## 1. Matrice de diversité
 
-Chaque extrait combine une valeur par ligne. 20 extraits au minimum ; chaque valeur apparaît au moins 3 fois
+Chaque extrait combine une valeur par ligne. 20 extraits visés (moins : dit dans le rapport, `EVAL-D6`) ; chaque valeur apparaît au moins 3 fois
 (scénarios : au moins 3 fois chacun pour S1 à S4, 2 fois pour S5, S6).
 
 | Dimension | Valeurs |
 |---|---|
-| Éclairage | jour (dehors ou fenêtre), intérieur lampe, faible (soir) |
+| Éclairage | intérieur lampe, faible (soir) ; pas de jour (`EVAL-D6`) |
 | Angle | face au plateau, 30° de côté, en plongée |
 | Distance | 30 cm, 50 cm |
 | Scénario | S1 tombée → remise correcte ; S2 fausse remise sur le disque → correction ; S3 en place, rotation, reste en place ; S4 en place → retombe pendant la rotation ; S5 mains devant le plateau ; S6 en place immobile, aucun geste |
@@ -121,3 +121,6 @@ en plus des couleurs, étiquettes de valeur sur les barres, SVG généré en Pyt
 - **EVAL-D5 (1er nov.)** — Les appels de Spark seul peuvent passer par `muse-spark-1.3-contributor` (même modèle,
   environ 12 fois moins cher en entrée) si l'offre est disponible en France ; le rapport dit lequel a été utilisé.
   Les images envoyées ne montrent que la transmission (déjà la règle, `steering/tech.md` section 3).
+- **EVAL-D6 (2 nov.)** — Deux éclairages au lieu de trois : lampe et soir. Raison : pas de lumière du jour les
+  1er et 2 nov. pendant les créneaux de tournage ; la limite est écrite dans le rapport. Le nombre d'extraits est
+  celui qui a été filmé : s'il y en a moins de 20 (ou moins de 15 en `test`), le rapport le dit dans ses limites.

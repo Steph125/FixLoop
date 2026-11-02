@@ -858,3 +858,7 @@ Interdits respectés : `.env` ni lu ni commité, aucun appel API (faux
 clients uniquement), `probe/` et `try_agent.py` non lancés, aucun
 `push`/`merge`/branche/workflow déclenché, aucune installation, `spec/`
 touché seulement pour cases et preuves. Coût API de cette série : 0 $.
+
+Vérification hors sandbox (1er nov., poste de l'auteur, Windows) : `python -m pytest -q -rs -m "not recorded" tests`
+→ 250 passed, 0 skipped, 1 deselected (les 22 ignorés et les 4 échecs de `test_server.py` ci-dessus venaient tous
+des sockets interdits) ; `check_spec.py` OK ; `node web/selftest.mjs` 25/25.

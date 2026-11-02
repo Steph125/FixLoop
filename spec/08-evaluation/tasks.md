@@ -10,6 +10,7 @@
 - [ ] **EVAL-T1 — Plan de tournage et tournage.** Remplir `clips.csv` (20 lignes au moins, matrice section 1,
   `split`) avant de filmer ; tourner ; copier dans `data/eval/` ; aucun visage ni document dans le champ.
   Exigences : `EVAL-R1.1`, `R1.2`, `R1.5`, `R2.1`, `R8.1`. Fait quand : chaque valeur de la matrice ≥ 3 fois.
+  `EVAL-D6` (2 nov.) : 2 éclairages (lampe, soir) ; nombre d'extraits = ceux filmés, limite dite dans le rapport.
 - [ ] **EVAL-T2 — Étiquetage.** `labels.csv` seconde par seconde (outil `scripts/label_clip.py` facultatif) ;
   commit « labels » avant toute exécution.
   Exigences : `EVAL-R1.3`, `R1.4`.
@@ -21,7 +22,7 @@
   par image hors transition, lecture `labels.csv` / `clips.csv`).
 - [x] **EVAL-T4 — Approches règles SAM et FixLoop.** `NoSparkAgent`, réglages `replay` et `live`
   (sous-échantillonnage, anti-rebond 3 / 4), `CachedAgent` partagé avec le replay.
-  Exigences : `EVAL-R3.2` à `R3.5`. Dépend de : `CORE-T9` ([x]), `PERC-T5` ([~]), `RPL-T1` ([x]).
+  Exigences : `EVAL-R3.2` à `R3.5`. Dépend de : `CORE-T9` ([x]), `PERC-T5` ([x]), `RPL-T1` ([x]).
   Preuve : `tests/test_benchmark.py` (NoSparkAgent, réglages 10 fps/4 et 1 fps/3, clôture synthétique
   sans fausse validation, arbitrage sur `hidden` rejoué à l'identique hors ligne).
   Choix : `false_validations` exclut le cadrage (`frame_view`, visibilité seule) — sinon la cible 0

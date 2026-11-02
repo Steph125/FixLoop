@@ -20,6 +20,7 @@ OVERLAY_BUDGET = 2 * 1024 * 1024  # RPL-R7.1 : overlays.json sous 2 Mo
 VIDEO_BUDGET = 15 * 1024 * 1024  # RPL-R7.1 : vidéo de plus de 15 Mo refusée
 FORBIDDEN_NAMES = {".env"}  # RPL-R8.2 : ni .env, ni clé, ni journal
 FORBIDDEN_SUFFIXES = {".jsonl"}  # journaux de session et de coûts
+OPENCV_CODEC = "opencv-mp4v"  # copie sans ffmpeg, mal lue sur téléphone (RPL-D5)
 
 # Appels externes interdits (RPL-R1.4) : fetch/src/import vers http(s).
 # Les liens `href="https://…"` (RPL-R7.2, depuis links.json) restent acceptés.
@@ -89,7 +90,7 @@ def check_forbidden(site: Path) -> list[str]:
 
 
 def check_session(path: Path, name: str) -> list[str]:
-    """Une session : 4 fichiers, JSON valides, vidéo ≤ 15 Mo et lisible, overlays sous 2 Mo."""
+    """Une session : 4 fichiers, JSON valides, vidéo ffmpeg ≤ 15 Mo et lisible, overlays sous 2 Mo."""
     errors = []
     for name_file in sorted(SESSION_FILES):
         if not (path / name_file).is_file():
@@ -98,9 +99,14 @@ def check_session(path: Path, name: str) -> list[str]:
         p = path / doc
         if p.is_file():
             try:
-                json.loads(p.read_text(encoding="utf-8"))
+                data = json.loads(p.read_text(encoding="utf-8"))
             except ValueError as exc:
                 errors.append(f"session {name} : {doc} illisible ({exc})")
+                continue
+            if (doc == "meta.json" and isinstance(data, dict)
+                    and data.get("video_codec") == OPENCV_CODEC):
+                errors.append(f"session {name} : vidéo copiée sans ffmpeg ({OPENCV_CODEC}), "
+                              "mal lue sur téléphone : reconstruire avec ffmpeg (RPL-D5)")
     overlays = path / "overlays.json"
     if overlays.is_file() and overlays.stat().st_size > OVERLAY_BUDGET:
         errors.append(f"session {name} : overlays.json dépasse 2 Mo (RPL-R7.1)")

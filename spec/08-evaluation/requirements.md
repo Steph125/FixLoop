@@ -7,8 +7,9 @@ d'images » : on mesure une **boucle de décision**, pas une réponse sur une im
 
 ## EVAL-R1 — Jeu d'extraits (Must)
 
-1. Le jeu DOIT contenir au moins 20 extraits de 10 à 20 s, filmés par l'auteur sur son vélo (droits : `SUB-R6`).
-2. Le jeu DOIT couvrir la matrice de `design.md` section 1 : au moins 3 éclairages, 3 angles, 2 distances, et les
+1. Le jeu DOIT contenir les extraits de 10 à 20 s filmés par l'auteur sur son vélo (droits : `SUB-R6`), 20 visés ;
+   s'il y en a moins de 20, le rapport DOIT le dire dans ses limites (`EVAL-D6`).
+2. Le jeu DOIT couvrir la matrice de `design.md` section 1 : les 2 éclairages disponibles (lampe, soir : `EVAL-D6`), 3 angles, 2 distances, et les
    6 scénarios (dont la fausse remise sur le disque et la chute pendant la rotation).
 3. Chaque extrait DOIT être étiqueté seconde par seconde : `off` (tombée), `on` (en place), `transition`,
    `hidden` (plateau ou chaîne masqué), et porter les instants où l'auteur a dit « c'est fait ».
@@ -18,7 +19,8 @@ d'images » : on mesure une **boucle de décision**, pas une réponse sur une im
 ## EVAL-R2 — Séparation calibration / test (Must)
 
 1. Les extraits utilisés pour régler les seuils (`velo2` et au plus 4 autres) DOIVENT être marqués `calib`.
-2. Les chiffres principaux du rapport DOIVENT être calculés sur les extraits `test` uniquement (au moins 15).
+2. Les chiffres principaux du rapport DOIVENT être calculés sur les extraits `test` uniquement (15 visés ;
+   moins : dit dans les limites du rapport, `EVAL-D6`).
 3. SI les seuils sont modifiés après avoir vu les résultats `test`, ALORS le rapport DOIT le dire et donner les
    chiffres avant et après.
 

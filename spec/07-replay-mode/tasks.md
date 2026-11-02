@@ -10,7 +10,7 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
 - [x] **RPL-T2 — Construction d'une session.** `replay/build_replay.py` : fichier de session, source `video`
   (`segment_video`) ou `recording`, rejeu par `Session` avec `RecordingOutput`, écriture de `video.mp4`
   (ffmpeg, `-preset veryfast`, faststart), `overlays.json` (5 fps), `events.json`, `meta.json`, `index.json`.
-  Exigences : `RPL-R2.2`, `R2.3`, `R5.2`, `R7.1`. Dépend de : T1 ([x]), `PERC-T5` ([~]), `PERC-T6` ([x]).
+  Exigences : `RPL-R2.2`, `R2.3`, `R5.2`, `R7.1`. Dépend de : T1 ([x]), `PERC-T5` ([x]), `PERC-T6` ([x]).
   Fait quand : la session synthétique se construit deux fois à l'identique — fait (octet par octet
   pour `events.json` et `overlays.json`).
   Choix : source `synthetic` ajoutée pour le code seul (vidéos réelles en RPL-T4) ; `state_at` et
@@ -25,6 +25,13 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   Preuve (1er nov.) : `tests/test_replay_real.py` 4 passed (vidéo 20 images écrite avec OpenCV,
   `video` déterministe + `--offline` sans nouvel appel, `recording` déterministe + `--offline`,
   `OfflineError` sans cache Spark).
+  `RPL-D5` appliquée (1er nov.) : vidéo réencodée sans piste audio (`-an`, `--keep-audio` pour l'auteur) ; ffmpeg
+  introuvable → copie OpenCV marquée `video_codec: opencv-mp4v`, refusée par `deploy_check.py` ; ffmpeg en échec →
+  `RuntimeError` avec la fin de stderr, jamais de copie ; la source `recording` passe par le même réencodage.
+  Preuve : `tests/test_replay_real.py` (`test_built_video_has_no_audio_track` avec ffmpeg et ffprobe réels,
+  `test_video_without_ffmpeg_marks_opencv_codec`, `test_video_build_raises_when_ffmpeg_fails`,
+  `test_encode_video_drops_audio_unless_keep_audio`),
+  `tests/test_replay_publish.py::test_deploy_check_refuses_video_copied_without_ffmpeg`.
 - [ ] **RPL-T3 — Tourner les vidéos A et B.** Vélo de l'auteur, téléphone posé, son activé (« c'est fait » dit à
   voix haute) ; A : chaîne tombée → posée sur le disque → « c'est fait » → correction → rotation arrière → test
   dynamique ; B : mains devant le plateau, angle de 30°, pour provoquer un arbitrage. Noter les instants de

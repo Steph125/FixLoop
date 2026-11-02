@@ -2,7 +2,7 @@
 
 Usage : python replay/build_replay.py replay/sessions/syn-A.json --out replay/build
        [--bikes-root data/bikes] [--cache replay/cache] [--offline] [--agent rules|fixloop]
-       [--sam-dir <dossier>] [--session-video ...]
+       [--sam-dir <dossier>] [--keep-audio] [--session-video ...]
 
 Le rejeu exécute le même code que le direct (`Session`, `geometry`, `verifier`,
 `fixloop/benchmark.py`) ; seules les réponses des modèles viennent d'un cache
@@ -12,7 +12,7 @@ Sources :
 - `synthetic` : scène `fixloop/sim.py`, sans vidéo ni API (tests, code seul) ;
 - `video` : vidéo filmée par l'auteur (`segment_video`, cache `raw_*.txt`,
   mesures, `CachedAgent(SparkAgent)`, images clés recadrées, vidéo réencodée
-  ffmpeg H.264 ≤ 960 px `+faststart`, `meta.source = "video"`,
+  ffmpeg H.264 ≤ 960 px `+faststart` sans piste audio (RPL-D5), `meta.source = "video"`,
   « vidéo 10 images/s, anti-rebond 4 ») ;
 - `recording` : session en direct enregistrée (`recording/` : images 1/s +
   sorties SAM brutes, `meta.source = "recording"`,
@@ -30,6 +30,8 @@ par le vrai `parse_raw`/`assemble_frames` (décision RPL-D1 : même code).
 import argparse
 import asyncio
 import json
+import shutil
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -43,6 +45,8 @@ from fixloop.memory import WonderMemory  # noqa: E402
 FPS = 10.0  # mode vidéo (RPL-D3) : 10 images/s, anti-rebond 4
 OVERLAY_EVERY = 2  # contours à 5 images/s (RPL-D4 : sous 2 Mo pour 60 s)
 VIDEO_WIDTH = 960  # réencodage ffmpeg : ≤ 960 px (RPL-T2)
+VIDEO_CODEC = "h264"  # `meta.video_codec` quand ffmpeg a réencodé
+OPENCV_CODEC = "opencv-mp4v"  # copie sans ffmpeg : refusée par deploy_check.py (RPL-D5)
 RECORDING_FPS = 1.0  # mode enregistrement (RPL-D3) : 1 image/s, anti-rebond 3
 
 
@@ -159,25 +163,33 @@ def keyframe_for(bgr, fm):
     return bgr
 
 
-def encode_video(src, dest, fps: float = FPS, width: int = VIDEO_WIDTH) -> None:
-    """Réencode la vidéo : H.264, ≤ 960 px, `+faststart`, son gardé (RPL-T2).
+def encode_video(src, dest, fps: float = FPS, width: int = VIDEO_WIDTH,
+                 keep_audio: bool = False) -> str:
+    """Réencode la vidéo : H.264, ≤ 960 px, `+faststart`, sans piste audio (RPL-D5).
 
-    ffmpeg si présent (celui de l'auteur), sinon copie OpenCV (tests).
+    Rend le codec écrit dans `meta.json` (`video_codec`). ffmpeg introuvable :
+    copie OpenCV `opencv-mp4v` (tests) avec un avertissement, que
+    `deploy_check.py` refuse de publier. ffmpeg présent mais en échec :
+    `RuntimeError` avec la fin de stderr, jamais de copie OpenCV.
     """
-    import shutil
-    import subprocess
     dest = Path(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
-    if shutil.which("ffmpeg") is not None:
-        try:
-            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
-                            "-vf", f"fps={fps},scale='min({width},iw)':-2",
-                            "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
-                            "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-                            str(dest)], check=True)
-            return
-        except Exception:
-            pass  # repli OpenCV ci-dessous
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is not None:
+        cmd = [ffmpeg, "-y", "-loglevel", "error", "-i", str(src),
+               "-vf", f"fps={fps},scale='min({width},iw)':-2",
+               "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+               "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
+        if not keep_audio:
+            cmd.append("-an")  # RPL-D5 : la voix ne va pas dans l'historique public
+        result = subprocess.run(cmd + [str(dest)], capture_output=True)
+        if result.returncode != 0:
+            tail = result.stderr.decode("utf-8", "replace").strip().splitlines()[-5:]
+            raise RuntimeError(f"ffmpeg en échec (code {result.returncode}) sur {src} :\n"
+                               + "\n".join(tail))
+        return VIDEO_CODEC
+    print(f"avertissement : ffmpeg introuvable, copie OpenCV {OPENCV_CODEC} (illisible "
+          f"sur téléphone, refusée par deploy_check.py) : {dest}", file=sys.stderr)
     import cv2
     cap = cv2.VideoCapture(str(src))
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -193,6 +205,7 @@ def encode_video(src, dest, fps: float = FPS, width: int = VIDEO_WIDTH) -> None:
         writer.write(img)
     cap.release()
     writer.release()
+    return OPENCV_CODEC
 
 
 def read_sam_cache(sam_dir, procedure) -> dict:
@@ -323,7 +336,7 @@ def collect_outputs(session, out, frames, keyframes, fps: float, overlay_every: 
 
 def write_session(out_dir, session_def: dict, procedure_id: str, events: list,
                   overlays: list, dims: dict, fps: float, agent: str,
-                  session, mode: str, source: str) -> dict:
+                  session, mode: str, source: str, video_codec: str) -> dict:
     """Écrit `events.json`, `overlays.json`, `meta.json`, `index.json` (déterministe)."""
     from fixloop.procedures import load_all as _procedures
     out_dir, name = Path(out_dir), session_def["name"]
@@ -343,7 +356,7 @@ def write_session(out_dir, session_def: dict, procedure_id: str, events: list,
             "filmed": session_def.get("filmed"), "source": source,
             "fps": fps, "debounce_frames": session_def.get("debounce_frames", 4),
             "bike_id": session_def.get("bike_id"), "demo_history": bool(session_def.get("demo_history")),
-            "mode": mode,
+            "mode": mode, "video_codec": video_codec,
             "agent": agent, "built": datetime.now(timezone.utc).isoformat(),
             "model_calls": dict(session.model_calls),
             "steps_validated": list(session.steps_validated)}
@@ -357,7 +370,7 @@ def write_session(out_dir, session_def: dict, procedure_id: str, events: list,
 def build_video(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=None,
                 offline: bool = False, agent: str = "fixloop", memory=None,
                 spark_inner=None, sam_client=None, raws_fn=None, prepare=None,
-                uploader=None, sam_dir=None) -> dict:
+                uploader=None, sam_dir=None, keep_audio: bool = False) -> dict:
     """Construit depuis une vidéo filmée (source `video`, RPL-T2)."""
     from fixloop.geometry import measure
     from fixloop.procedures import load_all
@@ -410,13 +423,14 @@ def build_video(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=N
                            nearest_indices(times, [float(t) for t in diag_at]),
                            debounce, model, mem,
                            session_def.get("bike_id", "demo-velo"), out)
-    encode_video(video_path, Path(out_dir) / name / "video.mp4", fps=FPS)
+    codec = encode_video(video_path, Path(out_dir) / name / "video.mp4", fps=FPS,
+                         keep_audio=keep_audio)
     events, overlays = collect_outputs(session, out, frames, keyframes, FPS,
                                        OVERLAY_EVERY, procedure)
     return write_session(out_dir, session_def, procedure_id, events, overlays,
                          {"w": w, "h": h}, FPS, agent, session,
                          f"vidéo {FPS:.0f} images/s, anti-rebond {debounce} (RPL-R5.2)",
-                         "video")
+                         "video", codec)
 
 
 def read_recording(rec_dir) -> tuple:
@@ -478,7 +492,7 @@ def build_recording(session_def: dict, out_dir, bikes_root="data/bikes", cache_d
                            debounce, model, mem,
                            session_def.get("bike_id", "demo-velo"), out)
     dest = Path(out_dir) / name
-    encode_video_from_frames(keyframes, dest / "video.mp4", fps=fps)
+    codec = encode_video_from_frames(keyframes, dest / "video.mp4", fps=fps)
     overlay_every = OVERLAY_EVERY if fps >= 10 else 1
     events, overlays = collect_outputs(session, out, frames, keyframes, fps,
                                        overlay_every, procedure)
@@ -486,27 +500,36 @@ def build_recording(session_def: dict, out_dir, bikes_root="data/bikes", cache_d
                          {"w": spec["w"], "h": spec["h"]}, fps, agent, session,
                          f"session en direct enregistrée {fps:.0f} image/s, "
                          f"anti-rebond {debounce} (RPL-R5.2)",
-                         "recording")
+                         "recording", codec)
 
 
-def encode_video_from_frames(bgr_frames: list, dest, fps: float = RECORDING_FPS) -> None:
-    """Vidéo du replay depuis les images enregistrées (source `recording`)."""
+def encode_video_from_frames(bgr_frames: list, dest, fps: float = RECORDING_FPS) -> str:
+    """Vidéo du replay depuis les images enregistrées (source `recording`).
+
+    Images écrites avec OpenCV dans un fichier temporaire, puis réencodées par
+    `encode_video` : même codec et même garde-fou que la source `video` (RPL-D5).
+    """
     import cv2
     dest = Path(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
+    raw = dest.with_name("video.frames.mp4")
     h, w = bgr_frames[0].shape[:2]
-    writer = cv2.VideoWriter(str(dest), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
+    writer = cv2.VideoWriter(str(raw), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
     if not writer.isOpened():
-        raise RuntimeError(f"écriture vidéo impossible : {dest}")
+        raise RuntimeError(f"écriture vidéo impossible : {raw}")
     for img in bgr_frames:
         writer.write(img)
     writer.release()
+    try:
+        return encode_video(raw, dest, fps=fps)
+    finally:
+        raw.unlink(missing_ok=True)
 
 
 def build(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=None,
           offline: bool = False, agent: str = "rules", memory=None,
           spark_inner=None, sam_client=None, raws_fn=None, prepare=None,
-          uploader=None, sam_dir=None) -> dict:
+          uploader=None, sam_dir=None, keep_audio: bool = False) -> dict:
     """Construit `replay/build/<nom>/` depuis une description de session."""
     from fixloop.perception import mask_to_svg_path
     source = session_def.get("source", "synthetic")
@@ -515,7 +538,7 @@ def build(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=None,
                            cache_dir=cache_dir, offline=offline, agent=agent,
                            memory=memory, spark_inner=spark_inner,
                            sam_client=sam_client, raws_fn=raws_fn, prepare=prepare,
-                           uploader=uploader, sam_dir=sam_dir)
+                           uploader=uploader, sam_dir=sam_dir, keep_audio=keep_audio)
     if source == "recording":
         return build_recording(session_def, out_dir, bikes_root=bikes_root,
                                cache_dir=cache_dir, offline=offline, agent=agent,
@@ -639,12 +662,14 @@ def main() -> None:
     ap.add_argument("--agent", default="rules", choices=["rules", "fixloop"])
     ap.add_argument("--sam-dir", default=None,
                     help="dossier des sorties brutes SAM (défaut : <out>/<nom>/sam)")
+    ap.add_argument("--keep-audio", action="store_true",
+                    help="garder la piste audio (RPL-D5 : sans son par défaut)")
     args = ap.parse_args()
     with open(args.session, encoding="utf-8") as fh:
         session_def = json.load(fh)
     info = build(session_def, args.out, bikes_root=args.bikes_root,
                  cache_dir=args.cache, offline=args.offline, agent=args.agent,
-                 sam_dir=args.sam_dir)
+                 sam_dir=args.sam_dir, keep_audio=args.keep_audio)
     print(f"{session_def['name']} : {info['events']} événements, "
           f"{info['overlays']} overlays -> {info['dir']}")
 

@@ -39,7 +39,8 @@ Montre ton plan avant de modifier plus de 3 fichiers. Une tâche à la fois.
 4. Modèles Meta, identifiants exacts : `sam-3.1`, `muse-spark-1.3`, `muse-wonder-1.0`, `muse-voice-transcribe-1.0`.
    URL `https://api.meta.ai/v1`, clé dans la variable `MODEL_API_KEY` lue depuis `.env`, côté serveur uniquement.
 5. Ne jamais lire, afficher, commiter ni copier le contenu de `.env`. Ne jamais ajouter `data/`, `probe_out*/`,
-   `latency_out/`, `replay/build/` ni de vidéos au dépôt.
+   `latency_out/`, `replay/build/` ni de vidéos au dépôt. Seule exception : `replay/published/<session>/video.mp4`,
+   vidéos de démonstration de l'auteur, publiées sans piste audio (`RPL-D5`).
 6. Aucun contenu tiers sans licence (pas de guides iFixit copiés). Les fiches de `procedures/` sont écrites à la main.
 7. Textes destinés à l'utilisateur : en français, moins de 20 mots, deuxième personne. Code, noms et commits : en
    anglais.
