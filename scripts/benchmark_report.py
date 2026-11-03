@@ -232,8 +232,9 @@ def main(argv=None) -> dict:
         lines += robust_section(args.robust, args.robust_clips, test_rows)
     lines.append("## Limites")
     lines.append("")
-    lines.append("- Un seul vélo, un seul utilisateur, étiquettes posées par l'auteur "
-                 "(EVAL-R7.4).")
+    lines.append("- Un seul vélo, un seul utilisateur (EVAL-R7.4). États posés par l'auteur, avec des "
+                 "corrections proposées par un assistant IA et validées par l'auteur ; instants "
+                 "« c'est fait » issus de muse-voice-transcribe-1.0 (EVAL-D8).")
     lines.append(f"- {len(test_clips)} extraits `test` : intervalle de confiance large, "
                  "aucun objectif chiffré publié sauf 0 fausse validation (EVAL-D4).")
     if len(test_clips) < 20:

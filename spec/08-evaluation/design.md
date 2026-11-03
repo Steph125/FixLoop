@@ -130,6 +130,13 @@ en plus des couleurs, étiquettes de valeur sur les barres, SVG généré en Pyt
   le verrait. Elles restent donc à part (`EVAL-R9.4`), toujours face à l'original. Transformations par filtres
   ffmpeg déterministes (mêmes paramètres pour tout l'extrait, bruit à graine fixe) ; zoom centré sur le plateau
   mesuré par SAM sur l'original quand ce cache existe, pour ne jamais sortir la pièce du cadre.
+- **EVAL-D8 (3 nov.)** — Origine des étiquettes. États : posés par l'auteur ; 24 secondes `transition` (A1 0-10,
+  B1 0-8, L1 0-3) passées en `off` sur proposition d'un assistant IA à partir des images, validées par l'auteur.
+  « C'est fait » : `muse-voice-transcribe-1.0` sur l'audio des extraits, puis `CommandDetector` du produit (qui
+  compte aussi « c'est bon » et ignore une répétition à moins de 2 s), phrases gardées dans
+  `eval/benchmark/done_from_transcribe.csv` ; aucun résultat de SAM ni de Spark vu avant. Chaîne posée sur le disque =
+  `off`. A1, L1 et S1 sont classés S2 pour ce qu'ils montrent, mais aucun « c'est fait » n'y est dit pendant que la
+  chaîne est sur le disque : le rappel des fausses remises (`EVAL-R4.4`) n'a pas de donnée sur ce jeu.
 
 ## 9. Robustesse (copies transformées, `EVAL-R9`)
 

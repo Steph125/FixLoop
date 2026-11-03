@@ -1,0 +1,9 @@
+clip,file,duration_s,lighting,angle,distance,scenario,split
+L1,data/eval/L1.MOV,10.7,lampe,face,50cm,S2,test
+L2,data/eval/L2.MOV,11.1,lampe,face,50cm,S3,test
+L3,data/eval/L3.MOV,10.9,lampe,face,50cm,S3,test
+L4,data/eval/L4.MOV,12.9,lampe,plongee,30cm,S6,test
+S1,data/eval/S1.MOV,10.6,soir,face,50cm,S2,test
+S3,data/eval/S3.MOV,10.5,soir,plongee,30cm,S6,test
+A1,data/eval/A1.MOV,45.6,lampe,face,50cm,S2,test
+B1,data/eval/B1.MOV,25.9,lampe,face,50cm,S5,test

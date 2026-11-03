@@ -11,9 +11,12 @@
   `split`) avant de filmer ; tourner ; copier dans `data/eval/` ; aucun visage ni document dans le champ.
   Exigences : `EVAL-R1.1`, `R1.2`, `R1.5`, `R2.1`, `R8.1`. Fait quand : chaque valeur de la matrice ≥ 3 fois.
   `EVAL-D6` (2 nov.) : 2 éclairages (lampe, soir) ; nombre d'extraits = ceux filmés, limite dite dans le rapport.
-- [ ] **EVAL-T2 — Étiquetage.** `labels.csv` seconde par seconde (outil `scripts/label_clip.py` facultatif) ;
+  État au 3 nov. : 8 extraits. Lampe 6, soir 2 ; face 6, plongée 2, aucun à 30° de côté ; 50 cm 6, 30 cm 2 ; S2 3,
+  S3 2, S5 1, S6 2, aucun S1 ni S4. « Fait quand » n'est pas atteint : à dire dans les limites du rapport.
+- [x] **EVAL-T2 — Étiquetage.** `labels.csv` seconde par seconde (outil `scripts/label_clip.py` facultatif) ;
   commit « labels » avant toute exécution.
   Exigences : `EVAL-R1.3`, `R1.4`.
+  Preuve (3 nov.) : `eval/benchmark/labels.csv`, 8 extraits (`EVAL-D8`), commit avant la première exécution.
 - [x] **EVAL-T3 — Calcul des mesures de comparaison.** Fonctions de la section 4 de `design.md`,
   `tests/test_benchmark.py` sur extraits synthétiques.
   Exigences : `EVAL-R4.1` à `R4.6`.

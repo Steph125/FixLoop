@@ -141,7 +141,10 @@ def main() -> None:
     buttons = tk.Frame(root)
     buttons.pack(anchor="w", padx=8, pady=4)
     tk.Label(root, justify="left", font=("Segoe UI", 10),
-             text="Touches : o tombée, f en place, t bouge, h cachée, espace « c'est fait », "
+             wraplength=820,
+             text="Touches : o tombée ou posée sur le disque, f dans les dents (même si le pédalier tourne), "
+                  "t en train de changer, h cachée, "
+                  "espace « c'est fait » (avant l'état), "
                   "n / → suivante, p / ← précédente, q enregistrer. Si les touches ne "
                   "répondent pas, clique sur l'image ou utilise les boutons.").pack(anchor="w", padx=8,
                                                                                   pady=4)
@@ -197,9 +200,9 @@ def main() -> None:
             set_state(state_for_key(key))
 
     for text, action in (("◀ précédente", lambda: go(-1)),
-                         ("o tombée", lambda: set_state("off")),
-                         ("f en place", lambda: set_state("on")),
-                         ("t bouge", lambda: set_state("transition")),
+                         ("o tombée / sur le disque", lambda: set_state("off")),
+                         ("f dans les dents", lambda: set_state("on")),
+                         ("t en train de changer", lambda: set_state("transition")),
                          ("h cachée", lambda: set_state("hidden")),
                          ("« c'est fait »", toggle_done),
                          ("suivante ▶", lambda: go(1)),
