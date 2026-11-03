@@ -96,6 +96,17 @@ def timeline(states: list, labelled: set, done: set, cur: int) -> str:
     return "".join(cells)
 
 
+def resume_labelled(states: list, done_at: list, seconds: int) -> set:
+    """Secondes déjà étiquetées à la reprise.
+
+    Un extrait relu tout en `transition` sans aucun « c'est fait » est un
+    enregistrement vide (fenêtre fermée sans étiqueter) : rien n'est repris.
+    """
+    if not states or (all(s == "transition" for s in states) and not done_at):
+        return set()
+    return set(range(min(len(states), seconds)))
+
+
 def main() -> None:
     """Fenêtre tkinter (livré avec Python) : l'OpenCV du projet est sans affichage."""
     import base64
@@ -115,7 +126,7 @@ def main() -> None:
     total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
     seconds = max(1, round(total / fps))
     states, done_at = read_done(args.labels, args.clip)
-    labelled = set(range(min(len(states), seconds)))  # reprise : déjà étiquetées
+    labelled = resume_labelled(states, done_at, seconds)  # reprise : déjà étiquetées
     states = (states + ["transition"] * seconds)[:seconds]
     done = set(done_at)
     view = {"cur": 0, "images": [], "i": 0}
@@ -127,9 +138,13 @@ def main() -> None:
     picture.pack()
     status = tk.Label(root, font=("Consolas", 12), justify="left")
     status.pack(anchor="w", padx=8)
+    buttons = tk.Frame(root)
+    buttons.pack(anchor="w", padx=8, pady=4)
     tk.Label(root, justify="left", font=("Segoe UI", 10),
-             text="o tombée   f en place   t bouge   h cachée   espace « c'est fait »   "
-                  "n / → suivante   p / ← précédente   q enregistrer et quitter").pack(anchor="w", padx=8, pady=4)
+             text="Touches : o tombée, f en place, t bouge, h cachée, espace « c'est fait », "
+                  "n / → suivante, p / ← précédente, q enregistrer. Si les touches ne "
+                  "répondent pas, clique sur l'image ou utilise les boutons.").pack(anchor="w", padx=8,
+                                                                                  pady=4)
 
     def load_second() -> None:
         view["images"] = [tk.PhotoImage(data=base64.b64encode(
@@ -155,26 +170,43 @@ def main() -> None:
         view["cur"] = min(seconds - 1, max(0, view["cur"] + delta))
         load_second()
 
+    def set_state(state: str) -> None:
+        cur = view["cur"]
+        states[cur] = state
+        labelled.add(cur)
+        if cur < seconds - 1:
+            go(1)
+        else:
+            refresh()
+
+    def toggle_done() -> None:
+        done.symmetric_difference_update({view["cur"]})
+        refresh()
+
     def on_key(event) -> None:
-        key, cur = event.char, view["cur"]
+        key = (event.char or "").lower()
         if key == "q":
             root.destroy()
         elif key == " ":
-            done.symmetric_difference_update({cur})
-            refresh()
+            toggle_done()
         elif key == "n" or event.keysym == "Right":
             go(1)
         elif key == "p" or event.keysym == "Left":
             go(-1)
         elif state_for_key(key) is not None:
-            states[cur] = state_for_key(key)
-            labelled.add(cur)
-            if cur < seconds - 1:
-                go(1)
-            else:
-                refresh()
+            set_state(state_for_key(key))
 
-    root.bind("<Key>", on_key)
+    for text, action in (("◀ précédente", lambda: go(-1)),
+                         ("o tombée", lambda: set_state("off")),
+                         ("f en place", lambda: set_state("on")),
+                         ("t bouge", lambda: set_state("transition")),
+                         ("h cachée", lambda: set_state("hidden")),
+                         ("« c'est fait »", toggle_done),
+                         ("suivante ▶", lambda: go(1)),
+                         ("Enregistrer et quitter", root.destroy)):
+        tk.Button(buttons, text=text, command=action, takefocus=0).pack(side="left", padx=2)
+    root.bind_all("<Key>", on_key)  # quel que soit l'élément qui a le focus
+    picture.bind("<Button-1>", lambda e: root.focus_force())
     root.protocol("WM_DELETE_WINDOW", root.destroy)  # fermer la fenêtre = enregistrer aussi
     load_second()
     play()
@@ -185,6 +217,9 @@ def main() -> None:
     root.mainloop()
     cap.release()
 
+    if not labelled:
+        print("Rien d'étiqueté : fichier inchangé. Relance la commande et étiquette chaque seconde.")
+        return
     write_labels_csv(args.labels, rows_for_clip(args.clip, states, sorted(done)))
     missing = [t for t in range(seconds) if t not in labelled]
     print(f"{len(states)} s enregistrées -> {args.labels}")

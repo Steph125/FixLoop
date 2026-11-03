@@ -2,7 +2,7 @@
 
 Usage : python scripts/benchmark_report.py --results eval/benchmark/results.csv
        --clips eval/benchmark/clips.csv --labels eval/benchmark/labels.csv
-       [--out eval/benchmark]
+       [--out eval/benchmark] [--robust eval/benchmark/robust/results.csv]
 
 Lit `results.csv`, `clips.csv`, `labels.csv` ; écrit `report.md` (structure de
 `design.md` section 6 : tableau principal sur les extraits `test`, réglage
@@ -11,6 +11,8 @@ commande pour reproduire, date, commit et seuils) et `chart.svg` (barres
 groupées : fausses validations et appels Spark par approche, motifs en plus
 des couleurs, valeurs écrites, SVG manuscrit sans dépendance lourde).
 Les phrases d'analyse restent à l'auteur (marquées « À ÉCRIRE »).
+Chiffres par extrait (EVAL-R1.1 révisé) ; `--robust` ajoute la section
+« Robustesse » : copies transformées face à l'original, à part (EVAL-R9.4).
 """
 
 import argparse
@@ -75,12 +77,72 @@ def aggregate(rows):
             "spark": spark, "cost": cost, "n": len(rows)}
 
 
+def cell(rows) -> str:
+    """« fausses / manquées » d'un groupe de lignes, « — » si vide."""
+    if not rows:
+        return "—"
+    g = aggregate(rows)
+    return f"{g['false']} / {g['missed']}"
+
+
+def per_clip_table(test_rows, test_clips, setting: str = "live") -> list[str]:
+    """Chiffres par extrait, sans pourcentage global (EVAL-R1.1 révisé)."""
+    out = [f"### Par extrait (réglage `{setting}`, fausses validations / validations manquées)", "",
+           "| Extrait | " + " | ".join(APPROACHES) + " |",
+           "|---|" + "---|" * len(APPROACHES)]
+    for clip in test_clips:
+        cells = [cell([r for r in test_rows if r["clip"] == clip and r["approach"] == a
+                       and r["setting"] == setting]) for a in APPROACHES]
+        out.append(f"| {clip} | " + " | ".join(cells) + " |")
+    return out + [""]
+
+
+def robust_section(results_path, clips_path, test_rows) -> list[str]:
+    """Copies transformées, chaque variante face à l'original (EVAL-R9.4, EVAL-D7)."""
+    rows = read_results(results_path)
+    clips_path = clips_path or Path(results_path).parent / "clips.csv"
+    with open(clips_path, encoding="utf-8", newline="") as fh:
+        meta = {r["clip"]: r for r in csv.DictReader(fh)}
+    try:
+        from augment_clips import VARIANTS
+    except ImportError:
+        VARIANTS = {}
+    sources = sorted({meta[r["clip"]]["source"] for r in rows if r["clip"] in meta})
+    transforms = [t for t in VARIANTS if any(m.get("transform") == t for m in meta.values())]
+    transforms += sorted({m.get("transform", "") for m in meta.values()} - set(transforms) - {""})
+    approaches = [a for a in APPROACHES if any(r["approach"] == a for r in rows)]
+    out = ["## Robustesse (copies transformées, à part)", "",
+           f"Copies transformées des {len(sources)} extraits filmés ({', '.join(sources)}) : mêmes "
+           "étiquettes que l'original, masques et mesures recalculés par SAM 3.1 sur chaque copie. "
+           "Elles ne s'ajoutent pas aux extraits du tableau principal (EVAL-R9.4, EVAL-D7).", ""]
+    for setting in [s for s in SETTINGS if any(r["setting"] == s for r in rows)]:
+        out += [f"### Réglage `{setting}` (fausses validations / validations manquées)", "",
+                "| Copie | Transformation | " + " | ".join(approaches) + " |",
+                "|---|---|" + "---|" * len(approaches)]
+        orig = [cell([r for r in test_rows if r["clip"] in sources and r["approach"] == a
+                      and r["setting"] == setting]) for a in approaches]
+        out.append("| original | aucune | " + " | ".join(orig) + " |")
+        for t in transforms:
+            mine = [r for r in rows if meta.get(r["clip"], {}).get("transform") == t
+                    and r["setting"] == setting]
+            what = VARIANTS.get(t, {}).get("what", t)
+            out.append(f"| {t} | {what} | " + " | ".join(
+                cell([r for r in mine if r["approach"] == a]) for a in approaches) + " |")
+        out.append("")
+    out += ["À ÉCRIRE : quelle transformation fait céder quelle approche, et pourquoi.", ""]
+    return out
+
+
 def main(argv=None) -> dict:
     ap = argparse.ArgumentParser(description="Rapport et graphique du benchmark (EVAL-T10).")
     ap.add_argument("--results", required=True)
     ap.add_argument("--clips", required=True)
     ap.add_argument("--labels", required=True)
     ap.add_argument("--out", default="eval/benchmark")
+    ap.add_argument("--robust", default=None,
+                    help="results.csv des copies transformées (EVAL-R9), section à part")
+    ap.add_argument("--robust-clips", default=None,
+                    help="clips.csv des copies (défaut : à côté de --robust)")
     args = ap.parse_args(argv)
 
     from fixloop.benchmark import OFF_MIN, ON_MAX
@@ -130,6 +192,7 @@ def main(argv=None) -> dict:
             lines.append(f"| {approach} | {g['false']} | {g['missed']} | {g['delay_med']} | "
                          f"{g['delay_max']} | {g['recall']} | {g['spark']} | {g['cost']} |")
         lines.append("")
+    lines += per_clip_table(test_rows, test_clips)
     lines.append("À ÉCRIRE : lecture du tableau (quelle approche, quel réglage, pourquoi).")
     lines.append("")
     lines.append("## Matrice de classement par image (règles SAM)")
@@ -165,12 +228,21 @@ def main(argv=None) -> dict:
         lines.append(detail + ".")
         lines.append("À ÉCRIRE : image et explication.")
         lines.append("")
+    if args.robust:
+        lines += robust_section(args.robust, args.robust_clips, test_rows)
     lines.append("## Limites")
     lines.append("")
     lines.append("- Un seul vélo, un seul utilisateur, étiquettes posées par l'auteur "
                  "(EVAL-R7.4).")
     lines.append(f"- {len(test_clips)} extraits `test` : intervalle de confiance large, "
                  "aucun objectif chiffré publié sauf 0 fausse validation (EVAL-D4).")
+    if len(test_clips) < 20:
+        lines.append(f"- {len(test_clips)} extraits filmés au lieu des 20 visés, éclairage lampe et "
+                     "soir seulement, pas de lumière du jour (EVAL-R1.1 révisé, EVAL-D6) : chiffres "
+                     "donnés par extrait, aucun pourcentage global présenté comme une précision.")
+    if args.robust:
+        lines.append("- Les copies transformées viennent des mêmes extraits : elles mesurent la "
+                     "robustesse, pas la diversité (EVAL-D7).")
     lines.append("- Seuils réglés sur `velo2` et au plus 4 extraits `calib` (EVAL-R2.1) ; "
                  "toute modification après les résultats `test` est dite ici (EVAL-R2.3).")
     lines.append("")
@@ -182,8 +254,9 @@ def main(argv=None) -> dict:
                  "--settings replay,live --offline --yes")
     lines.append("```")
     lines.append("")
+    robust_arg = f" --robust {args.robust}" if args.robust else ""
     lines.append(f"Commande du rapport : `python scripts/benchmark_report.py --results {args.results} "
-                 f"--clips {args.clips} --labels {args.labels} --out {args.out}`.")
+                 f"--clips {args.clips} --labels {args.labels} --out {args.out}{robust_arg}`.")
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

@@ -72,6 +72,18 @@
   Preuve (1er nov.) : `tests/test_benchmark_report.py` 1 passed (7 sections, « À ÉCRIRE », extraits
   `test` seuls, seuils, versions, `chart.svg` avec motifs et valeurs).
 
+- [x] **EVAL-T11 — Copies transformées et section Robustesse.** Ajouté le 3 nov. (`EVAL-D7`).
+  `scripts/augment_clips.py` : variantes de `design.md` section 9, mêmes paramètres pour tout l'extrait, contrôle
+  de la durée, de la cadence et de la taille, `robust/clips.csv` (`split = robust`, `source`, `transform`) et
+  `robust/labels.csv` copiées de l'original. `benchmark_report.py --robust` : section « Robustesse »,
+  transformation par transformation face à l'original, et tableau par extrait (`EVAL-R1.1` révisé).
+  Exigences : `EVAL-R9.1` à `R9.4`, `R1.1`. Fait quand : copies produites sur 2 extraits synthétiques, durées et
+  étiquettes identiques, rapport avec la section à part, sans appel réseau.
+  Preuve (3 nov.) : `tests/test_augment_clips.py` 6 passed (ffmpeg réel : 7 variantes sur 2 extraits, mêmes
+  images, cadence et taille, étiquettes copiées, `calib` exclu, copie identique octet par octet au 2e passage),
+  `tests/test_benchmark_report.py::test_report_per_clip_and_robustness_apart` ; essai local sur `L1` (7 copies de
+  321 images, plateau dans le cadre) ; suite complète 268 passed, 0 skipped.
+
 ## Couverture
 
 | Critère | Tâches |
@@ -84,3 +96,4 @@
 | R6.1 | T6 ; R6.2 : T6, T7 |
 | R7.1, R7.2, R7.4 | T8 ; R7.3 : T6 ; R7.5 : T9 |
 | R8.1 | T1, T7, T9 |
+| R9.1–R9.4 | T11 |

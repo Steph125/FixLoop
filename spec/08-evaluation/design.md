@@ -124,3 +124,28 @@ en plus des couleurs, étiquettes de valeur sur les barres, SVG généré en Pyt
 - **EVAL-D6 (2 nov.)** — Deux éclairages au lieu de trois : lampe et soir. Raison : pas de lumière du jour les
   1er et 2 nov. pendant les créneaux de tournage ; la limite est écrite dans le rapport. Le nombre d'extraits est
   celui qui a été filmé : s'il y en a moins de 20 (ou moins de 15 en `test`), le rapport le dit dans ses limites.
+- **EVAL-D7 (3 nov.)** — Copies transformées = test de robustesse, pas données en plus. FixLoop n'apprend rien
+  (SAM 3.1 et les seuils sont fixes) : une copie ne lui « enseigne » rien, elle mesure si le verdict tient quand
+  l'image change. Comptées comme des extraits, elles gonfleraient le jeu avec des images déjà vues et le jury
+  le verrait. Elles restent donc à part (`EVAL-R9.4`), toujours face à l'original. Transformations par filtres
+  ffmpeg déterministes (mêmes paramètres pour tout l'extrait, bruit à graine fixe) ; zoom centré sur le plateau
+  mesuré par SAM sur l'original quand ce cache existe, pour ne jamais sortir la pièce du cadre.
+
+## 9. Robustesse (copies transformées, `EVAL-R9`)
+
+```
+data/eval/<clip>.MOV  ──►  scripts/augment_clips.py  ──►  data/eval/aug/<clip>-<variante>.mp4
+  (clips.csv, labels.csv)     filtres ffmpeg, contrôle        eval/benchmark/robust/clips.csv
+                              durée / cadence / taille         eval/benchmark/robust/labels.csv (copiées)
+        └─► benchmark.py --clips robust/clips.csv --labels robust/labels.csv --out eval/benchmark/robust
+               (SAM 3.1 recalcule masques et mesures sur chaque copie)
+        └─► benchmark_report.py --robust eval/benchmark/robust/results.csv : section « Robustesse »
+```
+
+| Famille | Variante | Filtre |
+|---|---|---|
+| Distance apparente | `zoom13` | recadrage 1/1,3 autour du plateau, remis à la taille d'origine |
+| Cadrage | `shift` | recadrage 90 % décalé en haut à gauche, remis à la taille d'origine |
+| Luminosité | `dark`, `bright` | sous-exposition (gamma 0,75), surexposition (gamma 1,25, contraste 0,85) |
+| Qualité vidéo | `blur_noise`, `lowq` | flou 1,5 px + bruit à graine fixe ; demi-résolution + compression forte |
+| Caméra | `rotate4` | rotation de 4°, recadrée pour ôter les coins noirs |

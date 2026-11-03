@@ -69,3 +69,11 @@ def test_timeline_shows_unlabelled_done_and_current():
     lc = load()
     line = lc.timeline(["off", "on", "transition"], {0, 1}, {1}, 2)
     assert line == " o  f! [·]"
+
+
+def test_resume_ignores_empty_saves_and_keeps_real_work():
+    lc = load()
+    assert lc.resume_labelled(["transition"] * 11, [], 11) == set()  # fenêtre fermée sans rien
+    assert lc.resume_labelled(["off", "on", "on"], [], 3) == {0, 1, 2}
+    assert lc.resume_labelled(["transition", "transition"], [1], 2) == {0, 1}  # « c'est fait » noté
+    assert lc.resume_labelled([], [], 5) == set()

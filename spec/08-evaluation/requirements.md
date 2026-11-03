@@ -9,6 +9,10 @@ d'images » : on mesure une **boucle de décision**, pas une réponse sur une im
 
 1. Le jeu DOIT contenir les extraits de 10 à 20 s filmés par l'auteur sur son vélo (droits : `SUB-R6`), 20 visés ;
    s'il y en a moins de 20, le rapport DOIT le dire dans ses limites (`EVAL-D6`).
+   Révisé le 2 nov. : 8 extraits filmés (lampe et soir, pas de lumière du jour), au lieu de 20 : L1 à L4, S1, S3,
+   A1 et B1 (A2, B2, L5 à L8, S4, S5 et S7 sont des copies à l'identique d'autres fichiers, exclues ; S2 dure
+   0,9 s). Le rapport donne les chiffres par extrait, sans pourcentage global présenté comme une précision, et
+   écrit cette limite.
 2. Le jeu DOIT couvrir la matrice de `design.md` section 1 : les 2 éclairages disponibles (lampe, soir : `EVAL-D6`), 3 angles, 2 distances, et les
    6 scénarios (dont la fausse remise sur le disque et la chute pendant la rotation).
 3. Chaque extrait DOIT être étiqueté seconde par seconde : `off` (tombée), `on` (en place), `transition`,
@@ -76,3 +80,15 @@ Pour chaque approche et chaque réglage, le système DOIT calculer :
 
 1. Tournage et étiquetage : dimanche 1er nov. Exécution et rapport : lundi 2 nov. Chiffres gelés : mardi 3 nov. à
    midi.
+
+## EVAL-R9 — Robustesse aux conditions de prise de vue (Should)
+
+1. Le benchmark PEUT être rejoué sur des copies transformées des extraits filmés (distance apparente, cadrage,
+   lumière, qualité vidéo, rotation de caméra), produites par `scripts/augment_clips.py`.
+2. Une transformation DOIT s'appliquer à toutes les images d'un extrait avec les mêmes paramètres, garder la
+   durée, la cadence et la chronologie, et NE DOIT PAS créer une panne ou une réparation qui n'a pas eu lieu ; les
+   étiquettes d'une copie sont celles de son extrait d'origine.
+3. Les masques et les mesures d'une copie DOIVENT être recalculés par SAM 3.1 sur la copie (aucun masque
+   transformé à la main).
+4. Les copies NE DOIVENT PAS être comptées comme des extraits filmés : `split = robust`, résultats dans un
+   fichier à part, section « Robustesse » du rapport, chaque transformation à côté des chiffres de l'original.
