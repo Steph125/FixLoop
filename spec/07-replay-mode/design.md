@@ -141,3 +141,8 @@ par session (`RPL-R7.1`).
   `B1` au même réglage, construite une seule fois sans relance : le « c'est fait » de 10 s y est refusé (arbitrage `eps`).
   C'est le refus montré en tête du replay et de la vidéo. Sa suite garde la faiblesse du rapport : validation à 18 s
   avec la main dans le champ. D ne se ferme pas : le contact de la vraie rotation frôle le seuil de 0,18.
+- **RPL-D8 (4 nov.)** — Hébergement réel : Netlify, le repli prévu section 5, et non GitHub Pages. Le compte GitHub de
+  l'auteur est bloqué pour un problème de facturation (« The job was not started because your account is locked due
+  to a billing issue ») : le job de `pages.yml` ne démarre pas, sans lien avec le projet. Même contenu que `pages.yml`,
+  mêmes contrôles de `deploy_check.py`, téléversé en archive `.zip` : le glisser-déposer du dossier perdait `build/`
+  sur Netlify, cause non établie. `pages.yml` reste dans le dépôt, utilisable si le blocage est levé.

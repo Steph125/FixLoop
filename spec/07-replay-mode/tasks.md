@@ -82,6 +82,9 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   navigation privée, sur téléphone en 4G, Chrome, Firefox, Safari ; temps d'affichage de la 1re image noté dans
   `eval/day5/replay-check.md`.
   Exigences : `RPL-R1.1` à `R1.3`, `R8.1`, `R8.2`.
+  État (4 nov.) : en ligne sur https://wondrous-tiramisu-404f0a.netlify.app/ (`RPL-D8`) ; `deploy_check.py` OK ; sans
+  connexion, 23 fichiers en HTTP 200, identiques au dossier contrôlé, vidéos servies par morceaux (206). Reste à
+  l'auteur : lecture réelle dans les navigateurs et sur téléphone en 4G, puis `replay-check.md`.
 - [x] **RPL-T10 — Explorer les seuils (Could).** Curseurs, recalcul des `label`, mention « simulation ».
   Exigences : `RPL-R6.1`, `R6.2`.
   Preuve : `tests/test_phone_app.py::test_replay_threshold_simulation`, `node web/selftest.mjs`

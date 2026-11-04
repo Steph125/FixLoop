@@ -4,7 +4,7 @@ Point a phone at your bike drivetrain: FixLoop diagnoses a thrown chain, guides 
 voice, and only moves on once it has **measured** the step is done. A failed step is refused out loud,
 shown in red, and re-checked after you fix it.
 
-[Replay online](https://steph125.github.io/FixLoop/) · [3 min video](TBD) ·
+[Replay online](https://wondrous-tiramisu-404f0a.netlify.app/) · [3 min video](TBD) ·
 [Benchmark report](eval/benchmark/report.md) · [Spec](spec/README.md)
 
 ## What it does
@@ -144,7 +144,7 @@ again, and the state machine ignored it (`eval/benchmark/cache/fixloop.json`).
 
 ## Try it
 
-No bike, no key, no install: [open the replay](https://steph125.github.io/FixLoop/). Four sessions from two real videos,
+No bike, no key, no install: [open the replay](https://wondrous-tiramisu-404f0a.netlify.app/). Four sessions from two real videos,
 recomputed by the same code as live, with model answers from cache and no sound:
 
 - **"C'est fait" refused:** the user says it is done while the chain is not on the teeth, and FixLoop refuses and explains.
