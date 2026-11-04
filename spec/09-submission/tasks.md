@@ -30,16 +30,22 @@
   publication non répertoriée ; vérification en navigation privée.
   Exigences : `SUB-R1.1` à `R1.5`, `R2.1` à `R2.4`, `R6.2`, `R6.4`, `MEM-R4.2`. Quand : mardi 3 nov.
   État (4 nov.) : montée (`docs/video-plan.md`, `SUB-D4`), 2:40, 1080p ; images échantillonnées et voix contrôlée par
-  transcription. Mise en ligne par l'auteur : https://youtu.be/0RQLD24LSw4, publique à 15 h. Reste à l'auteur : ouvrir le lien en navigation
-  privée après 15 h, confirmer la lecture sur téléphone et `SUB-R6.4`.
+  transcription. Mise en ligne par l'auteur : https://youtu.be/0RQLD24LSw4, accessible sans compte depuis 15 h (contrôle du
+  4 nov., 15 h 02). `SUB-R6.4` : l'auteur indique qu'il n'y a pas de problème. Reste à l'auteur : navigation privée, téléphone.
 - [x] **SUB-T6 — Brouillon du formulaire.** Description courte (formulation de `design.md` section 1), liens, piste
   Indie, modèles. Exigences : `SUB-R7.2`, `R7.4`. Quand : mardi 3 nov. au soir.
   Preuve : `docs/submission-form.md`, avec le lien de la vidéo. Montage de la vidéo : `docs/video-plan.md`.
-- [ ] **SUB-T7 — Gel et étiquette.** Gel mardi midi ; `git tag v1.0-submission` puis `git push origin
+- [~] **SUB-T7 — Gel et étiquette.** Gel mardi midi ; `git tag v1.0-submission` puis `git push origin
   v1.0-submission` le 4 nov. Exigences : `SUB-R9.1`, `R9.2`.
-- [ ] **SUB-T8 — Contrôle final et passage en public.** Liste de conformité (`design.md` section 4), recherche de
+  État (4 nov.) : étiquette à poser par l'auteur sur le commit qui contient cette ligne.
+- [~] **SUB-T8 — Contrôle final et passage en public.** Liste de conformité (`design.md` section 4), recherche de
   secrets, révocation de clé si besoin, dépôt public, vérification sans connexion.
   Exigences : `SUB-R4.1` à `R4.3`, `R6.3` et toute la liste. Quand : mercredi 4 nov. matin.
+  Preuve (4 nov.) : aucun secret dans l'historique (3 motifs trouvés : faux secret de test, commande de recherche,
+  `.env.example`), `.env` non suivi ; clone neuf de `a7a77ca` : 293 passed, 3 skipped (`probe_out2` absent), `check_spec.py` OK,
+  `web/selftest.mjs` 28/28 ; dépôt public ; modèles du README présents dans le code ; `LICENSE` et `NOTICE.md` à jour ; vidéo de
+  2:40, refus à 0:04. Écart : pas de commit les 26, 27 et 29 oct. (le travail du 29 oct. est mesuré dans `eval/day1`).
+  Reste à l'auteur : liens en navigation privée, vidéo sur téléphone, écoute du replay.
 - [ ] **SUB-T9 — Envoi.** Formulaire envoyé avant 18 h (Paris), confirmation conservée, liens revérifiés après
   l'envoi. Exigences : `SUB-R7.1`, `R7.3`. Quand : mercredi 4 nov.
 
