@@ -1,0 +1,20 @@
+{
+ "name": "E",
+ "title": "« C'est fait » refusé, mains devant le plateau",
+ "video": "data/eval/B1.MOV",
+ "filmed": "2026-11-02",
+ "source": "video",
+ "setting": "live",
+ "procedure": "chain_off_chainring",
+ "debounce_frames": 3,
+ "bike_id": "demo-velo",
+ "demo_history": true,
+ "diagnose_at": [
+  0.5,
+  1.5,
+  2.5
+ ],
+ "user_done": [
+  10.0
+ ]
+}

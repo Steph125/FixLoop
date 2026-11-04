@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="300" role="img" aria-label="Fausses validations et appels Spark par approche">
+<defs>
+<pattern id="hach" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="white"/><line x1="0" y1="0" x2="0" y2="8" stroke="black" stroke-width="2"/></pattern>
+<pattern id="pois" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="white"/><circle cx="3" cy="3" r="1.6" fill="black"/></pattern>
+</defs>
+<text x="8" y="58" font-size="14">spark</text>
+<rect x="150" y="36" width="0.0" height="22" fill="url(#hach)" stroke="black"/>
+<text x="156.0" y="53" font-size="12">0 (Fausses validations)</text>
+<rect x="150" y="60" width="390.0" height="22" fill="url(#pois)" stroke="black"/>
+<text x="546.0" y="77" font-size="12">4.6 (Appels Spark / extrait)</text>
+<text x="8" y="112" font-size="14">rules</text>
+<rect x="150" y="90" width="84.8" height="22" fill="url(#hach)" stroke="black"/>
+<text x="240.8" y="107" font-size="12">1 (Fausses validations)</text>
+<rect x="150" y="114" width="0.0" height="22" fill="url(#pois)" stroke="black"/>
+<text x="156.0" y="131" font-size="12">0.0 (Appels Spark / extrait)</text>
+<text x="8" y="166" font-size="14">fixloop</text>
+<rect x="150" y="144" width="84.8" height="22" fill="url(#hach)" stroke="black"/>
+<text x="240.8" y="161" font-size="12">1 (Fausses validations)</text>
+<rect x="150" y="168" width="152.6" height="22" fill="url(#pois)" stroke="black"/>
+<text x="308.6" y="185" font-size="12">1.8 (Appels Spark / extrait)</text>
+<text x="150" y="288" font-size="12">Réglage live, extraits test ; motifs distincts, valeurs écrites.</text>
+</svg>

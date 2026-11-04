@@ -92,3 +92,5 @@ Pour chaque approche et chaque réglage, le système DOIT calculer :
    transformé à la main).
 4. Les copies NE DOIVENT PAS être comptées comme des extraits filmés : `split = robust`, résultats dans un
    fichier à part, section « Robustesse » du rapport, chaque transformation à côté des chiffres de l'original.
+5. La section « Robustesse » DOIT dire, pour chaque transformation, sur combien d'extraits la remise est validée et
+   ce que SAM y voit (`eval/benchmark/robust/detail.csv`) : un 0 fausse validation sans validation ne prouve rien.

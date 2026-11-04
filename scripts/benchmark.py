@@ -119,6 +119,8 @@ def result_row(clip, approach, setting, events, measures, labels, spark_extra=0,
     recall = false_reminder_recall(events, labels)
     counts = approach_counts(events, measures)
     spark_calls = counts["spark_calls"] + spark_extra
+    if approach == "rules":  # EVAL-R3.2 : `NoSparkAgent` compté par la session, aucun appel réel
+        spark_calls = 0
     sam_images = counts["sam_images"]
     sam_cost = max(sam_images, 50) * SAM_VIDEO_RATE if sam_images else 0.0
     cost = sam_cost + spark_calls * SPARK_CALL_EST  # Spark seul : aucun appel SAM
@@ -173,22 +175,29 @@ def clip_frames(video, merged: dict, procedure):
     if not cap.isOpened():
         raise RuntimeError(f"vidéo illisible : {video}")
     src_fps = cap.get(cv2.CAP_PROP_FPS) or SAM_FPS
-    bgr_frames = []
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frames = assemble_frames(merged, h, w, SAM_FPS, procedure.get("select", {}))
+    if not frames:  # SAM muet sur tout l'extrait : un résultat, pas une panne (rien n'est validé)
+        cap.release()
+        print(f"{video} : aucune image segmentée (SAM muet)")
+        return [], []
+    wanted = {int(round(fm.t * src_fps)) for fm in frames}  # seulement celles-ci en RAM
+    picked, last, j = {}, None, 0
     while True:
         ok, img = cap.read()
         if not ok:
             break
-        bgr_frames.append(img)
+        if j in wanted:
+            picked[j] = img
+        last = img
+        j += 1
     cap.release()
-    if not bgr_frames:
+    if last is None:
         raise RuntimeError(f"vidéo vide : {video}")
-    h, w = bgr_frames[0].shape[:2]
-    frames = assemble_frames(merged, h, w, SAM_FPS, procedure.get("select", {}))
-    if not frames:
-        raise RuntimeError(f"aucune image segmentée : {video} (SAM muet)")
     keyframes = []
     for fm in frames:
-        bgr = bgr_frames[min(int(round(fm.t * src_fps)), len(bgr_frames) - 1)]
+        bgr = picked.get(int(round(fm.t * src_fps)), last)
         ring = fm.masks.get("chainring")
         if ring is not None and ring.any() and ring.shape == bgr.shape[:2]:
             ys, xs = np.nonzero(ring)
@@ -223,6 +232,9 @@ def run_clip_real(clip: str, rows: list, procedure_id: str, procedure: dict,
     """
     from fixloop.geometry import measure
     from fixloop.procedures import load_all
+    if not frames:  # aucune mesure : aucune session à conduire, aucun appel Spark
+        return [(setting, approach, None, [], {"events": [], "calls": 0})
+                for setting in settings for approach in approaches]
     step = load_all()[procedure_id]["steps"][1]  # étape de remise évaluée
     done_at = [float(r["t"]) for r in rows if r["done"] == 1]
     measures_all = [measure(fm, procedure) for fm in frames]
@@ -248,7 +260,7 @@ def run_clip_real(clip: str, rows: list, procedure_id: str, procedure: dict,
 def append_results(rows, costs, clip_id, rows_clip, ran, procedure):
     """`ran` (faux ou réel) -> lignes de `results.csv` + journal des coûts."""
     for setting, approach, session, measures, res in ran:
-        if approach == "spark":
+        if session is None:
             events, spark_extra = res["events"], res["calls"]
         else:
             events, spark_extra = session.log, 0
@@ -257,6 +269,15 @@ def append_results(rows, costs, clip_id, rows_clip, ran, procedure):
                          procedure=procedure)
         log_costs(costs, clip_id, row["sam_images"], row["spark_calls"])
         rows.append(row)
+
+
+def add_confusion(confusion: dict, ran, rows_clip) -> None:
+    """Cumule le classement par image des règles SAM (EVAL-R4.5, `transition` exclue)."""
+    for setting, approach, _session, measures, _res in ran:
+        if approach == "rules":
+            for (pred, true), n in image_confusion(measures, rows_clip).items():
+                key = (setting, true, pred)
+                confusion[key] = confusion.get(key, 0) + n
 
 
 def spark_cache_or_exit(path, what: str):
@@ -373,6 +394,7 @@ def main() -> None:
     procedure = load_all()[args.procedure]
     costs = CostLog(root=args.costs_root)
     rows = []
+    confusion: dict = {}
     spark_cache = Path(args.spark_cache)
     for clip in clips:
         rows_clip = labels_by_clip[clip["clip"]]
@@ -383,10 +405,12 @@ def main() -> None:
                            procedure=args.procedure)
         elif args.offline:
             ran = run_clip_offline(clip, args, procedure, approaches, settings)
+            add_confusion(confusion, ran, rows_clip)
             append_results(rows, costs, clip["clip"], rows_clip, ran,
                            procedure=args.procedure)
         else:
             ran = run_clip_online(clip, args, procedure, approaches, settings)
+            add_confusion(confusion, ran, rows_clip)
             append_results(rows, costs, clip["clip"], rows_clip, ran,
                            procedure=args.procedure)
     out = Path(args.out)
@@ -395,6 +419,12 @@ def main() -> None:
         w = csv.DictWriter(fh, fieldnames=RESULT_COLUMNS)
         w.writeheader()
         w.writerows(rows)
+    if confusion:  # EVAL-R4.5 : classement par image, lu par le rapport
+        with (out / "confusion.csv").open("w", encoding="utf-8", newline="") as fh:
+            w = csv.writer(fh, lineterminator="\n")
+            w.writerow(["setting", "label", "interpretation", "images"])
+            for (setting, true, pred), n in sorted(confusion.items()):
+                w.writerow([setting, true, pred, n])
     print(f"{len(rows)} lignes -> {out / 'results.csv'} "
           f"(journal : {args.costs_root})")
 

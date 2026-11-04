@@ -1,0 +1,20 @@
+{
+  "c565ab4f8d4f0f1a4dfcb5302b42f3b086946a382e0e9ec8de3298f828503e56": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne décrochée de ton plateau sous ton pédalier."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:15:04.442830+00:00"
+  },
+  "be00e9e1bd086b293de4f2673a709b2adaa0fa3e14441fd290cdce91fc11406d": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne tombée au-dessus du plateau noir"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:40:32.931447+00:00"
+  }
+}

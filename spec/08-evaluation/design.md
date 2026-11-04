@@ -137,6 +137,11 @@ en plus des couleurs, étiquettes de valeur sur les barres, SVG généré en Pyt
   `eval/benchmark/done_from_transcribe.csv` ; aucun résultat de SAM ni de Spark vu avant. Chaîne posée sur le disque =
   `off`. A1, L1 et S1 sont classés S2 pour ce qu'ils montrent, mais aucun « c'est fait » n'y est dit pendant que la
   chaîne est sur le disque : le rappel des fausses remises (`EVAL-R4.4`) n'a pas de donnée sur ce jeu.
+- **EVAL-D9 (4 nov.)** — Détail par copie, ajouté après la mesure, sans changer ni logique, ni seuils, ni étiquettes.
+  `missed_validations` ne regarde que les segments `on` de 5 s ou plus après un « c'est fait » : une copie où SAM ne
+  voit plus la chaîne (`L1-lowq`) affichait donc 0 erreur sans avoir rien validé. `scripts/robust_detail.py` donne,
+  par copie, la remise validée ou non, ce que SAM voit et les images mal lues (`EVAL-R9.5`). Hors ligne ; ne décode que
+  l'image utile de chaque seconde ; refuse d'écrire si ses totaux diffèrent de `results.csv` ou de `confusion.csv`.
 
 ## 9. Robustesse (copies transformées, `EVAL-R9`)
 

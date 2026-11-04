@@ -13,6 +13,7 @@
   `EVAL-D6` (2 nov.) : 2 éclairages (lampe, soir) ; nombre d'extraits = ceux filmés, limite dite dans le rapport.
   État au 3 nov. : 8 extraits. Lampe 6, soir 2 ; face 6, plongée 2, aucun à 30° de côté ; 50 cm 6, 30 cm 2 ; S2 3,
   S3 2, S5 1, S6 2, aucun S1 ni S4. « Fait quand » n'est pas atteint : à dire dans les limites du rapport.
+  Décision de l'auteur (4 nov.) : pas de nouveau tournage, le jeu reste à ces 8 extraits.
 - [x] **EVAL-T2 — Étiquetage.** `labels.csv` seconde par seconde (outil `scripts/label_clip.py` facultatif) ;
   commit « labels » avant toute exécution.
   Exigences : `EVAL-R1.3`, `R1.4`.
@@ -56,14 +57,20 @@
   refusé) ; `scripts/benchmark.py --model` (EVAL-D5), `--sam-cache`, `--spark-cache`.
   Correction du 2 nov. : `benchmark.py` charge `.env` avant le passage en ligne (sinon `KeyError` sur
   `MODEL_API_KEY` juste après la confirmation du coût).
-- [ ] **EVAL-T7 — Exécution.** Passage en ligne, puis deux passages hors ligne identiques ; coût réel noté.
+- [x] **EVAL-T7 — Exécution.** Passage en ligne, puis deux passages hors ligne identiques ; coût réel noté.
   Exigences : `EVAL-R2.2`, `R5.1`, `R6.2`, `R8.1`.
-- [ ] **EVAL-T8 — Rapport et graphique.** `report.md` (structure section 6), `chart.svg`, limites, extraits
+  Preuve (4 nov.) : `eval/benchmark/results.csv`, 8 extraits en ligne, puis deux passages `--offline` identiques
+  octet par octet. Coût estimé au journal : 1,68 $ (la page Usage reste à comparer par l'auteur).
+- [x] **EVAL-T8 — Rapport et graphique.** `report.md` (structure section 6), `chart.svg`, limites, extraits
   ratés, versions et commit.
   Exigences : `EVAL-R2.3`, `R5.3`, `R7.1`, `R7.2`, `R7.4`.
-- [ ] **EVAL-T9 — Gel des chiffres.** Mardi 3 nov. à midi : chiffres copiés dans le README et le script de la
+  Preuve (4 nov.) : `eval/benchmark/report.md` et `chart.svg`, régénérés avec `--notes` et `--robust`, aucun
+  « À ÉCRIRE » restant.
+- [x] **EVAL-T9 — Gel des chiffres.** Mardi 3 nov. à midi : chiffres copiés dans le README et le script de la
   vidéo, chacun avec sa source.
   Exigences : `EVAL-R7.5`, `R8.1`. Utilisé par : `SUB-T3`, `SUB-T5`.
+  Preuve (4 nov.) : README (`Results`, `Stress test`) et `docs/video-plan.md`, chiffres repris de `report.md`,
+  `results.csv`, `confusion.csv` et `robust/detail.csv`. Gel le 4 nov. et non le 3 : le tournage a pris du retard.
 
 - [x] **EVAL-T10 — Générateur du rapport et du graphique.** Ajouté à la relecture du 1er nov.
   `scripts/benchmark_report.py` lit `results.csv`, `clips.csv` et `labels.csv` et écrit `report.md` (structure de
@@ -87,6 +94,14 @@
   `tests/test_benchmark_report.py::test_report_per_clip_and_robustness_apart` ; essai local sur `L1` (7 copies de
   321 images, plateau dans le cadre) ; suite complète 268 passed, 0 skipped.
 
+- [x] **EVAL-T12 — Détail par copie.** Ajouté le 4 nov. (`EVAL-D9`). `scripts/robust_detail.py` écrit
+  `robust/detail.csv` ; `benchmark_report.py` en tire le tableau « Remise validée ou non ».
+  Exigences : `EVAL-R9.5`. Fait quand : ligne correcte sur scène simulée et sur SAM muet, refus d'écrire si les totaux
+  diffèrent du benchmark, tableau du rapport testé.
+  Preuve (4 nov.) : `tests/test_robust_detail.py`,
+  `tests/test_benchmark_report.py::test_report_per_clip_and_robustness_apart` ; sur les vraies données, 64 lignes,
+  aucun écart avec `results.csv` et `confusion.csv`, aucun appel.
+
 ## Couverture
 
 | Critère | Tâches |
@@ -99,4 +114,4 @@
 | R6.1 | T6 ; R6.2 : T6, T7 |
 | R7.1, R7.2, R7.4 | T8 ; R7.3 : T6 ; R7.5 : T9 |
 | R8.1 | T1, T7, T9 |
-| R9.1–R9.4 | T11 |
+| R9.1–R9.4 | T11 ; R9.5 : T12 |

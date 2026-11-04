@@ -103,3 +103,44 @@ def test_report_per_clip_and_robustness_apart(tmp_path):
     assert "| dark |" in robust_part and "| 2 / 0 | 0 / 2 |" in robust_part
     assert "ne s'ajoutent pas" in robust_part  # EVAL-R9.4
     assert "aucun pourcentage global" in md
+    assert "Remise validée" not in robust_part  # sans detail.csv, pas de tableau inventé
+    detail = robust / "detail.csv"
+    with detail.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["clip", "source", "transform", "sam_silent", "images_live", "chain_seen",
+                    "chainring_seen", "engage_t", "engage_label", "false_validations",
+                    "transition_validations", "missed_validations", "off_read_seated", "on_read_fallen"])
+        w.writerow(["t1", "t1", "original", "0", "10", "9", "10", "7.0", "on", "0", "0", "0", "0", "0"])
+        w.writerow(["t2", "t2", "original", "0", "10", "8", "10", "6.0", "hidden", "1", "0", "0", "0", "0"])
+        w.writerow(["t1-dark", "t1", "dark", "0", "10", "2", "9", "", "", "0", "0", "0", "3", "1"])
+        w.writerow(["t2-dark", "t2", "dark", "1", "0", "0", "0", "", "", "0", "0", "0", "0", "0"])
+    rep.main(["--results", str(results), "--clips", str(clips), "--labels", str(labels),
+              "--out", str(out), "--robust", str(robust / "results.csv")])
+    robust_part = (out / "report.md").read_text(encoding="utf-8").split("## Robustesse")[1].split("## Limites")[0]
+    assert "Remise validée" in robust_part  # EVAL-R9.5 : un 0 sans validation ne prouve rien
+    assert "| original | 1 / 2 | 1 | 0 | 17 / 20 | 20 / 20 | 0 | 0 |" in robust_part
+    assert "| dark | 0 / 2 | 0 | 1 | 2 / 10 | 9 / 10 | 3 | 1 |" in robust_part
+
+
+def test_report_uses_notes_and_confusion_table(tmp_path):
+    import json
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    import benchmark_report as rep
+    clips, labels, results = write_inputs(tmp_path)
+    with (results.parent / "confusion.csv").open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["setting", "label", "interpretation", "images"])
+        w.writerow(["replay", "off", "tombée", "235"])
+        w.writerow(["replay", "on", "non vu", "388"])
+    notes = tmp_path / "notes.json"
+    notes.write_text(json.dumps({"answer": "Réponse X", "reading": "Lecture Y", "matrix": "Matrice Z",
+                                 "clips": {"t1": "Explication T1"}, "limits": ["Limite W"]},
+                                ensure_ascii=False), encoding="utf-8")
+    out = tmp_path / "bench"
+    rep.main(["--results", str(results), "--clips", str(clips), "--labels", str(labels),
+              "--out", str(out), "--notes", str(notes)])
+    md = (out / "report.md").read_text(encoding="utf-8")
+    for text in ("Réponse X", "Lecture Y", "Matrice Z", "Explication T1", "- Limite W"):
+        assert text in md  # analyses dans un fichier à part : rapport régénérable
+    assert "| off | 0 | 235 | 0 | 0 |" in md and "| on | 0 | 0 | 0 | 388 |" in md  # EVAL-R4.5

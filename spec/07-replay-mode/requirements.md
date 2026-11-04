@@ -26,7 +26,9 @@ ordinateur comme sur téléphone, sans aucun appel aux modèles au moment de la 
 
 1. Le replay DOIT proposer au moins 2 sessions :
    - **A** « erreur corrigée » : chaîne tombée, fausse remise sur le disque refusée (anomalie expliquée), remise
-     correcte validée, test dynamique réussi, clôture ;
+     correcte validée, test dynamique réussi, clôture. Révisé le 4 nov. (`RPL-D6`) : dans la vidéo filmée, personne
+     ne dit « c'est fait » pendant que la chaîne est sur le disque ; A montre donc la chaîne sur le disque non
+     validée, et le refus avec explication est montré par la session `E` (`RPL-D7`) ;
    - **B** « cas difficile » : au moins un arbitrage Muse Spark (verdict incertain) et sa suite.
 2. OÙ une session a été enregistrée en direct (`SRV-R9.3`), le replay DOIT en proposer une (priorité Should) :
    c'est la preuve la plus directe que le direct fonctionne.
@@ -47,9 +49,10 @@ ordinateur comme sur téléphone, sans aucun appel aux modèles au moment de la 
 ## RPL-R5 — Honnêteté (Must)
 
 1. La page DOIT afficher en permanence : « Replay d'une session réelle, filmée le <date>. Les décisions ont été
-   calculées par FixLoop sur cette vidéo ; les réponses des modèles Meta sont celles obtenues ce jour-là. »
-2. La page DOIT indiquer le mode de calcul : vidéo segmentée à 10 images/s (anti-rebond 4) ou session en direct
-   enregistrée (1 image/s, anti-rebond 3).
+   calculées par FixLoop sur cette vidéo ; les réponses des modèles Meta sont celles obtenues le <date de
+   construction>. » Révisé le 4 nov. : filmées le 2 nov., les réponses ont été obtenues plus tard (`RPL-D7`).
+2. La page DOIT indiquer le mode de calcul : vidéo segmentée à 10 images/s (anti-rebond 4), session en direct
+   enregistrée (1 image/s, anti-rebond 3) ou direct simulé sur une vidéo filmée (1 image/s, anti-rebond 3, `RPL-D7`).
 3. OÙ un historique de démonstration a été utilisé (`MEM-R4`), la page DOIT le dire.
 
 ## RPL-R6 — Explorer les seuils (Could)

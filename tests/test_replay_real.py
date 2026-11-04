@@ -365,3 +365,20 @@ def test_video_online_goes_through_segment_video(tmp_path, monkeypatch):
           cache_dir=tmp_path / "cache", agent="fixloop", spark_inner=FakeAgent(), online=True)
     assert clients == [None]  # ligne de commande : `segment_video` crée le vrai client
     assert (tmp_path / "b" / "vid-A" / "meta.json").is_file()
+
+
+def test_live_setting_drives_at_one_image_per_second(tmp_path):
+    video = tmp_path / "velo.mp4"
+    write_mp4(video, 60)
+    out = tmp_path / "b"
+    session = video_session(video, setting="live", debounce_frames=3, name="vid-D",
+                            diagnose_at=[0.5], user_done=[3.2])
+    build(session, out, bikes_root=tmp_path / "bikes", cache_dir=tmp_path / "cache", agent="fixloop",
+          spark_inner=FakeAgent(), raws_fn=fake_fetch(sim_raws(60, 30)))
+    meta = json.loads((out / "vid-D" / "meta.json").read_text(encoding="utf-8"))
+    assert meta["mode"].startswith("direct simulé") and "1 image/s" in meta["mode"]  # RPL-R5.2
+    events = json.loads((out / "vid-D" / "events.json").read_text(encoding="utf-8"))
+    validated = [e["t"] for e in events if e.get("event") == "validated"]
+    assert validated and all(float(t).is_integer() for t in validated)  # une mesure par seconde
+    overlays = json.loads((out / "vid-D" / "overlays.json").read_text(encoding="utf-8"))
+    assert len(overlays["frames"]) == 30  # contours gardés à 5 images/s (RPL-D4)

@@ -1,0 +1,13 @@
+{
+  "1f84eac5ebcfb95448e9fef64475712f6add490375a7ed2578b22fab27fa7bde": {
+    "kind": "memory_load",
+    "response": {
+      "bike_id": "demo-velo",
+      "entries": "278ad562fdd3a41e371bb120a31ac9f7a54ef007c4c70d6b46f727939810544d",
+      "text": "2026-10-29T01:47:08.532934+00:00 : chain_off_chainring, réussie\n2026-11-02T01:47:08.532934+00:00 : chain_off_chainring, réussie",
+      "synthesis": null
+    },
+    "model": "muse-wonder-1.0",
+    "obtained": "2026-11-04T03:06:53.166499+00:00"
+  }
+}

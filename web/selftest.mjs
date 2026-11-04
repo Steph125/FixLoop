@@ -2,13 +2,20 @@
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
 import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
-import { stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor, relabelFrames, filmedDate, loadLinks, REPO_URL } from "./replay.js";
+import { frameSize, stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor, relabelFrames, filmedDate, loadLinks, REPO_URL } from "./replay.js";
 
 const checks = [];
 
 function check(name, fn) {
   checks.push([name, fn]);
 }
+
+check("replay : taille de la vidéo lue dans overlays.json", () => {
+  const got = frameSize({ w: 848, h: 464, frames: [{ t: 0 }] });
+  if (got.w !== 848 || got.h !== 464) throw new Error(JSON.stringify(got));
+  const repli = frameSize(null);
+  if (repli.w !== 400 || repli.h !== 400) throw new Error(JSON.stringify(repli));
+});
 
 // --- APP-T1 : écrans et libellés ---
 check("six écrans dans l'ordre", () => {
@@ -268,7 +275,7 @@ check("replay : honnêteté et liens (RPL-T7)", async () => {
   if (!banner.includes("Replay d'une session réelle, filmée le")) throw new Error("RPL-R5.1");
   if (!banner.includes("31 octobre 2026")) throw new Error(`date : ${banner}`);
   if (!banner.includes("calculées par FixLoop")) throw new Error("calcul");
-  if (!banner.includes("obtenues ce jour-là")) throw new Error("modèles");
+  if (!banner.includes("celles obtenues le ")) throw new Error("modèles");
   if (!banner.includes("10 images/s")) throw new Error("mode RPL-R5.2");
   const syn = honestyText({ source: "synthetic", mode: meta.mode, demo_history: true });
   if (!syn.includes("Session synthétique de test")) throw new Error("synthétique");

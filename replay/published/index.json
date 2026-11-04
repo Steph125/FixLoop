@@ -1,0 +1,30 @@
+[
+ {
+  "dir": "E",
+  "filmed": "2026-11-02",
+  "mode": "direct simulé sur vidéo filmée, 1 image/s, anti-rebond 3 (RPL-R5.2)",
+  "name": "E",
+  "title": "« C'est fait » refusé, mains devant le plateau"
+ },
+ {
+  "dir": "A",
+  "filmed": "2026-11-02",
+  "mode": "vidéo 10 images/s, anti-rebond 4 (RPL-R5.2)",
+  "name": "A",
+  "title": "Chaîne sur le disque, remise puis vérifiée"
+ },
+ {
+  "dir": "B",
+  "filmed": "2026-11-02",
+  "mode": "vidéo 10 images/s, anti-rebond 4 (RPL-R5.2)",
+  "name": "B",
+  "title": "Mains devant le plateau : cas difficile"
+ },
+ {
+  "dir": "D",
+  "filmed": "2026-11-02",
+  "mode": "direct simulé sur vidéo filmée, 1 image/s, anti-rebond 3 (RPL-R5.2)",
+  "name": "D",
+  "title": "Réglage du direct : arbitrage, correction, rotation"
+ }
+]

@@ -13,20 +13,25 @@
   le 1er nov. par `pip show`, jamais de mémoire ; sans musique, médias de l'auteur).
 - [ ] **SUB-T2 — Journal Muse Code.** `docs/muse-code-log.md` : date, prompt, fichiers produits, corrections faites
   à la main. Exigences : `SUB-R3.3`. Quand : à chaque usage de Muse Code.
+  État (4 nov.) : à jour pour les commits `(Muse Code)`. Le travail depuis le 1er nov. n'est pas passé par Muse Code :
+  aucune ligne ajoutée, et le README le dit. À cocher par l'auteur s'il reprend Muse Code.
 - [~] **SUB-T3 — README.** Structure de `design.md` section 3, tableau Meta models (vérifié contre le code), chiffres
   sourcés, mention de l'historique de démo, instructions Windows et Linux.
   Exigences : `SUB-R2.2` à `R2.5`, `R3.1`, `R3.2`, `R3.4`, `R5.1`, `R8.1` à `R8.3`, `MEM-R4.2`.
   Dépend de : `EVAL-T9`. Quand : mardi 3 nov.
-  Brouillon du 1er nov. (sans vidéos ni benchmark) : structure complète, chiffres TBD (`eval/benchmark`),
-  liens Replay et vidéo en TBD ; à finir après le benchmark (EVAL-T9) et la vidéo.
-- [ ] **SUB-T4 — Installation depuis zéro.** Clone neuf dans un autre dossier, `.venv` neuf, README suivi à la
+  État (4 nov.) : chiffres et lien du replay en place (`EVAL-T9`) ; reste le lien de la vidéo (`SUB-T5`).
+- [x] **SUB-T4 — Installation depuis zéro.** Clone neuf dans un autre dossier, `.venv` neuf, README suivi à la
   lettre, tests verts ; corriger le README si une étape manque.
   Exigences : `SUB-R4.4`, `R8.2`. Quand : mardi 3 nov. après-midi.
+  Preuve (4 nov.) : dossier neuf avec les seuls fichiers suivis, sans `.env`, `.venv` neuf : 271 passed, 3 skipped
+  (`probe_out2` absent, données locales), `check_spec.py` OK, `web/selftest.mjs` 26/26. Corrigé : `pytest` et
+  `jsonschema` manquaient à `requirements.txt` (sans le second, FixLoop ne démarrait pas sur une installation neuve).
 - [ ] **SUB-T5 — Tournage et montage de la vidéo.** Plan de `design.md` section 2 ; sous-titres ; export ;
   publication non répertoriée ; vérification en navigation privée.
   Exigences : `SUB-R1.1` à `R1.5`, `R2.1` à `R2.4`, `R6.2`, `R6.4`, `MEM-R4.2`. Quand : mardi 3 nov.
-- [ ] **SUB-T6 — Brouillon du formulaire.** Description courte (formulation de `design.md` section 1), liens, piste
+- [x] **SUB-T6 — Brouillon du formulaire.** Description courte (formulation de `design.md` section 1), liens, piste
   Indie, modèles. Exigences : `SUB-R7.2`, `R7.4`. Quand : mardi 3 nov. au soir.
+  Preuve : `docs/submission-form.md` (lien de la vidéo à ajouter). Plan de la vidéo : `docs/video-plan.md`.
 - [ ] **SUB-T7 — Gel et étiquette.** Gel mardi midi ; `git tag v1.0-submission` puis `git push origin
   v1.0-submission` le 4 nov. Exigences : `SUB-R9.1`, `R9.2`.
 - [ ] **SUB-T8 — Contrôle final et passage en public.** Liste de conformité (`design.md` section 4), recherche de

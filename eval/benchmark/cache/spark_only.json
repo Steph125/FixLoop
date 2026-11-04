@@ -1,0 +1,372 @@
+{
+  "3b159dfc512ae7584a49fd0278eb1b2ac47e8d02084946f70c0acb162c6d38be": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.3",
+      "raison": "Tu dois éclairer, on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:09:19.437613+00:00"
+  },
+  "f2bc2f7b02ef62e972119d5ce32fe925740d9111808122506cef0b17a80bae67": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.7",
+      "raison": "Tu vois ta chaîne posée sur le disque noir, pas derrière."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:09:25.537605+00:00"
+  },
+  "e33300f4bb2bb577292c8f26bac0f30724fe476b58e5a4f39c9d54b9b22a7046": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.35",
+      "raison": "Je ne vois pas assez bien ta chaîne et ton plateau."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:09:29.389687+00:00"
+  },
+  "737ea4b428a1e5b7477610862a6c22b72036087e7325ec88f0a0cc9f9390487b": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.9",
+      "raison": "Tu filmes dans le noir, on ne voit pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:09:34.619406+00:00"
+  },
+  "a49814cab6bb0746c1312ca2c65288bcc8d491323a14f7d6b7d1c01d95123dc9": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.75",
+      "raison": "Tu filmes dans le noir, on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:09:40.866479+00:00"
+  },
+  "1e982a934a7d1ce6f9ce1aca34ee122a1caece5133018f7ec12c9b2f368a9b6c": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.6",
+      "raison": "Tu dois rapprocher ton téléphone, on ne voit pas bien."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:21:35.012285+00:00"
+  },
+  "efec3d42f56b249167820b64255dc8d228af0620f97967c03aa5cb4b0173d973": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.75",
+      "raison": "Ta chaîne reste visible sur le bord du disque noir."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:21:43.084714+00:00"
+  },
+  "13a2d6667d6d72c6442dcccb68b34220143205c05bcb8b8f802468d2d3ca0231": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.6",
+      "raison": "Tu caches le haut du plateau, on ne voit pas ta chaîne dessus."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:21:48.158373+00:00"
+  },
+  "b1f4d60878756b7e7cb7f4d850a77a8795bc06a6e7fd6384b8ebdc0ae6b67a2c": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.6",
+      "raison": "Tu filmes trop sombre, on distingue mal ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:21:55.459563+00:00"
+  },
+  "f9fb2a23145cbce9a0fc4d1f306b95560a2920dd3f56d86edc73d8d1f7115adc": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.85",
+      "raison": "Tu montres le disque noir sans aucune chaîne dessus."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:22:03.410717+00:00"
+  },
+  "8568e204a6cfa8a03ca199f609d7234696d243c35500d5805b74bf04ea68c3cb": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.2",
+      "raison": "Tu dois mieux éclairer car on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:23:29.066353+00:00"
+  },
+  "cd311be354abe9dd50c21d389b0d098dc4bbc91d8726b42a3b03a150e46e4eab": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.8",
+      "raison": "Tu dois éclairer de plus près, on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:23:34.298855+00:00"
+  },
+  "43404ca3ef72006cfb381e9c9abf4efe33e30425a377a83bfba6f0e8b593c26c": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.25",
+      "raison": "Tu éclaires mal, on ne voit pas ta chaîne sur le plateau."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:23:40.791074+00:00"
+  },
+  "3f3c113039c3add0da09da4386c8afc412c32b69207fdba1a3c7e174679cf6ca": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.75",
+      "raison": "Tu dois rapprocher ton téléphone, on ne voit pas bien la chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:23:48.341253+00:00"
+  },
+  "6e85a4be379557b3cf5af4751d3a23d32fd1ba87fa4b958cadfe0c50bbe980c3": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.75",
+      "raison": "Tu dois rapprocher ton téléphone, on ne distingue pas la chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:25:31.693821+00:00"
+  },
+  "4ba1c5f4c4a98de733014c2e5ca217ae9d4e983e0eebd7419e4bd0b5e31f132f": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.75",
+      "raison": "Tu vois ta chaîne pendre sous le disque, pas posée dessus."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:25:43.514398+00:00"
+  },
+  "b079ebbd34f4e5d0497e1eecf52196a0c68a65b4fa87d905e1b30d5a87db98a1": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.75",
+      "raison": "Tu vois ta chaîne pendre sous le disque noir."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:25:46.893064+00:00"
+  },
+  "588656c224ebba6f94f146ac5b3c9c1ad7bf7cbb5b5ba30f32d36619f19e970b": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.4",
+      "raison": "Tu dois mieux éclairer car on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:25:55.574825+00:00"
+  },
+  "321a40b27ad527d131f81b61e0d2a08a60415290d3a6d124ebf97051bcc0e7a4": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.85",
+      "raison": "Tu vois ta chaîne pendante sous le plateau, pas engagée derrière le disque."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:28:53.821191+00:00"
+  },
+  "dacd5d3c9ed14c6a439a6d704f691a5efa02bfe6f1f409fcd395f51443e043ab": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.85",
+      "raison": "Tu vois ta chaîne pendre sous le plateau noir."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:29:02.988138+00:00"
+  },
+  "9d91ef948675bd52ba4f3d6495d78d148edb48050e54b0e34f65e1948cc03f3a": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "reussie",
+      "confiance": "0.75",
+      "raison": "Tu as bien passé la chaîne derrière le disque."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:29:08.178586+00:00"
+  },
+  "dc295816d02c95b047a99c02410467f467e599783f4bed0a2ea6f58af878a7cc": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.9",
+      "raison": "Tu dois éclairer, on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:33:17.955103+00:00"
+  },
+  "512de4db376e0f3f5afb3cd9b912d80a756b4933c8c920118b3fd30593e7c34e": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.85",
+      "raison": "Tu filmes trop sombre, on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:33:22.981183+00:00"
+  },
+  "13ff75bd4e1a0bbc0ab25aff09421b5b1d16b11b5d6118d3c71ffc19dea048cf": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.85",
+      "raison": "Tu filmes dans le noir, on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:33:26.947211+00:00"
+  },
+  "7a9f15b40886168c814e9db662c2e569582e8707585b8884b69fe27e90ec6573": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.9",
+      "raison": "Éclaire et rapproche-toi, tu ne montres pas la chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:33:35.027039+00:00"
+  },
+  "1ae4afec191fda4e82e6ff78dded5c0a04860c4e3848e743fa3cf3f17959e152": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.75",
+      "raison": "Tu vois ta chaîne posée sur le disque, pas derrière."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:47:15.451045+00:00"
+  },
+  "5203ad627719f9d4a740564344bf1bbee402a027a80c231ebeb0a3ea11e63f56": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.85",
+      "raison": "Tu vois ta chaîne posée sur le disque et pendant en dessous."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:47:26.056559+00:00"
+  },
+  "c969a2df32965eea3eb51b2ea7d97f914d78ae21aed365c33953e51220847d5b": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.75",
+      "raison": "Tu vois ta chaîne posée sur le disque, pas engagée derrière."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:47:31.095642+00:00"
+  },
+  "b82a6a586985fd527347124d5b05e925c98aa50fcc3226c06c891d06eba36f2d": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.8",
+      "raison": "Ta chaîne reste visible sur le bord noir, pas derrière."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:47:36.807148+00:00"
+  },
+  "61df8db74975d85d9d4c8459454d9f37b00e55463626609d25c2ec3808fb5f1e": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.55",
+      "raison": "Je ne distingue pas bien ta chaîne derrière le disque."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:47:45.962130+00:00"
+  },
+  "992eb8b76770d5a347d35a007a66f0111a1cdbd8de6160ae3e37377386892eef": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.6",
+      "raison": "Tu filmes trop sombre, on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:47:52.583074+00:00"
+  },
+  "257789b6fc406144b25992ebe0cbfdd954f5677ed6c795ba70317a090c82e96c": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.75",
+      "raison": "Tu vois ta chaîne posée sur le bord noir, pas derrière."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:47:58.736654+00:00"
+  },
+  "1ac143e3983c45dd7624641d79b5471d0cf3dc0b747ad855fed9f9eb5079dfde": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.35",
+      "raison": "Tu dois rapprocher ton téléphone pour voir la chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:54:14.440238+00:00"
+  },
+  "bf18ac25bfac0bd0f2091f89cfa19ae22f65bae4073eacce723475d9a73b6d77": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "impossible_a_dire",
+      "confiance": "0.7",
+      "raison": "Tu filmes dans le noir, on ne distingue pas ta chaîne."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:54:22.050535+00:00"
+  },
+  "773b13ac24d03b95856b067a26199f527b40f7d1483cb207ae6e0650820b7cb2": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.75",
+      "raison": "Ta chaîne reste posée sur le bord du disque, elle n'est pas derrière."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:54:31.940381+00:00"
+  },
+  "e7589346a88a22511ccceb410c0dbb8c1e87d045da3ca5ffbd0b8b084b529412": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.75",
+      "raison": "Tu vois ta chaîne posée sur le bord du disque."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:54:40.632891+00:00"
+  },
+  "7d5784b89188cc0f7e9e0bdbf7efcbe5a934e8d1c2f5cbbb2fc5623646c1ab2f": {
+    "kind": "spark_only",
+    "response": {
+      "verdict": "ratee",
+      "confiance": "0.85",
+      "raison": "Tu tiens la chaîne au-dessus du plateau, elle n'est pas posée."
+    },
+    "model": "muse-spark-1.3-contributor",
+    "obtained": "2026-11-03T23:54:44.427360+00:00"
+  }
+}

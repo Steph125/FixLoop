@@ -131,3 +131,13 @@ par session (`RPL-R7.1`).
   « pas de vidéo dans le dépôt », car GitHub Pages publie le contenu du dépôt. Elles sont réencodées sans piste
   audio (`-an`) : les « c'est fait » sont déjà des événements sous-titrés, et un fichier commité reste dans
   l'historique public. Option `--keep-audio` de `build_replay.py` pour une décision explicite de l'auteur.
+- **RPL-D6 (4 nov.)** — Décision de l'auteur : pas de nouveau tournage, A = `A1`, B = `B1`. `A1` commence chaîne
+  sur le disque, mais le premier « c'est bon » arrive une fois la chaîne remise : pas d'anomalie « c'est fait »
+  dans A. Le replay et le rapport le disent ; rien n'est monté ni rejoué pour la faire apparaître.
+- **RPL-D7 (4 nov.)** — Session `D` : même vidéo que A, au réglage `live` du benchmark (1 image/s, anti-rebond 3,
+  `"setting": "live"`), affichée « direct simulé ». C'est ce réglage que le jury verrait en direct, et il suit toute la
+  réparation : refus, validation, vraie rotation, test. Le bandeau donne la date d'obtention des réponses (date de
+  construction), car elle diffère de la date de tournage. Les contours restent calculés à 5 images/s. Session `E` :
+  `B1` au même réglage, construite une seule fois sans relance : le « c'est fait » de 10 s y est refusé (arbitrage `eps`).
+  C'est le refus montré en tête du replay et de la vidéo. Sa suite garde la faiblesse du rapport : validation à 18 s
+  avec la main dans le champ. D ne se ferme pas : le contact de la vraie rotation frôle le seuil de 0,18.

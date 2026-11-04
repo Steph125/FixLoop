@@ -3,6 +3,7 @@
 Usage : python scripts/benchmark_report.py --results eval/benchmark/results.csv
        --clips eval/benchmark/clips.csv --labels eval/benchmark/labels.csv
        [--out eval/benchmark] [--robust eval/benchmark/robust/results.csv]
+       [--notes eval/benchmark/notes.json]
 
 Lit `results.csv`, `clips.csv`, `labels.csv` ; écrit `report.md` (structure de
 `design.md` section 6 : tableau principal sur les extraits `test`, réglage
@@ -10,13 +11,16 @@ Lit `results.csv`, `clips.csv`, `labels.csv` ; écrit `report.md` (structure de
 commande pour reproduire, date, commit et seuils) et `chart.svg` (barres
 groupées : fausses validations et appels Spark par approche, motifs en plus
 des couleurs, valeurs écrites, SVG manuscrit sans dépendance lourde).
-Les phrases d'analyse restent à l'auteur (marquées « À ÉCRIRE »).
+Les phrases d'analyse viennent de `--notes` (clés `answer`, `reading`, `matrix`,
+`clips`, `robust`, `limits`), pour que le rapport se régénère à l'identique ; sans
+elles, elles restent à l'auteur (marquées « À ÉCRIRE »).
 Chiffres par extrait (EVAL-R1.1 révisé) ; `--robust` ajoute la section
 « Robustesse » : copies transformées face à l'original, à part (EVAL-R9.4).
 """
 
 import argparse
 import csv
+import json
 import statistics
 import subprocess
 import sys
@@ -97,7 +101,30 @@ def per_clip_table(test_rows, test_clips, setting: str = "live") -> list[str]:
     return out + [""]
 
 
-def robust_section(results_path, clips_path, test_rows) -> list[str]:
+def confusion_tables(path) -> list[str]:
+    """Classement par image des règles SAM, depuis `confusion.csv` (EVAL-R4.5)."""
+    path = Path(path)
+    if not path.is_file():
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    preds = ("en place", "tombée", "incertain", "non vu")
+    out = []
+    for setting in SETTINGS:
+        mine = [r for r in rows if r["setting"] == setting]
+        if not mine:
+            continue
+        out += [f"Images, réglage `{setting}` :", "",
+                "| Étiquette | " + " | ".join(preds) + " |",
+                "|---|" + "---|" * len(preds)]
+        for label in ("off", "on", "hidden"):
+            counts = {r["interpretation"]: r["images"] for r in mine if r["label"] == label}
+            out.append(f"| {label} | " + " | ".join(counts.get(k, "0") for k in preds) + " |")
+        out.append("")
+    return out
+
+
+def robust_section(results_path, clips_path, test_rows, note=None) -> list[str]:
     """Copies transformées, chaque variante face à l'original (EVAL-R9.4, EVAL-D7)."""
     rows = read_results(results_path)
     clips_path = clips_path or Path(results_path).parent / "clips.csv"
@@ -129,8 +156,38 @@ def robust_section(results_path, clips_path, test_rows) -> list[str]:
             out.append(f"| {t} | {what} | " + " | ".join(
                 cell([r for r in mine if r["approach"] == a]) for a in approaches) + " |")
         out.append("")
-    out += ["À ÉCRIRE : quelle transformation fait céder quelle approche, et pourquoi.", ""]
+    out += robust_detail_table(Path(results_path).parent / "detail.csv", transforms)
+    out += [note or "À ÉCRIRE : quelle transformation fait céder quelle approche, et pourquoi.", ""]
     return out
+
+
+def robust_detail_table(path, transforms) -> list[str]:
+    """Remise validée ou non, par transformation : un 0 sans validation ne prouve rien (EVAL-R9.5)."""
+    path = Path(path)
+    if not path.is_file():
+        return []
+    with path.open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh))
+    out = ["### Remise validée ou non (règles SAM, réglage `live`)", "",
+           "Tous les extraits finissent chaîne en place : une remise jamais validée est un échec, que le "
+           "tableau ci-dessus ne compte pas. Une validation pendant `transition` compte comme chaîne en "
+           "place. Source : `eval/benchmark/robust/detail.csv` "
+           "(`scripts/robust_detail.py`, totaux contrôlés contre `results.csv` et `confusion.csv`).", "",
+           "| Copie | Remise validée, chaîne en place | Remise validée à tort | SAM muet | Chaîne vue | "
+           "Plateau vu | Images `off` lues « en place » | Images `on` lues « tombée » |",
+           "|---|---|---|---|---|---|---|---|"]
+    total = lambda mine, col: sum(int(r[col]) for r in mine)  # noqa: E731
+    for t in ["original"] + list(transforms):
+        mine = [r for r in rows if r["transform"] == t]
+        if not mine:
+            continue
+        good = sum(r["engage_label"] in ("on", "transition") for r in mine)
+        wrong = sum(r["engage_label"] in ("off", "hidden") for r in mine)
+        images = total(mine, "images_live")
+        out.append(f"| {t} | {good} / {len(mine)} | {wrong} | {total(mine, 'sam_silent')} | "
+                   f"{total(mine, 'chain_seen')} / {images} | {total(mine, 'chainring_seen')} / {images} | "
+                   f"{total(mine, 'off_read_seated')} | {total(mine, 'on_read_fallen')} |")
+    return out + [""]
 
 
 def main(argv=None) -> dict:
@@ -141,6 +198,7 @@ def main(argv=None) -> dict:
     ap.add_argument("--out", default="eval/benchmark")
     ap.add_argument("--robust", default=None,
                     help="results.csv des copies transformées (EVAL-R9), section à part")
+    ap.add_argument("--notes", default=None, help="analyses de l'auteur (JSON)")
     ap.add_argument("--robust-clips", default=None,
                     help="clips.csv des copies (défaut : à côté de --robust)")
     args = ap.parse_args(argv)
@@ -148,6 +206,7 @@ def main(argv=None) -> dict:
     from fixloop.benchmark import OFF_MIN, ON_MAX
     on_fr = str(ON_MAX).replace(".", ",")  # affichage français, comme les mesures
     off_fr = str(OFF_MIN).replace(".", ",")
+    notes = json.loads(Path(args.notes).read_text(encoding="utf-8")) if args.notes else {}
     rows = read_results(args.results)
     splits = read_splits(args.clips)
     test_rows = [r for r in rows if splits.get(r["clip"], "test") == "test"]
@@ -164,7 +223,7 @@ def main(argv=None) -> dict:
     lines.append("")
     lines.append("Est-ce que la boucle FixLoop (SAM + règles + arbitrage Spark qui ne "
                  "valide jamais) se trompe moins qu'une approche simple ?")
-    lines.append("À ÉCRIRE : réponse en 3 lignes après exécution (EVAL-T7).")
+    lines.append(notes.get("answer", "À ÉCRIRE : réponse en 3 lignes après exécution (EVAL-T7)."))
     lines.append("")
     lines.append("## Protocole")
     lines.append("")
@@ -193,7 +252,7 @@ def main(argv=None) -> dict:
                          f"{g['delay_max']} | {g['recall']} | {g['spark']} | {g['cost']} |")
         lines.append("")
     lines += per_clip_table(test_rows, test_clips)
-    lines.append("À ÉCRIRE : lecture du tableau (quelle approche, quel réglage, pourquoi).")
+    lines.append(notes.get("reading", "À ÉCRIRE : lecture du tableau (quelle approche, quel réglage, pourquoi)."))
     lines.append("")
     lines.append("## Matrice de classement par image (règles SAM)")
     lines.append("")
@@ -208,8 +267,9 @@ def main(argv=None) -> dict:
         g = table[("rules", setting)]
         lines.append(f"| {setting} | {g['false']} | {g['transition']} | {g['missed']} |")
     lines.append("")
-    lines.append("À ÉCRIRE : matrice détaillée par image depuis les mesures "
-                 "(`tests/test_benchmark.py::test_image_confusion_excludes_transition`).")
+    lines += confusion_tables(Path(args.results).parent / "confusion.csv")
+    lines.append(notes.get("matrix", "À ÉCRIRE : matrice détaillée par image depuis les mesures "
+                           "(`tests/test_benchmark.py::test_image_confusion_excludes_transition`)."))
     lines.append("")
     lines.append("## Extraits ratés")
     lines.append("")
@@ -226,10 +286,10 @@ def main(argv=None) -> dict:
         lines.append(f"### {clip}")
         lines.append("")
         lines.append(detail + ".")
-        lines.append("À ÉCRIRE : image et explication.")
+        lines.append(notes.get("clips", {}).get(clip, "À ÉCRIRE : image et explication."))
         lines.append("")
     if args.robust:
-        lines += robust_section(args.robust, args.robust_clips, test_rows)
+        lines += robust_section(args.robust, args.robust_clips, test_rows, notes.get("robust"))
     lines.append("## Limites")
     lines.append("")
     lines.append("- Un seul vélo, un seul utilisateur (EVAL-R7.4). États posés par l'auteur, avec des "
@@ -246,6 +306,8 @@ def main(argv=None) -> dict:
                      "robustesse, pas la diversité (EVAL-D7).")
     lines.append("- Seuils réglés sur `velo2` et au plus 4 extraits `calib` (EVAL-R2.1) ; "
                  "toute modification après les résultats `test` est dite ici (EVAL-R2.3).")
+    for limit in notes.get("limits", []):
+        lines.append(f"- {limit}")
     lines.append("")
     lines.append("## Reproduire")
     lines.append("")
@@ -256,6 +318,7 @@ def main(argv=None) -> dict:
     lines.append("```")
     lines.append("")
     robust_arg = f" --robust {args.robust}" if args.robust else ""
+    robust_arg += f" --notes {args.notes}" if args.notes else ""
     lines.append(f"Commande du rapport : `python scripts/benchmark_report.py --results {args.results} "
                  f"--clips {args.clips} --labels {args.labels} --out {args.out}{robust_arg}`.")
 

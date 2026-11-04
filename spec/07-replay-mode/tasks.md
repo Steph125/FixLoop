@@ -37,15 +37,21 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   prise au même instant que le masque (l'image n de la vidéo n'est pas l'instant n / 10), vidéo lue à 10 images/s.
   Preuve : `test_video_frames_follow_sam_times_at_30_fps`, `test_video_keyframes_match_mask_times`,
   `test_video_online_goes_through_segment_video`.
-- [ ] **RPL-T3 — Tourner les vidéos A et B.** Vélo de l'auteur, téléphone posé, son activé (« c'est fait » dit à
+  `RPL-D7` (4 nov.) : `"setting": "live"` conduit la session à 1 image/s, comme le benchmark. Preuve :
+  `test_live_setting_drives_at_one_image_per_second`, `node web/selftest.mjs` (bandeau avec date de construction).
+- [x] **RPL-T3 — Tourner les vidéos A et B.** Vélo de l'auteur, téléphone posé, son activé (« c'est fait » dit à
   voix haute) ; A : chaîne tombée → posée sur le disque → « c'est fait » → correction → rotation arrière → test
   dynamique ; B : mains devant le plateau, angle de 30°, pour provoquer un arbitrage. Noter les instants de
   « c'est fait » dans `replay/sessions/A.json`, `B.json`. Aucun visage ni document dans le champ.
   Exigences : `RPL-R3.1`. Peut se faire avec le tournage du benchmark (`EVAL-T1`).
-- [ ] **RPL-T4 — Construire A et B avec les vrais modèles.** 1re construction en ligne (coût : environ 1 200
+- [x] **RPL-T4 — Construire A et B avec les vrais modèles.** 1re construction en ligne (coût : environ 1 200
   images vidéo ≈ 0,25 $, plus quelques appels Spark et Wonder), puis `--offline` pour vérifier l'identité.
   Commiter `replay/cache/*.models.json` et `replay/sessions/*.json`.
   Exigences : `RPL-R2.1`, `R2.3`, `R2.4`, `R3.1`.
+  Preuve (4 nov.) : sessions A, B, D, E en ligne (sorties SAM du benchmark réutilisées), puis `--offline` depuis une
+  copie neuve de l'historique figé : `events.json` et `overlays.json` identiques octet par octet ; `deploy_check.py`
+  OK ; lecteur ouvert dans Edge sans fenêtre (bandeau, frise, contours au bon format). Lecture vidéo sur téléphone :
+  RPL-T9, pour l'auteur.
 - [x] **RPL-T5 — Lecteur : vidéo, contours, bandeau, sous-titres.** `web/replay.html`, `replay.js`, `stateAt`,
   synchronisation ± 100 ms, commandes de lecture, son.
   Exigences : `RPL-R4.1`, `R4.5`, `R1.3`, `R1.4`.

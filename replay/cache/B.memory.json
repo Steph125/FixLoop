@@ -1,0 +1,24 @@
+{
+  "e29813aa2280c2bd6ae65129af6e17461d545415235898a688b562258d00c604": {
+    "kind": "memory_load",
+    "response": {
+      "bike_id": "demo-velo",
+      "entries": "ba8dfa93bbd265ee7b2c4570ec24f5de39a0be6c2c8f97a928a2c8f9fc62db8e",
+      "text": "2026-10-27T22:11:26.478449+00:00 : chain_off_chainring, réussie\n2026-10-31T22:11:26.478449+00:00 : chain_off_chainring, réussie\n2026-11-04T01:15:04.456917+00:00 : chain_off_chainring, réussie",
+      "synthesis": null
+    },
+    "model": "muse-wonder-1.0",
+    "obtained": "2026-11-04T01:19:20.110311+00:00"
+  },
+  "1f84eac5ebcfb95448e9fef64475712f6add490375a7ed2578b22fab27fa7bde": {
+    "kind": "memory_load",
+    "response": {
+      "bike_id": "demo-velo",
+      "entries": "278ad562fdd3a41e371bb120a31ac9f7a54ef007c4c70d6b46f727939810544d",
+      "text": "2026-10-29T01:47:08.532934+00:00 : chain_off_chainring, réussie\n2026-11-02T01:47:08.532934+00:00 : chain_off_chainring, réussie",
+      "synthesis": null
+    },
+    "model": "muse-wonder-1.0",
+    "obtained": "2026-11-04T02:08:56.039371+00:00"
+  }
+}

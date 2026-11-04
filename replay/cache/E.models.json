@@ -1,0 +1,35 @@
+{
+  "ce9cc85b4b6d4a922eddecefb48c68be1bf7aec6c78220a7a83187154c305d8d": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu as ta chaîne qui pend au-dessus de ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:07:02.039610+00:00"
+  },
+  "d5822d65d9fc41f975157277f2861f625a917355191faa166babe455b5ad20d0": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "eps",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.86",
+        "verdict_brut": "ratee"
+      },
+      "message": "Tu montres la chaîne posée sur le bord du disque."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:07:39.569555+00:00"
+  },
+  "ec548c46f39b63f9f46d143288981d7dec5ac5778bc5556b04d0baee98bcb929": {
+    "kind": "explain",
+    "response": [
+      "Ta chaîne est sur le bord, replace-la bien sur les dents du haut.",
+      "chain"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:07:45.018115+00:00"
+  }
+}

@@ -121,3 +121,11 @@ def test_deploy_check_refuses_video_copied_without_ffmpeg(tmp_path):
     meta_path.write_text(json.dumps(meta), encoding="utf-8")
     errors = deploy_check.check_build(site)
     assert any("opencv-mp4v" in e for e in errors)  # mal lue sur téléphone : refusée
+
+
+def test_pages_workflow_installs_what_deploy_check_needs():
+    workflow = (ROOT / ".github" / "workflows" / "pages.yml").read_text(encoding="utf-8")
+    assert "deploy_check.py" in workflow
+    assert "opencv-python-headless" in workflow  # `video_readable` importe cv2 sur le runner
+    assert workflow.index("opencv-python-headless") < workflow.index("deploy_check.py --site")
+    assert "replay/published/" in workflow and "replay/build/." not in workflow  # RPL-T11

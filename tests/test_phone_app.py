@@ -223,3 +223,12 @@ def test_no_external_dependency_and_small_size():
         assert 'from "http' not in text and "@import" not in text  # pas de bibliothèque
         assert "MODEL_API_KEY" not in text  # APP-R10.3 : jamais la clé API
     assert total < 100 * 1024  # APP-R10.2 : moins de 100 ko
+
+
+def test_replay_fits_landscape_videos():
+    js, html = read("replay.js"), read("replay.html")
+    assert "frameSize(overlays)" in js  # taille de overlays.json, pas de chaque image
+    assert "frame.w" not in js  # sinon 400 x 400 et contours décalés sur une vraie vidéo
+    assert "aspectRatio" in js  # zone au format de la vidéo (848 x 464), pas 3:4
+    assert 'preload="auto"' in html and "muted" in html  # 1re image affichée, vidéos sans son (RPL-D5)
+    assert 'stroke="black"' not in js  # courbe lisible sur fond sombre

@@ -6,7 +6,7 @@
 <title>FixLoop — replay d'une réparation</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="replay">
 <main id="app">
 
 <p id="honesty" role="note"></p>
@@ -15,7 +15,7 @@
 <select id="session-select"></select></p>
 
 <div class="stage">
-<video id="replay-video" playsinline controlslist="nodownload"></video>
+<video id="replay-video" playsinline muted preload="auto" controlslist="nodownload"></video>
 <svg id="replay-overlay" preserveAspectRatio="xMidMid slice" aria-hidden="true"></svg>
 </div>
 

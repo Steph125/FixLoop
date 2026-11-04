@@ -1,0 +1,13 @@
+setting,label,interpretation,images
+live,hidden,en place,42
+live,hidden,incertain,6
+live,hidden,non vu,75
+live,hidden,tombée,17
+live,off,en place,4
+live,off,incertain,2
+live,off,non vu,87
+live,off,tombée,103
+live,on,en place,226
+live,on,incertain,27
+live,on,non vu,326
+live,on,tombée,1

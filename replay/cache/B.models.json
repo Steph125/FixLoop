@@ -1,0 +1,35 @@
+{
+  "42008765104ac715672d4da57ee9346d75072d4a2ad6e77457f7348accc2c7f0": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne tombée sous ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:19:26.827818+00:00"
+  },
+  "e73fe89311893b1249e55676d5be66eb5ba3b7a276ecd544669a19fc888a6d6b": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.65",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éloigne ton téléphone et éclaire ton plateau pour mieux voir."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:20:00.913700+00:00"
+  },
+  "2c9b97259fa8d10e1be5d96a254f639618a81bd0790b5eccf4478cccbf406544": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "ta chaine pend sous ton plateau et tu pédales dans le vide"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:09:26.237372+00:00"
+  }
+}

@@ -142,3 +142,32 @@ def test_offline_cli_refuses_missing_cache(tmp_path):
         capture_output=True, text=True, cwd=Path(__file__).resolve().parent.parent)
     assert r.returncode != 0  # --offline sans cache : arrêt, jamais inventé
     assert "cache" in (r.stdout + r.stderr).lower()
+
+
+def test_rules_row_counts_no_spark_call():
+    import benchmark as bench
+    events = [{"event": "diagnosis", "t": 0.0}, {"event": "closed", "t": 1.0,
+                                                 "model_calls": {"spark": 3, "wonder": 2}}]
+    labels = [{"clip": "c", "t": 0, "state": "off", "done": 0}]
+    row = bench.result_row("c", "rules", "replay", events, [], labels)
+    assert row["spark_calls"] == 0 and row["cost_usd_est"] == 0  # EVAL-R3.2 : aucun appel Spark
+    other = bench.result_row("c", "fixloop", "replay", events, [], labels)
+    assert other["spark_calls"] == 3
+
+
+def test_clip_with_no_segmented_frame_is_a_result_not_a_crash():
+    from fixloop.procedures import load_all
+    procedure = load_all()["chain_off_chainring"]
+    labels = [{"clip": "c", "t": 0, "state": "on", "done": 0}]
+    ran = bench.run_clip_real("c", labels, "chain_off_chainring", procedure, ["rules", "fixloop"],
+                              ["live"], [], [], None, None)  # SAM muet : aucun modèle appelé
+    rows = []
+    bench.append_results(rows, _NoCosts(), "c", labels, ran,
+                         procedure="chain_off_chainring")
+    assert [r["approach"] for r in rows] == ["rules", "fixloop"]
+    assert all(r["false_validations"] == 0 and r["sam_images"] == 0 for r in rows)
+
+
+class _NoCosts:
+    def add(self, **kw):
+        pass

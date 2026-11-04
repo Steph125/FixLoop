@@ -21,6 +21,7 @@ body {
 }
 
 main { max-width: 28rem; margin: 0 auto; padding: 1rem; }
+.replay main { max-width: 52rem; }  /* vidéo en paysage : plus large sur ordinateur */
 
 section[hidden] { display: none; }
 

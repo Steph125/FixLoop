@@ -1,0 +1,21 @@
+setting,label,interpretation,images
+live,hidden,en place,6
+live,hidden,non vu,7
+live,hidden,tombée,7
+live,off,incertain,1
+live,off,non vu,6
+live,off,tombée,21
+live,on,en place,40
+live,on,incertain,8
+live,on,non vu,42
+replay,hidden,en place,92
+replay,hidden,incertain,3
+replay,hidden,non vu,60
+replay,hidden,tombée,45
+replay,off,incertain,9
+replay,off,non vu,36
+replay,off,tombée,235
+replay,on,en place,435
+replay,on,incertain,45
+replay,on,non vu,388
+replay,on,tombée,5

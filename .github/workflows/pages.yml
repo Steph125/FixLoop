@@ -3,7 +3,7 @@ name: replay
 # Déploiement du lecteur sur GitHub Pages (RPL-T9). Déclenché à la main
 # uniquement (workflow_dispatch) ; jamais par cette série (consigne : ne pas
 # déclencher de workflow). Publie uniquement web/replay.html, web/replay.js,
-# web/style.css, web/lib.js et replay/build/** (RPL-R1.1).
+# web/style.css, web/lib.js et replay/published/** (RPL-R1.1, RPL-T11).
 on:
   workflow_dispatch:
 
@@ -15,6 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Installer OpenCV (deploy_check lit chaque vidéo)
+        run: python -m pip install "opencv-python-headless>=4.9"
       - name: Assembler le site (sessions publiées seulement)
         run: |
           mkdir -p public/build

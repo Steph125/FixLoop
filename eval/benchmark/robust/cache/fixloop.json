@@ -1,0 +1,1063 @@
+{
+  "3c277b946c0c374178ee41ff947a84a2411f213d1e272ad72a96af4c57ccf49a": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "tu vois ta chaîne pendue sous ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T00:57:36.982111+00:00"
+  },
+  "ad521aafc5ad707ddc0830d4303e088f1cf70609ccc5a8256bbc7919076d1ff5": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendre sous ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:02:03.479923+00:00"
+  },
+  "3f766049f28f71b6c9696f4c403bcdd05365eec99cc37436a7a1ba0bbb36f18d": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous le plateau avant."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:05:35.863090+00:00"
+  },
+  "c80cd304de5063b40cc4c7c74530fcc3f2b8c3c3571d37781c91b7fd178b845f": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.8",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Allume ta lampe et vise le haut du plateau de près."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:05:52.107344+00:00"
+  },
+  "f2345da4e7bfea874f1b8da25838c751b3c26af0e639a9b55a616c0d44b5241f": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendre sous ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:10:59.599122+00:00"
+  },
+  "8554e0c1a251df9a9e4dee828552b935d79c18205e9d58a14516b96984b80d2a": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.65",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éloigne ta main et filme le dessus du plateau en lumière."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:11:17.971990+00:00"
+  },
+  "20afa608658e85ba0c36d71f14afc24ac0804fd8d374a800dc3b080a4b0a0248": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaîne pend sous ton plateau et ton pédalier tourne vide."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:13:28.764752+00:00"
+  },
+  "361dab5db28a7f2bf6258e389c808779bdaf1e5e2f3c07aa3c5e261d2e65f024": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.65",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Stabilise ton téléphone et éclaire la chaîne près du plateau."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:13:45.840051+00:00"
+  },
+  "4c9f3e3aec2a1916ba47155aa8342eaac4690660a97d275b228c826f29033cf2": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu pédales dans le vide car ta chaîne a quitté le plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:14:44.331892+00:00"
+  },
+  "d6438e0bc457e7e605c78f92350208368d3c14329079e9db98660bd506b0b37e": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.8",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Stabilise ton téléphone face au plateau avec plus de lumière."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:14:55.363518+00:00"
+  },
+  "6dd01c8ab5127e4eb6cd6039226fc0fbb42d04685637366bfb1225cfa72c31ef": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaîne pend sous ton plateau et ton pédalier tourne vide"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:19:08.193356+00:00"
+  },
+  "01d66eb14ed8ad60ada61efea4e8e60591b92cbc740ce3c24d2459b274db1e3f": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaîne pend sous ton plateau et ton pédalier tourne vide."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:21:46.379752+00:00"
+  },
+  "3387d543acb253f424bb1b98205c9f7eba799a7b640a018b52ecf1afd7f2d976": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous ton plateau sur les images"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:23:18.688735+00:00"
+  },
+  "e9bbcfe43f5610c5b4b8294687b78e9d8ec88ad7d02d68d5022e3152b86fddbd": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pend sous ton plateau noir."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:24:57.692738+00:00"
+  },
+  "ee56f6d86cd9110ede6dddbee796e4a906e200fd969e1e15b04f38dc8eae61f8": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous ton plateau décroché."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:26:09.049476+00:00"
+  },
+  "d5164a1814208967a95f1d50fac72dc9a9f5f38396bf2ddd03bd6ff76a8aa347": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaîne pend sous ton plateau et ton pédalier tourne vide."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:27:27.415817+00:00"
+  },
+  "755f8e4455830cdbd64e533fac5ce00a3485797bb97db491c5a7889e4fe5556e": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaine qui pend sous ton plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T01:55:05.529983+00:00"
+  },
+  "b8c262bd5119430ad97c288b530ea7042fec43c047b43a5b6fb937448ac88371": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "ta chaîne pend sous le plateau près du boîtier"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:26:20.374537+00:00"
+  },
+  "8223ea17fb838e082f0c01732ee6698a9c4953610d586e8ce432c0b17c56bd02": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendre sous ton plateau noir"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:28:46.786760+00:00"
+  },
+  "d08ca6f3b9ddc2cf40d4889436d2056389db64fef5d77cf8a33e8252c5311c73": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous ton plateau avant noir"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:29:38.788734+00:00"
+  },
+  "5c7e10a2b343bfccc806235f648953cd320a186b57043451aeb57dc30ac2ae4d": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaîne pend sous ton plateau sur ces images."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:30:30.522115+00:00"
+  },
+  "1810939ac8cba3bc34c38b3ea487ded468d2dae9faa434d4fbfd45bc485123a8": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous le plateau noir"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:31:19.843160+00:00"
+  },
+  "ec975a14bb5391ce1695accf0f5ea7f47d54d1145fbcd2569a7a799cdc133788": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "tu vois la chaîne pend sous le plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:32:23.929971+00:00"
+  },
+  "23c5a8f041972794fc1177ede73ba8fe9121015854ca4c6ba070231c82b4c03c": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "ta chaîne pend sous ton plateau sur tes photos"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:36:40.433843+00:00"
+  },
+  "77ce295602c1b59dab7aee0f2da3d20c1760f3fd961bd3df888b8a05f4af66d3": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaîne pend sous le plateau et ne l'engage plus"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:42:42.711825+00:00"
+  },
+  "b34d894b8cf1d6085bb5ce73439304866eabc88ef192010fab1fbf47bae6d262": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:46:44.244138+00:00"
+  },
+  "14b6a0b0f35904720b90ede51c3d2a2e1e1310e41f17b1557db7a0c634ea5c36": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "tu vois ta chaîne pendre sous ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:49:31.431438+00:00"
+  },
+  "59a7568a30866851ab1c6f44361a991bf18a974fa8a83e191d01454ca1a59eb3": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "tu as ta chaîne qui pend sous le plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:54:52.819206+00:00"
+  },
+  "8780d2f4afa8713b937bb570215ae285dc11e33e8e81e4a9f376ab7d562ca0a5": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaine pend sous le plateau et ne touche plus les dents"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T02:58:15.995400+00:00"
+  },
+  "bb2878b992db6f8ab97cfe13cf95f7e30f356bccd3eb76a74eca031b4d633512": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaine pendue sous le plateau avant."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:03:43.545077+00:00"
+  },
+  "d055d499b697f25b51adf396a137d4e99cd8a21ba310de04e22112afa49dddbf": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne posée sur le plateau sans engager les dents"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:09:12.789814+00:00"
+  },
+  "e9a635b4e3fc58f38302e46e2f086e3d23c7a4cbe6832899f96e08c089f27152": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne qui pend sous ton plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:14:03.640060+00:00"
+  },
+  "a9d74ba278b58ae4acebc9b7d872b4bdaea7d14a233c769420f955eb83486868": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ton pédalier tourner sans chaîne sur le plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:15:36.857661+00:00"
+  },
+  "20d200c593c2a09f838c8fd20f7d28251927a8e19eb25f47a7933b0db983f183": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.9",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Rallume la lumière et place le plateau bien en face de toi."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:15:50.739478+00:00"
+  },
+  "ded2a3b8367af7ca49cf457cc8f76c6a0ec5da7c73aef4efd6d5226ef1d0f72f": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne qui pend sous ton plateau noir"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:17:56.044756+00:00"
+  },
+  "ddb9598e28dc05dd13ac74cb500ed385e97b488313f69f708b47b87c8c87bfc6": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.75",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Rapproche ton téléphone et vise le haut du plateau."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:18:10.626527+00:00"
+  },
+  "a5ac80841bc891038de8ab71820fa91ec1355528d58fccb22c23a6936cc3fb4e": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne décrochée sous ton plateau noir."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:20:08.067311+00:00"
+  },
+  "1457dd3125a650961b789ee9eea5f66616ba842479987694025f76d517145e44": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.7",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éclaire mieux et stabilise ton téléphone face au plateau."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:20:19.963910+00:00"
+  },
+  "40fb43ed58f7e5a95e1246f9fda3af5841aed4ce6d9c3b52d1bfceac7e7adad1": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaîne pend sous le plateau et ton pédalier tourne dans le vide."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:21:52.719735+00:00"
+  },
+  "a9198015de4990d8f943c795f4f029accd1a4476195caefab3761d470a509e68": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.85",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Recule ton téléphone et éclaire le plateau pour montrer la chaîne."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:22:03.767218+00:00"
+  },
+  "12bc2d880a8dc996c101a49f74fa12ecfe63668fa302a6f6d8d90c0f912f73b6": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne posée sur le haut du plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:24:30.145703+00:00"
+  },
+  "3e1e20df52151ce3aa9b2a28ad5b9458a6d33688875363ebdc3cb19a6f62ee14": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "tu vois ta chaîne pendre sous ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:28:42.292440+00:00"
+  },
+  "852c3f936dc9add6200010195edbc5d49830eea5ff9baa3c7deab64f272a7757": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne tombée sous le plateau à l'avant"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:31:15.390581+00:00"
+  },
+  "1f55a05fdeb1afd76313931a42495bfd0972bef26fc29f3ad50fc8ad6acf3f0c": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous l'arrière près du dérailleur."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:32:19.248345+00:00"
+  },
+  "cdc0153ffcd2c33f8f01e76959cba1c7bbe763a9aa9629439b5fdb5d654795cb": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pend sous ton plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:32:58.265705+00:00"
+  },
+  "1a817de6b2d439438d6180fa1144a3b1664d86976d3e089ef48284e9fcccc4c9": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Je vois ta chaîne pendante sous le cadre près de la roue."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:34:14.925546+00:00"
+  },
+  "289c3356087f85935c3d4b23150a80e6d1cc3890957f4132e7d8fe09a927b50a": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Ta chaîne est tombée et repose hors du plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:53:13.841840+00:00"
+  },
+  "ec69500b325a9e6f9f5253ec4bef23bc5e35c60b95d5da4da75fd3db1debeb7f": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "eps",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.85",
+        "verdict_brut": "ratee"
+      },
+      "message": "Tu laisses ta chaîne visible sur le bord du disque noir."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:54:12.680025+00:00"
+  },
+  "7bb461fce8009583c070b6d7e13a04a43c8c7bf96179dd1cafcf0a4d1d1a885d": {
+    "kind": "explain",
+    "response": [
+      "Tu laisses la chaîne sur le bord, pose-la bien sur les dents du haut.",
+      "chainring"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:54:20.096816+00:00"
+  },
+  "d9610685f96cb7769d96d4d8e0a3c3b8b4afe0211e7d0dae034c568ca721e147": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.7",
+        "verdict_brut": "reussie",
+        "ignore": "Spark ne valide jamais : on attend que la mesure SAM confirme"
+      },
+      "message": null
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T03:54:34.171324+00:00"
+  },
+  "4fa8f95f6a016a55d4d279794758d679a4315845d8112d7194641e01622853e9": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne détachée du plateau avant."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:09:00.589971+00:00"
+  },
+  "d519579ad0014cc09f48891afc1675117442d718ab479ef0b12c7806e66331b8": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.0",
+        "verdict_brut": ""
+      },
+      "message": null
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:10:02.064483+00:00"
+  },
+  "7c9025eec15afa9c8a6d87f1dff89f910e4e60edc023a52897770348ce668423": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.7",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Tu dois stabiliser ton téléphone près du plateau éclairé."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:10:21.549548+00:00"
+  },
+  "58a3b49fce686a45d89890e646c4f34d7bb226ff487e9263c0f76c3142dc0e86": {
+    "kind": "explain",
+    "response": [
+      "Ta chaîne est sortie du plateau, remets-la dessus puis tourne doucement.",
+      "chain"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:10:29.386622+00:00"
+  },
+  "b9d49ebe9a0df1e759d28490514c9bbf12655a611d0bd9542fdd84b407afc985": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne tombée sous ton plateau, elle pend dans le vide."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:22:21.420047+00:00"
+  },
+  "bd1e70bcc69b0d12209b9eb502a453a6dffc14371f363248335c8973a0b0b596": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.55",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Rapproche ton téléphone et éclaire ton plateau sans bouger."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:22:38.392398+00:00"
+  },
+  "0fd213c9ebbb1ab500a0c96d9e4a4eac4422ea3a79ee865e19d520fe0f760f58": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.7",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éclaire le plateau de côté et stabilise ton téléphone."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:22:50.730966+00:00"
+  },
+  "5b07bd38a7aa0cd48e59a7b8355ab4ce6f70891fe3ffc56ab9f2bf0b14b414ba": {
+    "kind": "explain",
+    "response": [
+      "Ta chaîne a sauté du plateau, replace-la doucement dessus.",
+      "chain"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:22:58.515595+00:00"
+  },
+  "9288907ec918b08e4a68e0076cab8abd1f55245aaaad4bd19214ac750709f94e": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne posée hors du plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:38:47.695859+00:00"
+  },
+  "b678b8f8f73cef7559bfb9654dfc58d1ff399bb3e0c9715275a23546ef03392f": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.78",
+        "verdict_brut": "reussie",
+        "ignore": "Spark ne valide jamais : on attend que la mesure SAM confirme"
+      },
+      "message": "Tu peux maintenant maintenir la chaîne sans la tendre."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:39:05.965407+00:00"
+  },
+  "ec260f7f941d9ae2561635a8a1513f1487065c231fe74b09037176b3f841177d": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.65",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Recule un peu et filme ton plateau fixe de côté."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:39:19.040108+00:00"
+  },
+  "c287a029ac3407e522c7cdfc662c90bf2ec89a3cccd75639208d3e0c1de69578": {
+    "kind": "explain",
+    "response": [
+      "Ta chaîne a sauté du plateau, remets-la dessus doucement à la main.",
+      "chain"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:39:24.127247+00:00"
+  },
+  "472367292ae35316a419c12e4ac38ebcc063bcf84403f23e9adbfa7f0e8d8100": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne tombée sous ton plateau avant noir"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:49:42.709426+00:00"
+  },
+  "7f76c4c5069a4c68b90bfe7ad6b6621ed69f4cf74b6a25bad6943dcc99488749": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.8",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Rapproche ton téléphone du haut du plateau sans bouger."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:49:58.616174+00:00"
+  },
+  "8c116e2f67cfe75e244fd6897b6ac2de99cf17f37515afe30c028883820af561": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.5",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Rapproche ton téléphone et éclaire le haut du plateau."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:50:14.014307+00:00"
+  },
+  "4da48b9ecd675b8339543375ebdb4dc89d35b9affe1a8415534dd3d6ced24cec": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.75",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Rapproche ton téléphone et éclaire le haut du plateau."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:50:25.623571+00:00"
+  },
+  "a0e33e15d89c02ebcb76f7fc0b65cfb5ffc5af244bdb13b4055bb27c5f2385aa": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Je vois la chaîne pendante sous le plateau du pédalier."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:54:13.644459+00:00"
+  },
+  "fe93960176aebab0cac1e2929175ce0375fcf477380598dad6e3cdabea636a53": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.8",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Rapproche ton téléphone et tiens-le stable face au disque noir."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:54:26.776172+00:00"
+  },
+  "898875c728bab5080e9f4cb9589225cc50ac4342538fbf646ff56b328c5b0277": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.85",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éloigne ton téléphone et éclaire mieux la transmission."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:54:37.620371+00:00"
+  },
+  "23fbbad2fb1ca46d1b2f1093935f295d08a174d12d919d5ce7af5d399f73c8d6": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.85",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Tu dois rapprocher ton téléphone et éclairer ta transmission."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T04:54:47.322738+00:00"
+  },
+  "bf93b524a1145842a6e4ae4437016476502321d23f374e34d64728102b1cce68": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne tombée au-dessus du plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:10:12.013406+00:00"
+  },
+  "0ab87cf84c2a412e8906120d1a318bd98bb437ab3801de1b1d2107df60eae80f": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "eps",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.72",
+        "verdict_brut": "ratee"
+      },
+      "message": "Tu poses encore ta chaîne sur le bord noir."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:10:50.907922+00:00"
+  },
+  "0d352384b1031e17cc8c0564891e05e57efd0cdfa178a1feefee9cd8128b536d": {
+    "kind": "explain",
+    "response": [
+      "Tu poses sur le cache noir, replace ta chaîne sur les dents du haut.",
+      "chainring"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:10:57.355770+00:00"
+  },
+  "394cc300497339c6751e43c03c0b2cd742d9502d2ca800ca9e3ec40012b88ce1": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.4",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Stabilise ton téléphone plus près et éclaire le disque noir."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:11:14.224787+00:00"
+  },
+  "ce807c57e80e4645d9560cc07be88f31630f3d6f8d8425d35c48d038db838282": {
+    "kind": "explain",
+    "response": [
+      "Ta chaîne a sauté du plateau, replace-la dessus délicatement.",
+      "chain"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:11:21.194766+00:00"
+  },
+  "bae84408f0cba12095977934e594e9308b10119a315481655d6dd09e1cbf3747": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaine decrochee au-dessus de ton plateau"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:20:47.755603+00:00"
+  },
+  "47beaeb843c81fdc22ea0b56ff616dbf5824f164859a66875c6fa3b7be5fae05": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "eps",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.85",
+        "verdict_brut": "ratee"
+      },
+      "message": "Tu as ta chaîne qui repose sur le bord noir."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:21:01.127100+00:00"
+  },
+  "53e453d9234771afe7b6f56effde5e477d891acd120ad9f4a96f4a445333ccaf": {
+    "kind": "explain",
+    "response": [
+      "Tu poses ta chaîne sur le carter noir, soulève-la et place-la sur les dents.",
+      "chain"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:21:06.756400+00:00"
+  },
+  "99fc9abb39e45a1e186c6a423c5fb2c82ccb8bb28a2e7b18daca8f18c70760de": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne tombée sous ton plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:27:03.547089+00:00"
+  },
+  "dbe7e99913d8c54940838394fd2921ec9f9935cf1ca0a84bb12887fb6a2f5c07": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "eps",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.85",
+        "verdict_brut": "ratee"
+      },
+      "message": "Tu as laissé la chaîne visible sur le bord du disque noir."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:27:41.843966+00:00"
+  },
+  "d848c5e47ec5a1080ca22400fafb1daf463d6d184ed4faa6e2d3a2e354ba17a1": {
+    "kind": "explain",
+    "response": [
+      "Ta chaîne est posée sur le cache noir, replace-la sur les dents du haut.",
+      "chain"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:27:46.735217+00:00"
+  },
+  "f11c41b1181763663267e6aa4ce66a16263ee6ed3e9460009fdc53d5b82e748b": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous ton plateau noir."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:30:22.174441+00:00"
+  },
+  "3a956e8ed7724edc02e83fe3ecd32aef54e00c2abbff0e1034b72a9d91f088cc": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.8",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Retire ta main et filme le haut du plateau de plus près."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:30:32.903666+00:00"
+  },
+  "a7805655da536ecabe2ce122a45ba2daa66f69f6d41ca731182e445c1b34f7b4": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.75",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éclaire le plateau et recule ta main pour montrer ta chaîne."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:30:51.792494+00:00"
+  },
+  "70eea0b15dad671c55286720a0b5a18d9f8b6f57e15c6b7f503db9c62ea0f505": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous ton plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:34:21.068143+00:00"
+  },
+  "db34ea0833e029dbec0f8cf76a9162591eb254a5e010a08cd1b1a8e1cab6016c": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.65",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Recule et stabilise ton téléphone pour montrer ton plateau."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:34:33.929462+00:00"
+  },
+  "5ff04617cbe8be3f8ff08154433be55f13ec16a40964e87189ba2149262b0a8a": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.65",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Recule ton téléphone et éclaire le dessus du plateau."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:34:48.777054+00:00"
+  },
+  "4e037ee131a8b462b9609d66fa8208b85c03f9e4c74f6acba7178e5b56d6c440": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne tombée sous le plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:38:25.243221+00:00"
+  },
+  "2eaca07657ecfce1963ee7d9c2d374e30c312960e8b9295efad230b09d89c37f": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.65",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éclaire le plateau et stabilise ton téléphone plus près du dessus."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:38:42.598336+00:00"
+  },
+  "f7035f75041ee3b46f7a63dd450ff3f48f0b4041183ae501fa6cb4f533800334": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendue sous ton plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:41:03.019554+00:00"
+  },
+  "5583360b7951d24371324fce96d7b40fee6994cef4b07a9ead98b8eb62704db4": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.65",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éclaire et stabilise ton téléphone face à ta transmission."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:41:12.677981+00:00"
+  },
+  "fc2953fb4f9a5def465f46ff05cd565094f1dc8a377c335f62591c92c49f6e22": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "0",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.75",
+        "verdict_brut": "impossible_a_dire"
+      },
+      "message": "Éclaire ta transmission et stabilise ton téléphone face au plateau."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:41:25.708911+00:00"
+  },
+  "75fbbcb31771288dbb85de5aa4d8d8b755b2e8d0206c8a8a7eeebc2fa2ed8048": {
+    "kind": "diagnose",
+    "response": [
+      "chain_off_chainring",
+      "Tu vois ta chaîne pendre sous ton plateau."
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:45:57.346653+00:00"
+  },
+  "4f51218d8b0a1d9138ff61acb96fa7017eb52b68b06da50fa43bf2afef4c359d": {
+    "kind": "arbitrate",
+    "response": {
+      "value": "eps",
+      "rule": null,
+      "evidence": {
+        "source": "muse-spark",
+        "confiance": "0.85",
+        "verdict_brut": "ratee"
+      },
+      "message": "Tu vois ta chaîne posée sur le bord noir, pas derrière."
+    },
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:46:07.692213+00:00"
+  },
+  "7a752c2f05d350285efb9c5ac1e65ac24656ee08c2778aa86fcb6b835151b8a0": {
+    "kind": "explain",
+    "response": [
+      "Ta chaîne est sur le cache noir, remets-la derrière sur les dents.",
+      "chain"
+    ],
+    "model": "muse-spark-1.3",
+    "obtained": "2026-11-04T05:46:15.881729+00:00"
+  }
+}

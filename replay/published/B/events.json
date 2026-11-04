@@ -1,0 +1,243 @@
+[
+ {
+  "event": "diagnose",
+  "model": "muse-spark-1.3",
+  "model_calls": {
+   "spark": 1,
+   "wonder": 1
+  },
+  "procedure": "chain_off_chainring",
+  "state": "DEMARRAGE",
+  "t": 0.0
+ },
+ {
+  "event": "step",
+  "model": "sam-3.1",
+  "model_calls": {
+   "spark": 1,
+   "wonder": 1
+  },
+  "state": "OBSERVATION",
+  "step": "frame_view",
+  "t": 0.0
+ },
+ {
+  "event": "say",
+  "t": 0.0,
+  "text": "Je vois : Chaîne tombée du plateau."
+ },
+ {
+  "event": "say",
+  "t": 0.0,
+  "text": "ta chaine pend sous ton plateau et tu pédales dans le vide"
+ },
+ {
+  "event": "say",
+  "t": 0.0,
+  "text": "C'est la 2e fois en un mois que ta chaîne tombe. On vérifiera son usure à la fin."
+ },
+ {
+  "event": "say",
+  "t": 0.0,
+  "text": "Place le téléphone face à la transmission, pour que la chaîne et le plateau soient bien visibles."
+ },
+ {
+  "color": "blue",
+  "event": "highlight",
+  "parts": [
+   "chain",
+   "chainring"
+  ],
+  "t": 0.0
+ },
+ {
+  "event": "validated",
+  "evidence": {
+   "contact": {
+    "chain/chainring": 0.241
+   },
+   "detected": {
+    "chain": true,
+    "chainring": true,
+    "derailleur": false
+   },
+   "frame": 13
+  },
+  "model": "sam-3.1",
+  "model_calls": {
+   "spark": 1,
+   "wonder": 1
+  },
+  "state": "ETAPE_VALIDEE",
+  "step": "frame_view",
+  "t": 1.3
+ },
+ {
+  "event": "step",
+  "model": "sam-3.1",
+  "model_calls": {
+   "spark": 1,
+   "wonder": 1
+  },
+  "state": "OBSERVATION",
+  "step": "engage_top_teeth",
+  "t": 1.3
+ },
+ {
+  "event": "say",
+  "t": 1.3,
+  "text": "C'est bon."
+ },
+ {
+  "event": "say",
+  "t": 1.3,
+  "text": "Pose la chaîne sur les dents du haut du plateau, sans la tendre."
+ },
+ {
+  "color": "blue",
+  "event": "highlight",
+  "parts": [
+   "chain",
+   "chainring"
+  ],
+  "t": 1.3
+ },
+ {
+  "event": "validated",
+  "evidence": {
+   "contact": {
+    "chain/chainring": 0.15
+   },
+   "detected": {
+    "chain": true,
+    "chainring": true,
+    "derailleur": false
+   },
+   "frame": 95
+  },
+  "model": "sam-3.1",
+  "model_calls": {
+   "spark": 1,
+   "wonder": 1
+  },
+  "state": "ETAPE_VALIDEE",
+  "step": "engage_top_teeth",
+  "t": 9.5
+ },
+ {
+  "event": "step",
+  "model": "sam-3.1",
+  "model_calls": {
+   "spark": 1,
+   "wonder": 1
+  },
+  "state": "OBSERVATION",
+  "step": "turn_backward",
+  "t": 9.5
+ },
+ {
+  "event": "say",
+  "t": 9.5,
+  "text": "C'est bon."
+ },
+ {
+  "event": "say",
+  "t": 9.5,
+  "text": "Tourne doucement le pédalier en arrière d'un demi-tour pour que la chaîne s'engage."
+ },
+ {
+  "color": "blue",
+  "event": "highlight",
+  "parts": [
+   "chainring"
+  ],
+  "t": 9.5
+ },
+ {
+  "event": "user_done",
+  "model_calls": {
+   "spark": 1,
+   "wonder": 1
+  },
+  "state": "OBSERVATION",
+  "t": 10.1
+ },
+ {
+  "event": "arbitrate",
+  "evidence": {
+   "confiance": "0.65",
+   "source": "muse-spark",
+   "verdict_brut": "impossible_a_dire"
+  },
+  "model": "muse-spark-1.3",
+  "model_calls": {
+   "spark": 2,
+   "wonder": 1
+  },
+  "state": "ARBITRAGE",
+  "t": 10.2,
+  "verdict": "0"
+ },
+ {
+  "event": "say",
+  "t": 10.2,
+  "text": "Éloigne ton téléphone et éclaire ton plateau pour mieux voir."
+ },
+ {
+  "event": "validated",
+  "evidence": {
+   "contact": {
+    "chain/chainring": 0.051
+   },
+   "detected": {
+    "chain": true,
+    "chainring": true,
+    "derailleur": false
+   },
+   "frame": 161
+  },
+  "model": "sam-3.1",
+  "model_calls": {
+   "spark": 2,
+   "wonder": 1
+  },
+  "state": "ETAPE_VALIDEE",
+  "step": "turn_backward",
+  "t": 16.1
+ },
+ {
+  "event": "dynamic_start",
+  "model": "sam-3.1",
+  "model_calls": {
+   "spark": 2,
+   "wonder": 1
+  },
+  "state": "ESSAI_DYNAMIQUE",
+  "t": 16.1
+ },
+ {
+  "event": "say",
+  "t": 16.1,
+  "text": "C'est bon."
+ },
+ {
+  "event": "say",
+  "t": 16.1,
+  "text": "Tourne le pédalier en avant pendant trois secondes."
+ },
+ {
+  "event": "closed",
+  "model_calls": {
+   "spark": 2,
+   "wonder": 2
+  },
+  "state": "CLOTURE",
+  "success": true,
+  "t": 19.2
+ },
+ {
+  "event": "say",
+  "t": 19.2,
+  "text": "Réparation validée. Je l'ai ajoutée à l'historique de ton vélo."
+ }
+]

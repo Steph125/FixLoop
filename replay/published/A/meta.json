@@ -1,0 +1,37 @@
+{
+ "agent": "fixloop",
+ "bike_id": "demo-velo",
+ "built": "2026-11-04T02:40:37.188221+00:00",
+ "debounce_frames": 4,
+ "demo_history": true,
+ "filmed": "2026-11-02",
+ "fps": 10.0,
+ "mode": "vidéo 10 images/s, anti-rebond 4 (RPL-R5.2)",
+ "model_calls": {
+  "spark": 1,
+  "wonder": 2
+ },
+ "name": "A",
+ "source": "video",
+ "steps": [
+  {
+   "id": "frame_view",
+   "instruction": "Place le téléphone face à la transmission, pour que la chaîne et le plateau soient bien visibles."
+  },
+  {
+   "id": "engage_top_teeth",
+   "instruction": "Pose la chaîne sur les dents du haut du plateau, sans la tendre."
+  },
+  {
+   "id": "turn_backward",
+   "instruction": "Tourne doucement le pédalier en arrière d'un demi-tour pour que la chaîne s'engage."
+  }
+ ],
+ "steps_validated": [
+  "frame_view",
+  "engage_top_teeth",
+  "turn_backward"
+ ],
+ "title": "Chaîne sur le disque, remise puis vérifiée",
+ "video_codec": "h264"
+}

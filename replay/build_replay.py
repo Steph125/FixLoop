@@ -433,10 +433,16 @@ def build_video(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=N
     model = spark_for(agent, offline, spark_inner, cache_path, procedure_id)
     mem = memory_for(memory, bikes_root, cache_dir, name, offline)
     out = TSOut()
-    times = [m.t for m in measures]
+    live = session_def.get("setting") == "live"  # RPL-D7 : comme le réglage `live` du benchmark
+    run_m, run_k = measures, keyframes
+    if live:
+        all_t = [m.t for m in measures]
+        picked = nearest_indices(all_t, [float(s) for s in range(int(max(all_t)) + 1)])
+        run_m, run_k = [measures[i] for i in picked], [keyframes[i] for i in picked]
+    times = [m.t for m in run_m]
     diag_at = session_def.get("diagnose_at") or [times[0], times[min(1, len(times) - 1)],
                                                  times[min(2, len(times) - 1)]]
-    session = drive_frames(procedure_id, load_all(), measures, keyframes,
+    session = drive_frames(procedure_id, load_all(), run_m, run_k,
                            list(session_def.get("user_done", [])),
                            nearest_indices(times, [float(t) for t in diag_at]),
                            debounce, model, mem,
@@ -447,7 +453,8 @@ def build_video(session_def: dict, out_dir, bikes_root="data/bikes", cache_dir=N
                                        OVERLAY_EVERY, procedure)
     return write_session(out_dir, session_def, procedure_id, events, overlays,
                          {"w": w, "h": h}, FPS, agent, session,
-                         f"vidéo {FPS:.0f} images/s, anti-rebond {debounce} (RPL-R5.2)",
+                         (f"direct simulé sur vidéo filmée, 1 image/s, anti-rebond {debounce} (RPL-R5.2)"
+                          if live else f"vidéo {FPS:.0f} images/s, anti-rebond {debounce} (RPL-R5.2)"),
                          "video", codec)
 
 

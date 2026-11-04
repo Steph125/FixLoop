@@ -78,6 +78,11 @@ export function stepBanner(meta, stepId) {
   return `Étape ${k + 1}/${steps.length} · ${steps[k].instruction}`;
 }
 
+// Taille de la vidéo : au niveau de overlays.json, pas de chaque image (vidéo réelle 848 x 464).
+export function frameSize(overlays) {
+  return { w: (overlays && overlays.w) || 400, h: (overlays && overlays.h) || 400 };
+}
+
 export async function loadSession(name, fetchFn = fetch) {
   const get = async (p) => (await fetchFn(p)).json();
   const meta = await get(`build/${name}/meta.json`);
@@ -86,6 +91,7 @@ export async function loadSession(name, fetchFn = fetch) {
   app.meta = meta;
   app.events = events;
   app.frames = overlays.frames || [];
+  app.size = frameSize(overlays);
   app.current = -1;
   app.spokenUntil = -1;
   return meta;
@@ -121,8 +127,7 @@ export function render(t) {
     if (validatedFlash(app.events, t)) {
       for (const part of Object.keys(frame.parts || {})) colors[part] = "green";
     }
-    const w = frame.w || 400;
-    const h = frame.h || 400;
+    const { w, h } = app.size || frameSize(null);
     svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
     svg.innerHTML = Object.entries(frame.parts || {})
       .map(([part, d]) => `<path d="${d}" fill="none" stroke="${colors[part] || "blue"}" stroke-width="4"/>`)
@@ -316,8 +321,8 @@ export function renderCurve(onMax, offMin) {
   el.innerHTML =
     `<line x1="0" y1="${g.onY}" x2="${width}" y2="${g.onY}" stroke="green"/>` +
     `<line x1="0" y1="${g.offY}" x2="${width}" y2="${g.offY}" stroke="red"/>` +
-    `<path d="${g.d}" fill="none" stroke="black"/>` +
-    `<line id="cursor" x1="0" y1="0" x2="0" y2="${height}" stroke="black"/>`;
+    `<path d="${g.d}" fill="none" stroke="#f2f5f7"/>` +
+    `<line id="cursor" x1="0" y1="0" x2="0" y2="${height}" stroke="#ffd43b"/>`;
   app.curve = { width, duration };
 }
 
@@ -356,7 +361,7 @@ export function honestyText(meta) {
   }
   return `Replay d'une session réelle, filmée le ${filmedDate(m.filmed)}. ` +
     `Les décisions ont été calculées par FixLoop sur cette vidéo ; ` +
-    `les réponses des modèles Meta sont celles obtenues ce jour-là.${mode}${history}`;
+    `les réponses des modèles Meta sont celles obtenues le ${filmedDate((m.built || m.filmed || "").slice(0, 10))}.${mode}${history}`;
 }
 
 // Liens (RPL-R7.2) : dépôt, vidéo de démonstration, rapport du benchmark,
@@ -435,6 +440,8 @@ export async function selectSession(name) {
   if (app.video) {
     app.video.src = `build/${name}/video.mp4`;
     app.video.playbackRate = app.speed;
+    const stage = app.video.parentElement;  // zone au format de la vidéo, sans recadrage
+    if (stage && stage.style && app.size) stage.style.aspectRatio = `${app.size.w} / ${app.size.h}`;
   }
   app.spokenUntil = -1;
   renderHonesty();
