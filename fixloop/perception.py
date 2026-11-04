@@ -162,8 +162,9 @@ class LivePerception:
         if img is None:
             return ImageResult(frame_index, t, {}, {"total_s": 0.0, "attempts": {}}, "image: illisible")
         h, w = img.shape[:2]
-        if w > LIVE_WIDTH:  # réduction seulement, jamais d'agrandissement
-            img = cv2.resize(img, (LIVE_WIDTH, int(h * LIVE_WIDTH / w)), interpolation=cv2.INTER_AREA)
+        if max(h, w) > LIVE_WIDTH:  # PERC-D8 : grand côté ; réduction seulement, jamais d'agrandissement
+            scale = LIVE_WIDTH / max(h, w)
+            img = cv2.resize(img, (round(w * scale), round(h * scale)), interpolation=cv2.INTER_AREA)
             ok, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 85])
             if ok:
                 jpeg = buf.tobytes()
@@ -227,7 +228,8 @@ class LivePerception:
                 self._cost(part, time.monotonic() - t0, False, attempts)
                 return PartResult(None), attempts, None, _error_name(part, e)
             first = marks["first"] - t0 if "first" in marks else None
-            found = masks_from_records(result.records, h, w, CONF_THR, largest)
+            found = await asyncio.to_thread(masks_from_records, result.records, h, w, CONF_THR,
+                                            largest)  # PERC-D8 : décodage lent, boucle libre
             pr = found.get(0, found.get(sorted(found)[0])) if found else PartResult(None)
             self._cost(part, time.monotonic() - t0, True, attempts)
             return pr, attempts, first, None

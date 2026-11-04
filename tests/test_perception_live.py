@@ -328,3 +328,62 @@ def test_video_explicit_parts_override_default(tmp_path):
     assert len(client.created) == 6  # PERC-R3.3 : 2 morceaux x 3 pieces demandees
     assert [f.frame_index for f in frames] == [0, 1, 2, 3]
     assert set(frames[0].masks) == {"chain", "chainring", "derailleur"}
+
+
+def sent_image_shape(client):
+    """Taille de l'image réellement envoyée à SAM."""
+    import base64
+    content = client.created[0]["input"][0]["content"]
+    url = next(c["image_url"] for c in content if c["type"] == "input_image")
+    raw = base64.b64decode(url.split(",", 1)[1])
+    img = cv2.imdecode(np.frombuffer(raw, np.uint8), cv2.IMREAD_COLOR)
+    return img.shape[:2]
+
+
+def test_portrait_image_reduced_on_long_side():
+    async def main():
+        client = client_two_parts()
+        return client, await LivePerception(PROC, client=client, retry_s=0).segment_image(
+            jpeg_bytes(1280, 720), 0, 0.0)
+    client, res = asyncio.run(main())
+    assert sent_image_shape(client) == (848, 477)  # PERC-D8 : même échelle qu'en paysage
+    assert (res.w, res.h) == (477, 848)
+
+
+def test_landscape_image_size_unchanged():
+    async def main():
+        client = client_two_parts()
+        return client, await LivePerception(PROC, client=client, retry_s=0).segment_image(
+            jpeg_bytes(720, 1280), 0, 0.0)
+    client, res = asyncio.run(main())
+    assert sent_image_shape(client) == (477, 848)
+    assert (res.w, res.h) == (848, 477)
+
+
+def test_small_image_is_never_enlarged():
+    async def main():
+        client = client_two_parts()
+        return client, await LivePerception(PROC, client=client, retry_s=0).segment_image(
+            jpeg_bytes(300, 400), 0, 0.0)
+    client, res = asyncio.run(main())
+    assert sent_image_shape(client) == (300, 400)
+
+
+def test_masks_decoded_outside_event_loop(monkeypatch):
+    import threading
+
+    import fixloop.perception as P
+    threads = []
+    real = P.masks_from_records
+
+    def spy(*args, **kw):
+        threads.append(threading.get_ident())
+        return real(*args, **kw)
+
+    monkeypatch.setattr(P, "masks_from_records", spy)
+
+    async def main():
+        await LivePerception(PROC, client=client_two_parts(), retry_s=0).segment_image(jpeg_bytes(), 0, 0.0)
+        return threading.get_ident()
+    loop_thread = asyncio.run(main())
+    assert len(threads) == 2 and loop_thread not in threads  # PERC-D8 : boucle libre

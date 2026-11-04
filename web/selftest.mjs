@@ -1,7 +1,7 @@
 // FixLoop : vérifications de lib.js, sans DOM (APP-T10).
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
 import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
-  CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE } from "./lib.js";
+  CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE, endSummaryText } from "./lib.js";
 import { frameSize, stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor, relabelFrames, filmedDate, loadLinks, REPO_URL } from "./replay.js";
 
 const checks = [];
@@ -110,13 +110,23 @@ check("packBinary : en-tête SRV-R3.2 (APP-R2.2)", () => {
   }
 });
 
+check("écran de fin : une phrase, jamais de compteurs bruts (APP-T11)", () => {
+  const ok = endSummaryText(true);
+  const ko = endSummaryText(false);
+  if (ok === ko) throw new Error("réussite et arrêt confondus");
+  for (const t of [ok, ko]) {
+    if (!t || wordCount(t) >= 20) throw new Error(`texte : ${t}`);
+    if (/[{}"]|dropped|stale/.test(t)) throw new Error(`brut : ${t}`);
+  }
+});
+
 check("taille d'image 848 px (APP-R2.2)", () => {
   const big = imageTargetSize(1920, 1080);
   if (big.w !== 848 || big.h !== 477) throw new Error(`paysage : ${big.w}x${big.h}`);
   const small = imageTargetSize(400, 300);
   if (small.w !== 400 || small.h !== 300) throw new Error("petite gardée");
-  const tall = imageTargetSize(1080, 1920);
-  if (tall.w !== 848 || tall.h !== Math.round(1920 * 848 / 1080)) throw new Error("portrait");
+  const tall = imageTargetSize(720, 1280); // APP-D5 : grand côté, 720x1280 en portrait sur un vrai téléphone
+  if (tall.w !== 477 || tall.h !== 848) throw new Error(`portrait : ${tall.w}x${tall.h}`);
   if (JPEG_QUALITY !== 0.7 || MAX_SEND_WIDTH !== 848) throw new Error("constantes");
 });
 

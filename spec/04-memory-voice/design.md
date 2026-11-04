@@ -157,6 +157,10 @@ ne correspond pas à « c est fait ». Le silence pendant la synthèse protège 
   (texte brut) pour le diagnostic de Spark et la phrase de panne répétée (calcul local), et la synthèse Wonder
   est calculée en tâche de fond ; elle est journalisée quand elle arrive. À la clôture, l'entrée est écrite sans
   `summary`, `closed` part aussitôt, et `summary` est ajouté par une deuxième écriture atomique quand Wonder répond.
+- **VOX-D5 (4 nov.)** — Premier essai sur vrai téléphone : 1,6 s d'audio transmis, le reste de la session perdu, sans
+  message ni raison conservée. Le même pont, seul, tient 30 s ; il tient aussi quand la boucle est bloquée : la cause
+  n'est pas établie. La reconnexion n'existait qu'à l'ouverture. Ajouts : reconnexion en cours de session, raison de
+  chaque coupure (code et motif de fermeture, message d'erreur du serveur, clé masquée) au journal et dans la console.
 - **VOX-D1 (30 oct.)** — Audio relayé par le serveur : la clé API ne quitte jamais le serveur (`steering/tech.md`
   section 6).
 - **VOX-D2 (30 oct.)** — Bouton « C'est fait » toujours visible : la voix est un confort, pas une dépendance.

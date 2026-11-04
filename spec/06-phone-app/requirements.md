@@ -20,7 +20,7 @@ Navigateurs visés : Chrome Android récent (principal, téléphone de l'auteur)
 
 1. PENDANT QU'une session est active et non en pause, l'appli DOIT capturer une image par seconde de la vidéo de
    la caméra.
-2. Chaque image DOIT être réduite à 848 px de large au plus (proportions gardées), encodée en JPEG qualité 0,7, et
+2. Chaque image DOIT être réduite à 848 px sur son grand côté au plus (proportions gardées), encodée en JPEG qualité 0,7, et
    envoyée en binaire au format `SRV-R3.2`.
 3. SI la WebSocket n'est pas ouverte, ALORS l'appli NE DOIT PAS accumuler d'images (pas de file).
 4. L'appli DOIT afficher la vidéo de la caméra en plein écran, sans délai perceptible (vidéo locale, pas celle du

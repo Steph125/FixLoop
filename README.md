@@ -75,6 +75,11 @@ second by second and committed before any measure. Each number is per the whole 
 and limits are in [`eval/benchmark/report.md`](eval/benchmark/report.md). The target of 0 false validations was
 **not** reached.
 
+On the 8 filmed clips, FixLoop never read a fallen chain as seated (0 of 280 images), passed the seating step on 3 clips
+and, in live mode, refused the premature "c'est fait" on clip B1; Spark alone passed one step across all 8 clips. Every
+false validation happened with a hand in the frame. Sources: `eval/benchmark/confusion.csv`, `eval/benchmark/robust/detail.csv`
+(rows `original`), `replay/published/E/events.json`.
+
 | Approach | False validations, `live` / `replay` | Missed validations, `live` / `replay` | Spark calls per clip, `live` / `replay` |
 |---|---|---|---|
 | FixLoop (SAM + rules + Spark arbitration) | 1 / 6 | 0 / 1 | 1.8 / 1.1 |
@@ -147,15 +152,18 @@ again, and the state machine ignored it (`eval/benchmark/cache/fixloop.json`).
 No bike, no key, no install: [open the replay](https://wondrous-tiramisu-404f0a.netlify.app/). Four sessions from two real videos,
 recomputed by the same code as live, with model answers from cache and no sound:
 
+- **Chain on the disc, then fixed:** the step stays open until the chain is put back, then the session closes.
 - **"C'est fait" refused:** the user says it is done while the chain is not on the teeth, and FixLoop refuses and explains.
   Later in this session, FixLoop passes the step while the hand still holds the chain: the weakness described in Results.
-- **Chain on the disc, then fixed:** the step stays open until the chain is put back, then the session closes.
 - **Hands in front of the chainring:** a Spark arbitration, and a **real false validation** at closing (19.2 s).
 - **Live setting (1 image/s):** arbitration, fix, then the real back-pedal. It does not close: during rotation the contact
   stays close to the 0.18 threshold.
 
-The bike history shown is a prepared demo history, and the page says so. Live mode needs a server and a phone on HTTPS.
-It has not yet been tried on a real phone, so it is not open to the public.
+The bike history shown is a prepared demo history, and the page says so.
+
+Live mode needs a server and a phone on HTTPS, so it is not open to the public. It ran on a real phone on Nov 4, with the
+chain already seated: FixLoop saw it was fine and closed the session. **Refusing a fallen chain has not been tested on a
+real phone**, only on filmed clips. Details: `eval/day4/phone-checklist.md`.
 
 ## Run locally
 
@@ -175,6 +183,12 @@ With a key (`Copy-Item .env.example .env`, then paste it): `python scripts/check
 The filmed clips are not in the repository, so the benchmark cannot be rerun from a fresh clone. Model answers are
 committed (`eval/benchmark/cache/`), and the labels, results and report are in `eval/benchmark/`.
 
+## What's next
+
+- Detect hands (a SAM `hand` prompt) and refuse to validate while a hand touches the chain.
+- Measure that the crank really turns during the test.
+- Film 20 clips, including daylight and a 30° angle.
+
 ## Built during the hackathon
 
 | Date | What was built | Where |
@@ -186,7 +200,7 @@ committed (`eval/benchmark/cache/`), and the labels, results and report are in `
 | Nov 1 | First real session, Transcribe and Wonder probes, benchmark + replay code | `eval/day3`, `scripts/benchmark.py` |
 | Nov 2 | Clips filmed, fixes for real 30 fps videos, videos published without sound | `replay/build_replay.py` |
 | Nov 3 | Labelling window, transformed copies for robustness, per-clip report | `scripts/label_clip.py`, `scripts/augment_clips.py` |
-| Nov 4 | Benchmark run, replay built and published, freeze, submission before 21:00 ET | `eval/benchmark`, `replay/published`, `v1.0-submission` |
+| Nov 4 | Benchmark run, replay built and published, first sessions on a real phone and their fixes, freeze, submission before 21:00 ET | `eval/benchmark`, `replay/published`, `eval/day4`, `v1.0-submission` |
 
 ## Built with Muse Code
 
@@ -199,7 +213,7 @@ criteria.
 
 [`spec/README.md`](spec/README.md) explains spec-driven development: EARS requirements, design, atomic
 tasks. `python scripts/check_spec.py` checks that every acceptance criterion is covered by a task
-(83 requirements, 303 criteria, 55 decisions, 107 tasks).
+(83 requirements, 306 criteria, 63 decisions, 112 tasks).
 
 ## License
 

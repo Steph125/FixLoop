@@ -145,8 +145,28 @@ class VoiceBridge:
         self.started = False
         self._ws = None
         self._recv_task = None
-        self._frames = 0
+        self._frames = 0  # toute la session, pour le coût (VOX-R4.2)
+        self._logged_s = 0.0  # déjà au journal des coûts : `stop` peut être appelé deux fois
+        self._paced = 0  # liaison en cours, pour le rythme d'envoi
         self._first_frame_t: float | None = None
+        self._server_error: str | None = None
+
+    def _safe(self, text: str) -> str:
+        """Texte pour le journal : jamais la clé, longueur bornée (VOX-D5)."""
+        return (text.replace(self.api_key, "***") if self.api_key else text)[:300]
+
+    def _closed_reason(self, exc: BaseException) -> str:
+        """Pourquoi la liaison est tombée : exception, code et motif, message du serveur."""
+        parts = [type(exc).__name__]
+        code = getattr(self._ws, "close_code", None)
+        why = getattr(self._ws, "close_reason", None)
+        if code is not None:
+            parts.append(f"code={code}")
+        if why:
+            parts.append(f"raison={why}")
+        if self._server_error:
+            parts.append(f"serveur={self._server_error}")
+        return self._safe(" ".join(parts))
 
     async def start(self) -> bool:
         """Ouvre la session Transcribe ; rend False apr\u00e8s 3 relances rat\u00e9es."""
@@ -162,12 +182,13 @@ class VoiceBridge:
                 if not isinstance(ack, dict) or "type" in ack:
                     raise ConnectionError(f"pas d\u2019accus\u00e9 de r\u00e9ception : {str(ack)[:120]}")
                 self._ws = ws
+                self._paced, self._first_frame_t, self._server_error = 0, None, None
                 self._recv_task = asyncio.get_running_loop().create_task(self._receive())
                 self.started = True
                 return True
             except Exception as e:  # refus, coupure, d\u00e9lai : on relance (design 04, 2.3)
                 self.failures += 1
-                self.last_error = f"{type(e).__name__}"
+                self.last_error = self._safe(f"{type(e).__name__}: {e}")
                 try:
                     await ws.close()  # type: ignore[possibly-undefined]
                 except Exception:
@@ -185,12 +206,14 @@ class VoiceBridge:
             await self._pace()
             try:
                 await self._ws.send(frame)
-            except Exception:
+            except Exception as e:
                 self.failures += 1
+                self.last_error = self._closed_reason(e)
                 self.started = False
                 self._ws = None
                 return
             self._frames += 1
+            self._paced += 1
 
     async def _pace(self) -> None:
         """Jamais plus de 5 s d\u2019audio en avance sur le temps r\u00e9el (doc Meta)."""
@@ -199,7 +222,7 @@ class VoiceBridge:
         if self._first_frame_t is None:
             self._first_frame_t = now
             return
-        ahead = (self._first_frame_t + self._frames * FRAME_MS / 1000) - now
+        ahead = (self._first_frame_t + self._paced * FRAME_MS / 1000) - now
         if ahead > MAX_AHEAD_S:
             await asyncio.sleep(ahead - MAX_AHEAD_S)
 
@@ -224,9 +247,11 @@ class VoiceBridge:
             except Exception:
                 pass
         self._ws, self._recv_task, self.started = None, None, False
-        if self.costs is not None and seconds > 0:
+        new_s = seconds - self._logged_s
+        if self.costs is not None and new_s > 0:
+            self._logged_s = seconds
             try:
-                self.costs.add(model=MODEL, kind="second", units=seconds, seconds=seconds,
+                self.costs.add(model=MODEL, kind="second", units=new_s, seconds=new_s,
                                ok=True, session_id=self.session_id)
             except Exception:
                 pass
@@ -240,9 +265,13 @@ class VoiceBridge:
                     continue
                 kind, data = parse_event(raw)
                 if kind == "speechComplete" and self.on_final is not None:
-                    self.on_final(data["transcript"], self.clock())
+                    try:
+                        self.on_final(data["transcript"], self.clock())
+                    except Exception as e:  # une phrase mal traitée ne coupe pas l'écoute
+                        self.last_error = self._safe(f"on_final: {type(e).__name__}")
                 elif kind == "error":
                     self.failures += 1
-                    self.last_error = data.get("message")
+                    self._server_error = self._safe(str(data.get("message", "")))
+                    self.last_error = self._server_error
         except Exception:
             pass

@@ -21,7 +21,7 @@ window just before sending, then once more after.
 - Video: TBD (unlisted, viewable without an account)
 - Replay, no install: https://wondrous-tiramisu-404f0a.netlify.app/
 - Benchmark report: https://github.com/Steph125/FixLoop/blob/main/eval/benchmark/report.md
-- Live mode: not open to the public, not yet tried on a real phone
+- Live mode: not open to the public; ran on a real phone with the chain already seated, refusal not tested on a phone
 
 **Meta models used:**
 

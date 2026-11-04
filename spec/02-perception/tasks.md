@@ -60,6 +60,11 @@
   Preuve : `test_sam_settings_overridable_via_env` (rechargement, repli défaut),
   `test_api_key_never_in_outputs` (sentinelle absente des journaux et erreurs).
 
+- [x] **PERC-T11 — Boucle libre pendant le décodage.** Ajouté le 4 nov. (`PERC-D8`). Grand côté limité, décodage dans un
+  fil. Exigences : `PERC-R2.4`. Fait quand : image en portrait réduite à 848 px, masques décodés hors de la boucle.
+  Preuve : `tests/test_perception_live.py::test_portrait_image_reduced_on_long_side`,
+  `test_landscape_image_size_unchanged`, `test_masks_decoded_outside_event_loop`.
+
 ## Couverture
 
 | Critère | Tâches |
@@ -68,7 +73,7 @@
 | R1.4, R1.6 | T3, T9 |
 | R1.7 | T2, T9 |
 | R1.9 | T4 |
-| R2.1–R2.3 | T4 |
+| R2.1–R2.3 | T4 ; R2.4 : T11 |
 | R3.1–R3.6 | T1, T5 |
 | R4.1–R4.5 | T1, T2, T4 |
 | R5.1, R5.2 | T3 |

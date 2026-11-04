@@ -111,9 +111,10 @@ export const JPEG_QUALITY = 0.7;
 export const MSG_AUDIO = 0x01; // PCM16 mono 24 kHz, 80 ms (VOX-R1.2)
 export const MSG_IMAGE = 0x02;
 
-export function imageTargetSize(videoW, videoH, maxW = MAX_SEND_WIDTH) {
-  const w = Math.min(maxW, videoW);
-  return { w, h: Math.round((videoH * w) / videoW) };
+// APP-D5 : limite sur le grand côté, un téléphone en portrait envoie sinon 720x1280.
+export function imageTargetSize(videoW, videoH, maxSide = MAX_SEND_WIDTH) {
+  const scale = Math.min(1, maxSide / Math.max(videoW, videoH));
+  return { w: Math.round(videoW * scale), h: Math.round(videoH * scale) };
 }
 
 // 1 octet de type, 8 octets d’horodatage gros-boutiste, puis les données.
@@ -172,6 +173,11 @@ export function pickFrenchVoice(voices) {
 }
 
 // Statut voix du serveur : texte affiché, ou null si tout va bien (VOX-R3.2).
+// Écran de fin : une phrase pour l'utilisateur (APP-T11).
+export function endSummaryText(success) {
+  return success ? "Chaque étape de ta réparation a été vérifiée." : "Ta réparation n'est pas terminée. Tu peux recommencer.";
+}
+
 export function voiceStatusText(status) {
   if (status === "on") return null;
   return VOICE_MESSAGE;

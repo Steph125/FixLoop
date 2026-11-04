@@ -31,7 +31,7 @@ créé une fois par processus, fermé à l'arrêt (`await client.close()`).
 
 ```python
 CONF_THR = 0.4            # FIXLOOP_SAM_CONF
-LIVE_WIDTH = 848          # FIXLOOP_SAM_WIDTH, largeur envoyée en direct (pas d'agrandissement)
+LIVE_WIDTH = 848          # FIXLOOP_SAM_WIDTH, grand côté envoyé en direct (pas d'agrandissement)
 MAX_IN_FLIGHT = 5         # FIXLOOP_SAM_INFLIGHT (PERC-D7)
 CHUNK_SECONDS = 10.0      # FIXLOOP_SAM_CHUNK_S
 VIDEO_FPS = 10.0
@@ -75,8 +75,8 @@ Le module ne connaît pas la machine à états : il rend des `FrameMasks` ; `geo
 
 ## 3. Mode image (direct)
 
-1. Le JPEG reçu du téléphone (≤ 848 px de large, `APP-R2`) est envoyé tel quel en data URL : pas de
-   redimensionnement côté serveur, sauf s'il dépasse `LIVE_WIDTH` (réduction seulement).
+1. Le JPEG reçu du téléphone (≤ 848 px sur le grand côté, `APP-R2`) est envoyé tel quel en data URL : pas de
+   redimensionnement côté serveur, sauf si son grand côté dépasse `LIVE_WIDTH` (réduction seulement).
 2. `segment_image` lance `asyncio.gather` d'une tâche par pièce. Chaque tâche : `responses.create` en flux,
    mesure du premier octet (premier événement `response.output_text.delta`, que l'événement soit un dict ou un
    objet), décodage, `stream.close()` dans un `finally`.
@@ -148,6 +148,11 @@ en médiane, au-dessus de la limite de 4 ko (`PERC-R6.2`).
 
 ## 9. Journal des décisions
 
+- **PERC-D8 (4 nov.)** — Constat du premier essai sur vrai téléphone : une image en portrait restait à 720×1280
+  (seule la largeur était limitée), et décoder ses masques tenait la boucle asyncio environ 2 s, pour une image reçue
+  par seconde (mesure hors ligne, codec de masques en Python pur). Le grand côté est donc limité à `LIVE_WIDTH`, ce qui
+  garde l'échelle de calibration des seuils, et `masks_from_records` passe dans un fil. Le décodage fait aussi par
+  `parse_responses_stream` reste sur la boucle : environ la moitié du coût, jugée acceptable à 848 px.
 - **PERC-D1 (29 oct.)** — Vidéo par morceaux de 10 s avec cache, après des coupures répétées sur la vidéo entière
   (WinError 10054). Résultat : 18 requêtes (6 morceaux × 3 pièces), 529 s, aucune perte.
 - **PERC-D2 (30 oct.)** — Direct en mode image (1 image/s, requêtes qui se chevauchent), replay en mode vidéo

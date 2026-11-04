@@ -95,6 +95,11 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
   Preuve : `eval/day3/findings.md` (session du 1er nov., 0,130 $ au journal ; page Usage : 50 images SAM sur 50,
   dépense 0 € sous crédits gratuits).
 
+- [x] **SRV-T12 — Résultat SAM avant la fin du diagnostic.** Ajouté le 4 nov., après le premier essai sur vrai téléphone :
+  `self.sm.step` levait `TypeError` tant qu'aucune fiche n'était choisie, et le résultat était perdu.
+  Exigences : `SRV-R4.1`. Fait quand : le résultat passe sans erreur et la mesure arrive dans la file.
+  Preuve : `tests/test_session.py::test_sam_result_before_diagnosis_is_not_a_crash`.
+
 ## Couverture
 
 | Critère | Tâches |
@@ -102,7 +107,7 @@ Toutes à faire. Jalon (`steering/product.md`, samedi 31) : session de bout en b
 | R1.1–R1.4 | T1 |
 | R2.1–R2.4 | T4 |
 | R3.1–R3.4 | T3 |
-| R4.1–R4.5 | T5 |
+| R4.1–R4.5 | T5 ; R4.1 : T12 |
 | R5.1–R5.3 | T5 ; R5.4 : T6 |
 | R6.1, R6.2 | T5 ; R6.3 : T7 |
 | R7.1–R7.4 | T7 |

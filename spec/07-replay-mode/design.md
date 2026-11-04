@@ -139,8 +139,10 @@ par session (`RPL-R7.1`).
   réparation : refus, validation, vraie rotation, test. Le bandeau donne la date d'obtention des réponses (date de
   construction), car elle diffère de la date de tournage. Les contours restent calculés à 5 images/s. Session `E` :
   `B1` au même réglage, construite une seule fois sans relance : le « c'est fait » de 10 s y est refusé (arbitrage `eps`).
-  C'est le refus montré en tête du replay et de la vidéo. Sa suite garde la faiblesse du rapport : validation à 18 s
+  C'est le refus montré en tête de la vidéo (place dans le replay : `RPL-D9`). Sa suite garde la faiblesse du rapport : validation à 18 s
   avec la main dans le champ. D ne se ferme pas : le contact de la vraie rotation frôle le seuil de 0,18.
+- **RPL-D9 (4 nov.)** — Ordre du replay, sur retour du relecteur : A, E, B, D. Le jury ouvre la première session de la
+  liste ; A montre la boucle complète, et E, qui finit sur la faiblesse du rapport, reste deuxième. Rien n'est retiré.
 - **RPL-D8 (4 nov.)** — Hébergement réel : Netlify, le repli prévu section 5, et non GitHub Pages. Le compte GitHub de
   l'auteur est bloqué pour un problème de facturation (« The job was not started because your account is locked due
   to a billing issue ») : le job de `pages.yml` ne démarre pas, sans lien avec le projet. Même contenu que `pages.yml`,

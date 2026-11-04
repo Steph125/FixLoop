@@ -232,3 +232,17 @@ def test_replay_fits_landscape_videos():
     assert "aspectRatio" in js  # zone au format de la vidéo (848 x 464), pas 3:4
     assert 'preload="auto"' in html and "muted" in html  # 1re image affichée, vidéos sans son (RPL-D5)
     assert 'stroke="black"' not in js  # courbe lisible sur fond sombre
+
+
+def test_overlay_is_cropped_like_the_video():
+    """Essai réel du 4 nov. : `xMidMid` est invalide, le contour restait trop petit et décalé (APP-T11)."""
+    for page in ("index.html", "replay.html"):
+        html = read(page)
+        assert "xMidMid" not in html
+        assert 'preserveAspectRatio="xMidYMid slice"' in html  # même recadrage que `object-fit: cover`
+
+
+def test_end_screen_shows_a_sentence_not_raw_counters():
+    live = read("live.js")
+    assert "JSON.stringify(msg.summary)" not in live  # essai réel : JSON brut à l'écran (APP-T11)
+    assert "endSummaryText" in live

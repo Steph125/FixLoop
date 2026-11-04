@@ -3,7 +3,7 @@
 import { isScreen, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage,
   helloMessage, userDoneMessage, commandMessage, pauseMessage, resumeMessage, stopMessage,
   packBinary, imageTargetSize, MSG_IMAGE, JPEG_QUALITY,
-  partColor, formatMeasure, verdictLabel, stepLabel, staleOverlay, GREEN_MS,
+  partColor, formatMeasure, verdictLabel, stepLabel, staleOverlay, GREEN_MS, endSummaryText,
   pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE,
   voiceStatusText, MSG_AUDIO,
   backoffDelay, screenFor, errorMessage, HISTORY_MESSAGE, CAMERA_MESSAGE } from "./lib.js";
@@ -250,7 +250,7 @@ export function showEnd(msg) {
   const title = document.getElementById("end-title");
   if (title) title.textContent = msg.success ? "Réparation validée" : "Session arrêtée";
   const summary = document.getElementById("end-summary");
-  if (summary && msg.summary) summary.textContent = JSON.stringify(msg.summary);
+  if (summary) summary.textContent = endSummaryText(msg.success); // compteurs : au journal, pas à l'écran
   stopCapture();
   stopStaleTimer();
   stopMic();

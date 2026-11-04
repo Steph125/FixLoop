@@ -130,3 +130,130 @@ def test_bridge_gives_up_after_refused_handshake():
             return bridge
     bridge = arun(main())
     assert bridge.failures >= 3
+
+
+def test_bridge_keeps_close_reason_and_restarts():
+    async def main():
+        import asyncio
+        import json
+
+        import websockets
+
+        connections = 0
+
+        async def fake(ws):
+            nonlocal connections
+            connections += 1
+            await ws.recv()
+            await ws.send(json.dumps({"sessionId": f"faux-{connections}"}))
+            if connections == 1:
+                await ws.recv()  # une trame, puis fermeture par le serveur
+                await ws.close(code=1011, reason="trop de charge")
+                return
+            async for _ in ws:
+                pass
+
+        async with websockets.serve(fake, "127.0.0.1", 0) as server:
+            port = server.sockets[0].getsockname()[1]
+            bridge = VoiceBridge("cle-test", ws_url=f"ws://127.0.0.1:{port}")
+            assert await bridge.start() is True
+            for _ in range(200):
+                await bridge.push_audio(bytes(FRAME_BYTES))
+                if not bridge.started:
+                    break
+                await asyncio.sleep(0.01)
+            assert bridge.started is False
+            assert "1011" in bridge.last_error and "trop de charge" in bridge.last_error
+            sent = bridge._frames
+            assert await bridge.start() is True  # VOX-R3.3 : même pont, nouvelle liaison
+            await bridge.push_audio(bytes(FRAME_BYTES))
+            assert bridge.started is True
+            await bridge.stop()
+            assert bridge.seconds_sent == pytest.approx((sent + 1) * FRAME_MS / 1000)  # tout est compté
+    arun(main())
+
+
+def test_bridge_error_message_never_shows_the_key():
+    async def main():
+        import asyncio
+        import json
+
+        import websockets
+
+        async def fake(ws):
+            await ws.recv()
+            await ws.send(json.dumps({"sessionId": "faux"}))
+            await ws.send(json.dumps({"type": "error", "message": "clé cle-secrete refusée"}))
+            await ws.close(code=1008, reason="cle-secrete")
+
+        async with websockets.serve(fake, "127.0.0.1", 0) as server:
+            port = server.sockets[0].getsockname()[1]
+            bridge = VoiceBridge("cle-secrete", ws_url=f"ws://127.0.0.1:{port}")
+            assert await bridge.start() is True
+            for _ in range(200):
+                await bridge.push_audio(bytes(FRAME_BYTES))
+                if not bridge.started:
+                    break
+                await asyncio.sleep(0.01)
+            assert bridge.started is False
+            assert "refusée" in bridge.last_error  # le message du serveur reste, sans la clé
+            assert "cle-secrete" not in bridge.last_error
+    arun(main())
+
+
+def test_bridge_survives_failing_callback():
+    async def main():
+        import asyncio
+        import json
+
+        import websockets
+
+        async def fake(ws):
+            await ws.recv()
+            await ws.send(json.dumps({"sessionId": "faux"}))
+            for text in ("un", "deux"):
+                await ws.send(json.dumps({"type": "speechComplete", "turnId": text, "transcript": text}))
+            async for _ in ws:
+                pass
+
+        seen = []
+
+        def on_final(text, t):
+            seen.append(text)
+            if text == "un":
+                raise ValueError("boom")
+
+        async with websockets.serve(fake, "127.0.0.1", 0) as server:
+            port = server.sockets[0].getsockname()[1]
+            bridge = VoiceBridge("cle-test", on_final=on_final, ws_url=f"ws://127.0.0.1:{port}")
+            assert await bridge.start() is True
+            await asyncio.sleep(0.3)
+            assert seen == ["un", "deux"]  # une erreur ne coupe pas la lecture
+            await bridge.stop()
+    arun(main())
+
+
+def test_stopping_twice_logs_the_seconds_once():
+    """Essai réel du 4 nov. : `_voice_run` et `_stop_voice` arrêtent tous deux le pont, 15,12 s comptées deux fois."""
+    import asyncio
+
+    class Costs:
+        def __init__(self):
+            self.units = []
+
+        def add(self, **kw):
+            self.units.append(kw["units"])
+
+    costs = Costs()
+    bridge = VoiceBridge("cle-test", costs=costs, session_id="s1")
+    bridge._frames = 10
+
+    async def main():
+        await bridge.stop()
+        await bridge.stop()
+        bridge._frames = 15  # reconnexion : seules les nouvelles secondes comptent
+        await bridge.stop()
+
+    asyncio.run(main())
+    assert costs.units == [pytest.approx(0.8), pytest.approx(0.4)]
+    assert bridge.seconds_sent == pytest.approx(1.2)

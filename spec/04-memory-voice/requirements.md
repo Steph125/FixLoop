@@ -83,6 +83,8 @@ l'écran.
 1. L'appli DOIT toujours afficher un gros bouton « C'est fait » (`APP-R4`), qui envoie `user_done`.
 2. SI le micro est refusé, la connexion Transcribe échoue 3 fois ou le budget voix est atteint, ALORS le système
    DOIT continuer la session avec le bouton seul et afficher « Commande vocale indisponible ».
+3. SI la liaison Transcribe se coupe en cours de session, ALORS le système DOIT se reconnecter (3 coupures au plus),
+   garder la raison de chaque coupure au journal, puis appliquer `VOX-R3.2` si la voix reste perdue (`VOX-D5`).
 
 ## VOX-R4 — Coût et durée (Must)
 

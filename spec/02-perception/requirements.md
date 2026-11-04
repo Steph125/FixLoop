@@ -36,6 +36,8 @@ donner un verdict pendant que l'utilisateur répare.
    au-delà, la nouvelle image DOIT être abandonnée (et comptée), jamais mise en file.
 3. Le système DOIT rendre chaque résultat avec son `frame_index` et son instant `t` d'origine, pour que l'appelant
    écarte les résultats arrivés dans le désordre ou trop vieux (`SRV-R4`).
+4. Le système DOIT décoder les masques hors de la boucle asyncio, et DOIT réduire une image dont le grand côté dépasse
+   `LIVE_WIDTH` : une image ne doit pas bloquer la session (`PERC-D8`).
 
 ## PERC-R3 — Segmentation d'une vidéo (Must, replay et évaluation)
 

@@ -25,7 +25,7 @@ video.srcObject = stream;                       // affichage local, plein écran
 setInterval(captureFrame, 1000);                // APP-R2.1
 async function captureFrame() {
   if (!wsOpen() || app.paused) return;          // APP-R2.3 : pas de file
-  const w = Math.min(848, video.videoWidth), h = Math.round(video.videoHeight * w / video.videoWidth);
+  const { w, h } = imageTargetSize(video.videoWidth, video.videoHeight);  // 848 px sur le grand côté
   canvas.width = w; canvas.height = h; ctx.drawImage(video, 0, 0, w, h);
   const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg", 0.7));
   ws.send(packBinary(0x02, Date.now(), await blob.arrayBuffer()));
@@ -99,6 +99,11 @@ Le replay public (`07`) n'a pas besoin de serveur Python : hébergement statique
 
 ## 8. Journal des décisions
 
+- **APP-D6 (4 nov.)** — Corrections issues du premier essai sur vrai téléphone. `xMidMid`, valeur invalide, faisait
+  retomber le contour sur `meet` : environ 40 % trop petit et décalé, alors que ce fichier prescrivait déjà `xMidYMid slice`.
+  L'écran de fin affichait le JSON des compteurs : remplacé par une phrase, les compteurs restent au journal.
+- **APP-D5 (4 nov.)** — 848 px sur le grand côté, et non en largeur : un téléphone tenu en portrait envoyait 720×1280
+  (`PERC-D8`). Une image en paysage ne change pas.
 - **APP-D1 (30 oct.)** — Appli web plutôt que native : pas de magasin d'applications, le jury l'ouvre d'un lien.
 - **APP-D2 (30 oct.)** — HTTPS par tunnel pour les essais ; hébergement statique pour le replay.
 - **APP-D3 (30 oct.)** — Le téléphone ne recalcule aucune mesure : une seule source de vérité, le serveur.

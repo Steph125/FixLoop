@@ -789,3 +789,142 @@ def test_voice_status_shapes():
     sess._send_voice_status("error", "refused")
     assert sess._out_queue.get_nowait() == {
         "type": "voice_status", "status": "error", "reason": "refused"}
+
+
+def test_sam_result_before_diagnosis_is_not_a_crash():
+    """Essai réel du 4 nov. : SAM répond avant la fin du diagnostic, aucune fiche encore (SRV-T12)."""
+    import concurrent.futures as cf
+    import queue
+
+    import numpy as np
+
+    from fixloop.perception import ImageResult, PartResult
+    from fixloop.state_machine import Session
+    _, sess = make_live({5: "off"})
+    sess._out_queue = queue.Queue()
+
+    class Event:
+        def set(self):
+            pass
+
+    sess._work_event = Event()
+    sess.t0_ms = 0
+    sess.clock = lambda: 100.0
+    sess.sm = Session(sess.procedures, sess.models.agent, sess.models.memory, sess.output,
+                      "velo-1", debounce_frames=3)
+    assert sess.sm.procedure is None  # le diagnostic n'a pas encore choisi la fiche
+    mask = np.zeros((120, 160), bool)
+    mask[30:70, 40:80] = True
+    res = ImageResult(5, 5.0, {"chainring": PartResult(mask, 0.9, (40, 30, 80, 70), "M", 1)},
+                      {"total_s": 0.0, "attempts": {}}, None, 160, 120)
+    sess.pending_frames[5] = (5000, jpeg_bytes(), 99.9)
+    fut = cf.Future()
+    fut.set_result(res)
+    sess._on_result(fut, 5)
+    assert sess.work.take()[0] == "measure"
+
+
+class LossyBridge:
+    """Perd la liaison après chaque lot d'audio, comme un flux fermé par Transcribe."""
+
+    def __init__(self):
+        self.started, self.stopped = False, False
+        self.starts, self.pushed = 0, []
+        self.last_error = "ConnectionClosedError code=1011 raison=trop de charge"
+
+    async def start(self):
+        self.starts += 1
+        self.started = True
+        return True
+
+    async def push_audio(self, pcm):
+        self.pushed.append(pcm)
+        self.started = False
+
+    async def stop(self):
+        self.started, self.stopped = False, True
+        return 0.0
+
+
+def voice_statuses(sess):
+    out = []
+    while not sess._out_queue.empty():
+        msg = sess._out_queue.get_nowait()
+        if msg.get("type") == "voice_status":
+            out.append((msg["status"], msg.get("reason")))
+    return out
+
+
+def test_voice_reconnects_after_loss_and_records_reason():
+    async def main():
+        import asyncio
+        _, sess = make_live({0: "off"})
+        sess._out_queue = asyncio.Queue()
+        sess._work_event = asyncio.Event()
+        sess.started = True
+        bridge = LossyBridge()
+        sess.bridge = bridge
+        run = asyncio.create_task(sess._voice_run())
+        await wait_for(lambda: bridge.started)
+        sess._on_audio(b"\x01" * 3840, 1000)
+        await wait_for(lambda: bridge.starts == 2 and bridge.started)  # VOX-R3.3 : relancé
+        assert len(sess.voice_log) == 1
+        assert "1011" in sess.voice_log[0]["reason"]  # la raison reste pour le journal
+        sess._on_audio(b"\x02" * 3840, 1080)
+        await wait_for(lambda: len(bridge.pushed) == 2)  # l'audio repasse après la reconnexion
+        sess.closing = True
+        await asyncio.wait_for(run, 10)
+        assert bridge.stopped is True and sess.bridge is None
+    arun(main())
+
+
+def test_voice_gives_up_after_three_losses():
+    async def main():
+        import asyncio
+        _, sess = make_live({0: "off"})
+        sess._out_queue = asyncio.Queue()
+        sess._work_event = asyncio.Event()
+        sess.started = True
+        bridge = LossyBridge()
+        sess.bridge = bridge
+        run = asyncio.create_task(sess._voice_run())
+        for i in range(4):
+            await wait_for(lambda: bridge.started and bridge.starts == i + 1)
+            sess._on_audio(b"\x01" * 3840, 1000 + i)
+            await wait_for(lambda: not bridge.started or bridge.starts > i + 1)
+        await asyncio.wait_for(run, 10)  # la tâche s'arrête seule
+        assert bridge.starts == 4  # 1 ouverture + 3 reconnexions
+        assert voice_statuses(sess)[-1] == ("error", "lost")  # VOX-R3.2 : bouton seul
+        assert bridge.stopped is True and sess.bridge is None
+        sess._on_audio(b"\x03" * 3840, 2000)
+        assert sess.counters["audio_dropped"] == 1
+    arun(main())
+
+
+def test_voice_refused_at_start_records_reason():
+    async def main():
+        import asyncio
+
+        class Refused(LossyBridge):
+            async def start(self):
+                return False
+
+        _, sess = make_live({0: "off"})
+        sess._out_queue = asyncio.Queue()
+        sess._work_event = asyncio.Event()
+        sess.started = True
+        sess.bridge = Refused()
+        await asyncio.wait_for(sess._voice_run(), 10)
+        assert voice_statuses(sess) == [("error", "refused")]
+        assert sess.bridge is None and "1011" in sess.voice_log[0]["reason"]
+    arun(main())
+
+
+def test_voice_losses_are_written_to_journal(tmp_path):
+    import json
+
+    from server.session import SessionRecorder
+    rec = SessionRecorder(root=tmp_path)
+    rec.finish("s1", {"voice": [{"t": 3.2, "reason": "code=1011"}]})
+    head = json.loads((tmp_path / "s1.jsonl").read_text(encoding="utf-8").splitlines()[0])
+    assert head["voice"] == [{"t": 3.2, "reason": "code=1011"}]

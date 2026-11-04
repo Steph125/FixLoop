@@ -303,6 +303,9 @@ def _clean(value: object) -> object:
     return value
 
 
+MAX_VOICE_LOSSES = 3  # VOX-R3.3 : au-delà, la voix est abandonnée pour la session
+
+
 class SessionRecorder:
     """Journal `data/sessions/<id>.jsonl` et enregistrements replay (SRV-R9)."""
 
@@ -323,6 +326,7 @@ class SessionRecorder:
                 "bike_id": report.get("bike_id"), "success": report.get("success"),
                 "ended": report.get("ended", "closed"),
                 "counters": report.get("counters", {}),
+                "voice": report.get("voice", []),  # VOX-R3.3 : coupures de la voix
                 "latencies": report.get("latencies", []),
                 "costs": report.get("costs", {})}
         with open(path, "w", encoding="utf-8") as fh:
@@ -499,6 +503,7 @@ class LiveSession:
         self.work = WorkQueue()
         self.counters = {"dropped": 0, "stale": 0, "out_of_order": 0, "bad_message": 0,
                          "too_big": 0, "audio_dropped": 0}
+        self.voice_log: list = []  # VOX-R3.3 : raison de chaque coupure de la voix
         self.red_parts: set = set()
         self.sm: object = None
         self.perception: object = None
@@ -725,16 +730,20 @@ class LiveSession:
         """Démarre le pont puis y verse l'audio en continu (SRV-T6)."""
         import asyncio
         assert self.bridge is not None
+        losses = 0
         try:
-            ok = await self.bridge.start()
-        except Exception:
-            ok = False
-        self._send_voice_status("on" if ok else "error", None if ok else "refused")
-        if not ok:
-            self.bridge = None
-            return
-        try:
+            if not await self._voice_connect():
+                return
             while not self.closing:
+                if not self.bridge.started:  # VOX-R3.3 : coupure en cours de session
+                    losses += 1
+                    self._note_voice_problem("coupure")
+                    self.audio_pending = []
+                    if losses > MAX_VOICE_LOSSES:
+                        self._send_voice_status("error", "lost")  # VOX-R3.2 : bouton seul
+                        return
+                    if not await self._voice_connect():
+                        return
                 if self.audio_pending:
                     chunk = b"".join(self.audio_pending)
                     self.audio_pending = []
@@ -744,6 +753,26 @@ class LiveSession:
             if self.bridge is not None:  # _stop_voice a pu passer avant
                 await self.bridge.stop()
                 self.bridge = None
+
+    async def _voice_connect(self) -> bool:
+        """Ouvre ou rouvre la liaison Transcribe, et le dit à l'appli."""
+        try:
+            ok = await self.bridge.start()
+        except Exception:
+            ok = False
+        self._send_voice_status("on" if ok else "error", None if ok else "refused")
+        if not ok:
+            self._note_voice_problem("refus")
+        return ok
+
+    def _note_voice_problem(self, what: str) -> None:
+        """Raison gardée au journal et affichée dans la console, sans clé (VOX-D5)."""
+        import logging
+        reason = str(getattr(self.bridge, "last_error", None) or "inconnue")
+        now = self.clock()
+        self.voice_log.append({"t": round(now - (self.started_at or now), 1), "what": what,
+                               "reason": reason})
+        logging.getLogger("uvicorn.error").warning("Voix, %s : %s", what, reason)
 
     async def _stop_voice(self) -> None:
         """Coupe la voix : tâche annulée, `endStream` envoyé (VOX-R4.1)."""
@@ -837,7 +866,8 @@ class LiveSession:
         keyframe = keyframe_image(img, box.box if box is not None else None)
         contact = next(iter(m.contact.values()), None)
         contact = None if contact is None or contact != contact else round(contact, 3)
-        on_max, off_min = ((step_thresholds(self.sm.step) if self.sm is not None else (None, None)))
+        on_max, off_min = (step_thresholds(self.sm.step) if proc is not None  # SRV-T12 : fiche pas encore choisie
+                           else (None, None))
         label = label_for(contact, on_max, off_min)
         latency_ms = round(age * 1000, 1)
         self.latencies.append(latency_ms)  # SRV-R9.1
@@ -866,6 +896,7 @@ class LiveSession:
                 "bike_id": self.bike_id, "success": success, "ended": ended,
                 "events": list(self.sm.log) if self.sm is not None else [],
                 "counters": {**self.counters, **summary_for(self.counters)},
+                "voice": list(self.voice_log),
                 "latencies": list(self.latencies), "costs": costs})
         except Exception:
             pass

@@ -70,6 +70,14 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
   « Commande vocale indisponible ». Exigences : `VOX-R3.1`, `R3.2`. Dépend de : `APP-T5` ([x]).
   Preuve : `tests/test_phone_app.py::test_voice_fallback_status`, `tests/test_session.py::test_voice_status_shapes`.
 
+- [x] **VOX-T7 — Reconnexion en cours de session.** Ajouté le 4 nov. (`VOX-D5`). `_voice_run` relance le pont après une
+  coupure, 3 fois au plus ; raison gardée au journal et affichée dans la console.
+  Exigences : `VOX-R3.3`. Fait quand : reconnexion et abandon testés avec un faux pont, raison et masquage de la clé
+  testés contre un faux serveur. Preuve : `tests/test_session.py::test_voice_reconnects_after_loss_and_records_reason`,
+  `test_voice_gives_up_after_three_losses`, `tests/test_voice_bridge.py::test_bridge_keeps_close_reason_and_restarts`,
+  `test_bridge_error_message_never_shows_the_key`, `test_bridge_survives_failing_callback`,
+  `test_stopping_twice_logs_the_seconds_once` (constaté sur un essai réel : secondes comptées deux fois).
+
 ## Couverture
 
 | Critère | Tâches |
@@ -82,5 +90,5 @@ Toutes à faire. Ordre conseillé : les tâches sans réseau d'abord (T1, T2, T5
 | MEM-R4.1 | MEM-T6 ; R4.2 : `SUB-T3`, `SUB-T6` |
 | VOX-R1.1, R1.3 | VOX-T3 ; R1.2, R1.4 : VOX-T1 |
 | VOX-R2.1–R2.4 | VOX-T2 ; R2.1, R2.6 : VOX-T6 ; R2.5 : VOX-T4 |
-| VOX-R3.1 | VOX-T5, `APP-T4` ; R3.2 : VOX-T3, VOX-T5 |
+| VOX-R3.1 | VOX-T5, `APP-T4` ; R3.2 : VOX-T3, VOX-T5 ; R3.3 : VOX-T7 |
 | VOX-R4.1 | VOX-T3 ; R4.2 : VOX-T4 |

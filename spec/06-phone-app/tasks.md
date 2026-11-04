@@ -32,19 +32,27 @@ Toutes à faire. Jalon (dimanche 1er nov.) : appli sur le téléphone de l'auteu
   `voice_status`.
   Exigences : `APP-R7.4` (24 kHz, 80 ms — le titre disait 16 kHz / 100 ms : voir SPEC À REVOIR). Dépend de : `VOX-T3` ([~]), `SRV-T6` ([~], voix coupée sans pont).
   Preuve : `tests/test_phone_app.py::test_voice_input_worklet`, `test_voice_fallback_status`, `node web/selftest.mjs` 17/17.
-- [ ] **APP-T9 — Écran allumé, HTTPS et essai sur téléphone.** `wakeLock` ; tunnel HTTPS ; session réelle
+- [~] **APP-T9 — Écran allumé, HTTPS et essai sur téléphone.** `wakeLock` ; tunnel HTTPS ; session réelle
   complète sur le vélo ; liste de contrôle `eval/day4/phone-checklist.md`.
   Exigences : `APP-R1.1`, `R9.1`, `R10.3`, et vérification manuelle de tous les `APP-R*`.
+  État (4 nov.) : 2 sessions réelles, chaîne déjà en place seulement (`eval/day4/phone-checklist.md`). Partiel : refus d'une
+  chaîne tombée non testé sur téléphone, décision de l'auteur de s'arrêter là.
 - [x] **APP-T10 — Auto-test navigateur.** `web/selftest.html`.
   Exigences : tests de `design.md` section 7.
   Preuve : `tests/test_phone_app.py::test_selftest_covers_lib`, `node web/selftest.mjs` 16/16.
+
+- [x] **APP-T11 — Corrections du premier essai sur vrai téléphone.** Ajouté le 4 nov. (`APP-D5`, `APP-D6`). Contour aligné
+  sur la vidéo, écran de fin sans compteurs bruts, 848 px sur le grand côté.
+  Exigences : `APP-R2.2`. Fait quand : tests ci-dessous verts ; l'alignement à l'écran reste à confirmer par `APP-T9`.
+  Preuve : `tests/test_phone_app.py::test_overlay_is_cropped_like_the_video`,
+  `test_end_screen_shows_a_sentence_not_raw_counters`, `node web/selftest.mjs`.
 
 ## Couverture
 
 | Critère | Tâches |
 |---|---|
 | R1.1 | T9 ; R1.2–R1.4 : T3 ; R1.5 : T2 |
-| R2.1–R2.3 | T5 ; R2.4 : T3 |
+| R2.1–R2.3 | T5 ; R2.2 : T11 ; R2.4 : T3 |
 | R3.1, R3.2 | T3 |
 | R4.1–R4.3 | T4 |
 | R5.1–R5.4 | T6 |
