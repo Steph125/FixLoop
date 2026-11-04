@@ -246,3 +246,12 @@ def test_end_screen_shows_a_sentence_not_raw_counters():
     live = read("live.js")
     assert "JSON.stringify(msg.summary)" not in live  # essai réel : JSON brut à l'écran (APP-T11)
     assert "endSummaryText" in live
+
+
+def test_replay_voice_is_cut_when_changing_session_or_instant():
+    """Vidéo de l'auteur, 4 nov. : la voix avait jusqu'à 45 s de retard sur l'image (RPL-T12)."""
+    js = read("replay.js")
+    select = js.split("export async function selectSession")[1].split("export function")[0]
+    seek = js.split("export function seekTo")[1].split("export function")[0]
+    assert "stopSpeech()" in select and "stopSpeech()" in seek
+    assert "speechPlan(" in js.split("export function speakUntil")[1].split("export function")[0]

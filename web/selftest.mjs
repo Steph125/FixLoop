@@ -2,7 +2,7 @@
 // Même contenu que web/selftest.html : `node web/selftest.mjs` hors navigateur.
 import { SCREENS, isScreen, errorMessage, wordCount, ERROR_MESSAGES, makeBikeId, isBikeId, codeRequired, cameraConstraints, startMessage, helloMessage, userDoneMessage, commandMessage, speakingMessage, pauseMessage, resumeMessage, stopMessage, backoffDelay, screenFor, packBinary, imageTargetSize, MSG_AUDIO, MSG_IMAGE, MAX_SEND_WIDTH, JPEG_QUALITY, STALE_MS, GREEN_MS, partColor, formatMeasure, verdictLabel, stepLabel, stateAt, staleOverlay, pickFrenchVoice, shouldInterruptSay, VALIDATION_PHRASE, voiceStatusText,
   CAMERA_MESSAGE, HISTORY_MESSAGE, VOICE_MESSAGE, endSummaryText } from "./lib.js";
-import { frameSize, stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor, relabelFrames, filmedDate, loadLinks, REPO_URL } from "./replay.js";
+import { speechPlan, frameSize, stateAt as replayStateAt, nearestFrame, contactLabel, validatedFlash, nextSpeed, stepBanner, timelineItems, eventDetail, curveGeometry, cursorX, honestyText, linksFor, relabelFrames, filmedDate, loadLinks, REPO_URL } from "./replay.js";
 
 const checks = [];
 
@@ -108,6 +108,13 @@ check("packBinary : en-tête SRV-R3.2 (APP-R2.2)", () => {
   if (view.getInt16(0, true) !== 256 || view.getInt16(2, true) !== -1) {
     throw new Error("octets petit-boutistes");
   }
+});
+
+check("replay : la voix ne prend pas de retard (RPL-T12)", () => {
+  const first = speechPlan(null, ["Je vois.", "Tu vois ta chaîne."]);
+  if (first.cancel || first.text !== "Je vois. Tu vois ta chaîne.") throw new Error("groupe");
+  if (!speechPlan("Pose la chaîne.", ["Tourne."]).cancel) throw new Error("phrase non coupée");
+  if (speechPlan("C'est bon.", ["Tourne."]).cancel) throw new Error("validation coupée");
 });
 
 check("écran de fin : une phrase, jamais de compteurs bruts (APP-T11)", () => {

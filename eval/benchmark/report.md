@@ -11,7 +11,7 @@ Oui pour la mesure, pas encore pour la cible. Sur ces 8 extraits, la géométrie
 - Réglages : `live` (direct simulé, 1 image/s, anti-rebond 3) puis `replay` (10 images/s, anti-rebond 4) (EVAL-R3.5).
 - Modèles : sam-3.1 (segmentation), muse-spark-1.3 (arbitrage et Spark seul, `--model` dans EVAL-D5).
 - Seuils de contact : en place ≤ 0,18, tombée ≥ 0,26.
-- Date : 2026-11-04, commit : 643244b (EVAL-R5.3).
+- Date : 2026-11-04, commit : f487dd9 (EVAL-R5.3).
 - Diagnostic hors périmètre (une seule fiche, design 08 §3).
 
 ## Tableau principal (extraits `test`)

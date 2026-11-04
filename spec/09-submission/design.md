@@ -95,3 +95,7 @@ Les licences sont recopiées depuis les métadonnées des paquets installés (`p
 - **SUB-D2 (30 oct.)** — README en anglais, spec en français : le jury est international, l'auteur travaille en
   français.
 - **SUB-D3 (30 oct.)** — Soumission visée 9 h avant la limite : marge pour une coupure ou un formulaire bloqué.
+- **SUB-D4 (4 nov.)** — La vidéo suit le montage de `docs/video-plan.md`, et non le plan de la section 2 : enregistrements de
+  l'auteur dans son ordre (replay, puis téléphone), sans narration, avec sous-titres et écrans fixes en français et en
+  anglais. Le refus reste avant 0:20 et les cinq temps de la boucle restent montrés. Le refus d'une chaîne tombée
+  n'existe que sur vidéo filmée : le plan sur téléphone le dit à l'écran. Voix du lecteur recalée au montage (`RPL-D10`).

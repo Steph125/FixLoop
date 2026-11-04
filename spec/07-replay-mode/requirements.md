@@ -44,7 +44,7 @@ ordinateur comme sur téléphone, sans aucun appel aux modèles au moment de la 
 4. Le lecteur DOIT tracer la courbe du contact chaîne / plateau dans le temps, avec les seuils 0,18 et 0,26 et le
    curseur de lecture.
 5. Le lecteur DOIT permettre lecture, pause, vitesse ×0,5 / ×1 / ×2, et lire les phrases à voix haute (bouton
-   « Son », désactivé par défaut).
+   « Son », désactivé par défaut), sans retard sur l'image (`RPL-D10`).
 
 ## RPL-R5 — Honnêteté (Must)
 

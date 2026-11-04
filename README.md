@@ -4,7 +4,7 @@ Point a phone at your bike drivetrain: FixLoop diagnoses a thrown chain, guides 
 voice, and only moves on once it has **measured** the step is done. A failed step is refused out loud,
 shown in red, and re-checked after you fix it.
 
-[Replay online](https://wondrous-tiramisu-404f0a.netlify.app/) · [3 min video](TBD) ·
+[Replay online](https://wondrous-tiramisu-404f0a.netlify.app/) · [3 min video](https://youtu.be/0RQLD24LSw4) ·
 [Benchmark report](eval/benchmark/report.md) · [Spec](spec/README.md)
 
 ## What it does
@@ -161,9 +161,9 @@ recomputed by the same code as live, with model answers from cache and no sound:
 
 The bike history shown is a prepared demo history, and the page says so.
 
-Live mode needs a server and a phone on HTTPS, so it is not open to the public. It ran on a real phone on Nov 4, with the
-chain already seated: FixLoop saw it was fine and closed the session. **Refusing a fallen chain has not been tested on a
-real phone**, only on filmed clips. Details: `eval/day4/phone-checklist.md`.
+Live mode needs a server and a phone on HTTPS, so it is not open to the public. Tried on a real phone (Nov 4, 2 sessions)
+with the real models: the sessions ran with the chain already seated; **the refusal path was not tested on the phone**, only
+on filmed clips. Details: `eval/day4/phone-checklist.md`.
 
 ## Run locally
 
@@ -200,7 +200,7 @@ committed (`eval/benchmark/cache/`), and the labels, results and report are in `
 | Nov 1 | First real session, Transcribe and Wonder probes, benchmark + replay code | `eval/day3`, `scripts/benchmark.py` |
 | Nov 2 | Clips filmed, fixes for real 30 fps videos, videos published without sound | `replay/build_replay.py` |
 | Nov 3 | Labelling window, transformed copies for robustness, per-clip report | `scripts/label_clip.py`, `scripts/augment_clips.py` |
-| Nov 4 | Benchmark run, replay built and published, first sessions on a real phone and their fixes, freeze, submission before 21:00 ET | `eval/benchmark`, `replay/published`, `eval/day4`, `v1.0-submission` |
+| Nov 4 | Benchmark run, replay built and published, first sessions on a real phone and their fixes, player voice fix (RPL-T12), freeze, submission before 21:00 ET | `eval/benchmark`, `replay/published`, `eval/day4`, `v1.0-submission` |
 
 ## Built with Muse Code
 
@@ -213,7 +213,7 @@ criteria.
 
 [`spec/README.md`](spec/README.md) explains spec-driven development: EARS requirements, design, atomic
 tasks. `python scripts/check_spec.py` checks that every acceptance criterion is covered by a task
-(83 requirements, 306 criteria, 63 decisions, 112 tasks).
+(83 requirements, 306 criteria, 65 decisions, 113 tasks).
 
 ## License
 

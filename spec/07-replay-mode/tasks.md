@@ -103,6 +103,11 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
   `pages.yml`, refus `fetch` externe/`.env`/`.jsonl`/vidéo > 15 Mo). Fait quand : tests de `publish.py` et de `deploy_check.py`
   sur un site synthétique, sans déclencher le workflow.
 
+- [x] **RPL-T12 — Voix sans retard.** Ajouté le 4 nov. (`RPL-D10`), constat sur la vidéo de l'auteur.
+  Exigences : `RPL-R4.5`. Fait quand : nouvelle phrase qui coupe la précédente, validation non coupée, voix coupée au
+  changement de session ou d'instant. Preuve : `node web/selftest.mjs`,
+  `tests/test_phone_app.py::test_replay_voice_is_cut_when_changing_session_or_instant`. Écoute réelle : à l'auteur.
+
 ## Couverture
 
 | Critère | Tâches |
@@ -110,7 +115,7 @@ Toutes à faire. Jalon (lundi 2 nov.) : replay public déployé, 2 sessions.
 | R1.1–R1.3 | T9 ; R1.3, R1.4 : T5 |
 | R2.1 | T1, T4 ; R2.2 : T2 ; R2.3 : T1, T2, T4 ; R2.4 : T1, T4 |
 | R3.1 | T3, T4 ; R3.2 : T8 |
-| R4.1, R4.5 | T5 ; R4.2–R4.4 : T6 |
+| R4.1, R4.5 | T5 ; R4.5 : T12 ; R4.2–R4.4 : T6 |
 | R5.1–R5.3 | T7 ; R5.2 : T2 |
 | R6.1, R6.2 | T10 |
 | R7.1 | T2, T9, T11 ; R7.2 : T7, T11 |

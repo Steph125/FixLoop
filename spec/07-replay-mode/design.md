@@ -141,6 +141,10 @@ par session (`RPL-R7.1`).
   `B1` au même réglage, construite une seule fois sans relance : le « c'est fait » de 10 s y est refusé (arbitrage `eps`).
   C'est le refus montré en tête de la vidéo (place dans le replay : `RPL-D9`). Sa suite garde la faiblesse du rapport : validation à 18 s
   avec la main dans le champ. D ne se ferme pas : le contact de la vraie rotation frôle le seuil de 0,18.
+- **RPL-D10 (4 nov.)** — Voix sans file. La vidéo de l'auteur montre jusqu'à 45 s de retard : les phrases s'empilaient, et
+  celles de la session précédente continuaient après un changement. Une nouvelle phrase coupe maintenant la
+  précédente, sauf la validation (règle du direct, `APP-R7.2`) ; changer de session ou d'instant coupe la voix. Coût assumé :
+  le diagnostic peut être coupé par l'étape suivante ; les phrases restent dans la frise et `events.json`.
 - **RPL-D9 (4 nov.)** — Ordre du replay, sur retour du relecteur : A, E, B, D. Le jury ouvre la première session de la
   liste ; A montre la boucle complète, et E, qui finit sur la faiblesse du rapport, reste deuxième. Rien n'est retiré.
 - **RPL-D8 (4 nov.)** — Hébergement réel : Netlify, le repli prévu section 5, et non GitHub Pages. Le compte GitHub de

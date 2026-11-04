@@ -2,6 +2,8 @@
 // Modules ES, aucune dépendance (APP-R10.1, RPL-R1.4). La logique pure est
 // testée sans DOM dans `web/selftest.mjs` (miroir `web/selftest.html`).
 
+import { shouldInterruptSay } from "./lib.js";
+
 // État affiché à l'instant t : rejeu des événements (design 07, section 4).
 // Miroir de `state_at` (`replay/build_replay.py`), testé à l'identique.
 export function stateAt(events, t) {
@@ -67,6 +69,7 @@ export const app = {
   speed: 1,
   sound: false,
   spokenUntil: -1,
+  speakingText: null,
   video: null,
   svg: null,
 };
@@ -148,19 +151,31 @@ export function render(t) {
   return { frame, state: st };
 }
 
-// Voix : lit les phrases franchies, à ×1, coupée par défaut (RPL-R4.5).
+// Pas de file : une nouvelle phrase coupe la précédente, sauf la validation, comme en direct (RPL-D10).
+export function speechPlan(speakingText, texts) {
+  return { cancel: speakingText !== null && shouldInterruptSay(speakingText), text: texts.join(" ") };
+}
+
+export function stopSpeech() {
+  if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+  app.speakingText = null;
+}
+
+// Voix : lit les phrases franchies, coupée par défaut, sans retard sur l'image (RPL-R4.5).
 export function speakUntil(t) {
   if (!app.sound) return;
   const synth = window.speechSynthesis;
   if (!synth) return;
   const news = app.events.filter((e) => e.event === "say" && e.t <= t + 1e-9 && e.t > app.spokenUntil);
-  for (const e of news) {
-    const u = new SpeechSynthesisUtterance(e.text);
-    u.lang = "fr-FR";
-    u.rate = 1.0;
-    synth.speak(u);
-  }
-  if (news.length) app.spokenUntil = t;
+  if (!news.length) return;
+  app.spokenUntil = t;
+  const plan = speechPlan(synth.speaking ? app.speakingText : null, news.map((e) => e.text));
+  if (plan.cancel) synth.cancel();
+  const u = new SpeechSynthesisUtterance(plan.text);
+  u.lang = "fr-FR";
+  u.rate = 1.0;
+  app.speakingText = plan.text;
+  synth.speak(u);
 }
 
 export function tick() {
@@ -336,6 +351,8 @@ export function moveCursor(t) {
 }
 
 export function seekTo(t) {
+  stopSpeech();
+  app.spokenUntil = t;
   if (app.video) app.video.currentTime = t;
   render(t);
 }
@@ -436,6 +453,7 @@ export function unlockSpeech() {
 }
 
 export async function selectSession(name) {
+  stopSpeech();
   await loadSession(name);
   if (app.video) {
     app.video.src = `build/${name}/video.mp4`;

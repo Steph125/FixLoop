@@ -18,10 +18,10 @@ window just before sending, then once more after.
 **Links:**
 
 - Repository: https://github.com/Steph125/FixLoop
-- Video: TBD (unlisted, viewable without an account)
+- Video: https://youtu.be/0RQLD24LSw4 (viewable without an account)
 - Replay, no install: https://wondrous-tiramisu-404f0a.netlify.app/
 - Benchmark report: https://github.com/Steph125/FixLoop/blob/main/eval/benchmark/report.md
-- Live mode: not open to the public; ran on a real phone with the chain already seated, refusal not tested on a phone
+- Live mode: not open to the public. Tried on a real phone (Nov 4, 2 sessions) with the real models: the sessions ran with the chain already seated; the refusal path was not tested on the phone
 
 **Meta models used:**
 
